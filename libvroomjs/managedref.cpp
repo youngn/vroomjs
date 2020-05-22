@@ -31,41 +31,44 @@ using namespace v8;
 
 long js_mem_debug_managedref_count;
 
-Handle<Value> ManagedRef::GetPropertyValue(Local<String> name)
+Local<Value> ManagedRef::GetPropertyValue(Local<String> name)
 {
-    Handle<Value> res;
-    
-    String::Value s(name);
-    
+    Local<Value> res;
+
+    auto isolate = Isolate::GetCurrent();
+    String::Value s(isolate, name);
+
 #ifdef DEBUG_TRACE_API
-		std::cout << "GetPropertyValue" << std::endl;
+    std::cout << "GetPropertyValue" << std::endl;
 #endif
+
     jsvalue r = engine_->CallGetPropertyValue(contextId_, id_, *s);
-	if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        res = ThrowException(engine_->AnyToV8(r, contextId_));
+    if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
+        isolate->ThrowException(engine_->AnyToV8(r, contextId_));
     else
         res = engine_->AnyToV8(r, contextId_);
-    
+
 #ifdef DEBUG_TRACE_API
-		std::cout << "cleaning up result from getproperty value" << std::endl;
+    std::cout << "cleaning up result from getproperty value" << std::endl;
 #endif
     // We don't need the jsvalue anymore and the CLR side never reuse them.
     jsvalue_dispose(r);
-	return res;
+    return res;
 }
 
-Handle<Boolean> ManagedRef::DeleteProperty(Local<String> name)
+Local<Boolean> ManagedRef::DeleteProperty(Local<String> name)
 {
-    Handle<Value> res;
-    
-    String::Value s(name);
-    
+    Local<Value> res;
+
+    auto isolate = Isolate::GetCurrent();
+    String::Value s(isolate, name);
+
 #ifdef DEBUG_TRACE_API
 		std::cout << "DeleteProperty" << std::endl;
 #endif
     jsvalue r = engine_->CallDeleteProperty(contextId_, id_, *s);
 	if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        res = ThrowException(engine_->AnyToV8(r, contextId_));
+        isolate->ThrowException(engine_->AnyToV8(r, contextId_));
     else
         res = engine_->AnyToV8(r, contextId_);
     
@@ -75,14 +78,15 @@ Handle<Boolean> ManagedRef::DeleteProperty(Local<String> name)
     // We don't need the jsvalue anymore and the CLR side never reuse them.
     jsvalue_dispose(r);
 
-	return res->ToBoolean();
+	return res->ToBoolean(isolate);
 }
 
-Handle<Value> ManagedRef::SetPropertyValue(Local<String> name, Local<Value> value)
+Local<Value> ManagedRef::SetPropertyValue(Local<String> name, Local<Value> value)
 {
-    Handle<Value> res;
-    
-    String::Value s(name);
+    Local<Value> res;
+
+    auto isolate = Isolate::GetCurrent();
+    String::Value s(isolate, name);
 
 #ifdef DEBUG_TRACE_API
 		std::cout << "SetPropertyValue" << std::endl;
@@ -91,7 +95,7 @@ Handle<Value> ManagedRef::SetPropertyValue(Local<String> name, Local<Value> valu
     jsvalue v = engine_->AnyFromV8(value);
     jsvalue r = engine_->CallSetPropertyValue(contextId_, id_, *s, v);
     if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        res = ThrowException(engine_->AnyToV8(r, contextId_));
+        isolate->ThrowException(engine_->AnyToV8(r, contextId_));
     else
         res = engine_->AnyToV8(r, contextId_);
     
@@ -105,15 +109,16 @@ Handle<Value> ManagedRef::SetPropertyValue(Local<String> name, Local<Value> valu
     return res;
 }
 
-Handle<Value> ManagedRef::GetValueOf()
+Local<Value> ManagedRef::GetValueOf()
 {
 #ifdef DEBUG_TRACE_API
 	std::wcout << "GETTING VALUE OF..........." << std::endl;
 #endif
-	Handle<Value> res;
+
+    Local<Value> res;
     jsvalue r = engine_->CallValueOf(contextId_, id_);
     if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        res = ThrowException(engine_->AnyToV8(r, contextId_));
+        Isolate::GetCurrent()->ThrowException(engine_->AnyToV8(r, contextId_));
     else
         res = engine_->AnyToV8(r, contextId_);
     
@@ -126,16 +131,16 @@ Handle<Value> ManagedRef::GetValueOf()
     return res;
 }
 
-Handle<Value> ManagedRef::Invoke(const Arguments& args)
+Local<Value> ManagedRef::Invoke(const FunctionCallbackInfo<Value>& args)
 {
 #ifdef DEBUG_TRACE_API
 	std::wcout << "INVOKING..........." << std::endl;
 #endif
-	Handle<Value> res;
+    Local<Value> res;
     jsvalue a = engine_->ArrayFromArguments(args);
     jsvalue r = engine_->CallInvoke(contextId_, id_, a);
     if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        res = ThrowException(engine_->AnyToV8(r, contextId_));
+        Isolate::GetCurrent()->ThrowException(engine_->AnyToV8(r, contextId_));
     else
         res = engine_->AnyToV8(r, contextId_);
     
@@ -149,16 +154,16 @@ Handle<Value> ManagedRef::Invoke(const Arguments& args)
     return res;
 }
 
-Handle<Array> ManagedRef::EnumerateProperties()
+Local<Array> ManagedRef::EnumerateProperties()
 {
-    Handle<Value> res;
+    Local<Value> res;
     
 #ifdef DEBUG_TRACE_API
 		std::cout << "EnumerateProperties" << std::endl;
 #endif
     jsvalue r = engine_->CallEnumerateProperties(contextId_, id_);
 	if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        res = ThrowException(engine_->AnyToV8(r, contextId_));
+        Isolate::GetCurrent()->ThrowException(engine_->AnyToV8(r, contextId_));
     else
         res = engine_->AnyToV8(r, contextId_);
     
@@ -168,5 +173,5 @@ Handle<Array> ManagedRef::EnumerateProperties()
     // We don't need the jsvalue anymore and the CLR side never reuse them.
     jsvalue_dispose(r);
 
-	return Handle<Array>::Cast(res);
+	return Local<Array>::Cast(res);
 }

@@ -6,3 +6,9 @@
 *.swp
 build/
 test-results/
+.vs/
+*.vcxproj.user
+*.csproj.user
+obj/
+packages/
+Debug/

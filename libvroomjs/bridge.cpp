@@ -24,20 +24,45 @@
 // THE SOFTWARE.
 
 #include <iostream>
+#include <libplatform/libplatform.h>
 #include "vroomjs.h"
+#include <cassert>
 
 using namespace v8;
 
-int32_t js_object_marshal_type;
+// Store Platform so that we can delete it later.
+v8::Platform* v8platform;
 
 extern "C" 
 {
-	EXPORT void CALLINGCONVENTION js_set_object_marshal_type(int32_t type)
+    EXPORT void CALLINGCONVENTION js_initialize(const char* directory_path)
     {
 #ifdef DEBUG_TRACE_API
-		std::wcout << "js_object_marshal_type " << type << std::endl;
+        std::wcout << "js_initialize " << type << std::endl;
 #endif
-	    js_object_marshal_type = type;
+        assert(directory_path != NULL);
+
+        // todo: protect this from multiple calls?
+
+        //v8::V8::InitializeICUDefaultLocation(directory_path);
+        v8::V8::InitializeExternalStartupData(directory_path);
+
+        v8platform = v8::platform::NewDefaultPlatform().release();
+        V8::InitializePlatform(v8platform);
+        V8::Initialize();
+    }
+
+    EXPORT void CALLINGCONVENTION js_shutdown()
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "js_shutdown " << type << std::endl;
+#endif
+
+        v8::V8::Dispose();
+        v8::V8::ShutdownPlatform();
+
+        delete v8platform;
+        v8platform = nullptr;
     }
 
 	EXPORT JsEngine* CALLINGCONVENTION jsengine_new(keepalive_remove_f keepalive_remove, 
@@ -52,7 +77,15 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsengine_new" << std::endl;
 #endif
-		JsEngine *engine = JsEngine::New(max_young_space, max_old_space);
+        assert(keepalive_remove != NULL);
+        assert(keepalive_get_property_value != NULL);
+        assert(keepalive_set_property_value != NULL);
+        assert(keepalive_valueof != NULL);
+        assert(keepalive_invoke != NULL);
+        assert(keepalive_delete_property != NULL);
+        assert(keepalive_enumerate_properties != NULL);
+
+        JsEngine *engine = JsEngine::New(max_young_space, max_old_space);
 		if (engine != NULL) {
             engine->SetRemoveDelegate(keepalive_remove);
             engine->SetGetPropertyValueDelegate(keepalive_get_property_value);
@@ -69,7 +102,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
                 std::wcout << "jsengine_terminate_execution" << std::endl;
 #endif
-
+        assert(engine != NULL);
 		engine->TerminateExecution();
 	}
 
@@ -77,7 +110,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
                 std::wcout << "jsengine_dump_heap_stats" << std::endl;
 #endif
-		engine->DumpHeapStats();
+        assert(engine != NULL);
+        engine->DumpHeapStats();
 	}
 
 	EXPORT void CALLINGCONVENTION js_dump_allocated_items() {
@@ -95,7 +129,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsengine_dispose" << std::endl;
 #endif
-        engine->Dispose();        
+        assert(engine != NULL);
+        engine->Dispose();
         delete engine;
     }
 
@@ -104,8 +139,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_new" << std::endl;
 #endif
-        JsContext* context = JsContext::New(id, engine);
-        return context;
+        assert(engine != NULL);
+        return JsContext::New(id, engine);
     }
 
 	EXPORT void CALLINGCONVENTION jscontext_force_gc()
@@ -113,7 +148,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_force_gc" << std::endl;
 #endif
-        while(!V8::IdleNotification()) {};
+        // TODO: this method is no longer part of the API - investigate
+        //while(!V8::IdleNotification()) {};
     }
 
     EXPORT void jscontext_dispose(JsContext* context)
@@ -121,7 +157,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_dispose" << std::endl;
 #endif
-        context->Dispose();        
+        assert(context != NULL);
+        context->Dispose();
         delete context;
     }
     
@@ -130,9 +167,14 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_dispose_object" << std::endl;
 #endif
+        assert(engine != NULL);
+
         if (engine != NULL) {
+            // Allow V8 GC to reclaim the JS Object
             engine->DisposeObject(obj);
 		}
+
+        // Delete the Persistent handle (not the Object, which is owned by V8)
 		delete obj;
     }     
     
@@ -141,6 +183,9 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_execute" << std::endl;
 #endif
+        assert(context != NULL);
+        assert(str != NULL);
+
         return context->Execute(str, resourceName);
     }
 
@@ -149,6 +194,9 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_execute_script" << std::endl;
 #endif
+        assert(context != NULL);
+        assert(script != NULL);
+
         return context->Execute(script);
     }
 
@@ -157,6 +205,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_get_global" << std::endl;
 #endif
+        assert(context != NULL);
         return context->GetGlobal();
     }
 	
@@ -165,6 +214,9 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_set_variable" << std::endl;
 #endif
+        assert(context != NULL);
+        assert(name != NULL);
+
         return context->SetVariable(name, value);
     }
 
@@ -173,6 +225,9 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_get_variable" << std::endl;
 #endif
+        assert(context != NULL);
+        assert(name != NULL);
+
         return context->GetVariable(name);
     }
 
@@ -181,6 +236,10 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_get_property_value" << std::endl;
 #endif
+        assert(context != NULL);
+        assert(obj != NULL);
+        assert(name != NULL);
+
         return context->GetPropertyValue(obj, name);
     }
     
@@ -189,6 +248,10 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_set_property_value" << std::endl;
 #endif
+        assert(context != NULL);
+        assert(obj != NULL);
+        assert(name != NULL);
+
         return context->SetPropertyValue(obj, name, value);
     }    
 
@@ -197,6 +260,9 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_get_property_names" << std::endl;
 #endif
+        assert(context != NULL);
+        assert(obj != NULL);
+
         return context->GetPropertyNames(obj);
     }    
 	    
@@ -205,41 +271,55 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_invoke_property" << std::endl;
 #endif
+        assert(context != NULL);
+        assert(obj != NULL);
+        assert(name != NULL);
+
         return context->InvokeProperty(obj, name, args);
     }        
 
-	  EXPORT jsvalue CALLINGCONVENTION jscontext_invoke(JsContext* context, Persistent<Function>* funcArg, Persistent<Object>* thisArg, jsvalue args)
+	EXPORT jsvalue CALLINGCONVENTION jscontext_invoke(JsContext* context, Persistent<Function>* funcArg, Persistent<Object>* thisArg, jsvalue args)
     {
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_invoke" << std::endl;
 #endif
+        assert(context != NULL);
+        assert(funcArg != NULL);
+        assert(thisArg != NULL);
+
         return context->InvokeFunction(funcArg, thisArg, args);
     }        
 
-	 EXPORT JsScript* CALLINGCONVENTION jsscript_new(JsEngine *engine)
+	EXPORT JsScript* CALLINGCONVENTION jsscript_new(JsEngine *engine)
     {
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsscript_new" << std::endl;
 #endif
-        JsScript* script = JsScript::New(engine);
-        return script;
+        assert(engine != NULL);
+
+        return JsScript::New(engine);
     }
 
-	 EXPORT void CALLINGCONVENTION jsscript_dispose(JsScript *script)
+	EXPORT void CALLINGCONVENTION jsscript_dispose(JsScript *script)
     {
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsscript_dispose" << std::endl;
 #endif
+        assert(script != NULL);
+
         script->Dispose();
 		delete script;
     }
 
-	  EXPORT jsvalue CALLINGCONVENTION jsscript_compile(JsScript* script, const uint16_t* str, const uint16_t *resourceName)
+	EXPORT jsvalue CALLINGCONVENTION jsscript_compile(JsScript* script, const uint16_t* str, const uint16_t *resourceName)
     {
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsscript_compile" << std::endl;
 #endif
-		return script->Compile(str, resourceName);
+        assert(script != NULL);
+        assert(str != NULL);
+
+        return script->Compile(str, resourceName);
     }
 
     EXPORT jsvalue CALLINGCONVENTION jsvalue_alloc_string(const uint16_t* str)
@@ -247,8 +327,11 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsvalue_alloc_string" << std::endl;
 #endif
+        assert(str != NULL);
+
         jsvalue v;
     
+        // todo: use strlen?
         int length = 0;
         while (str[length] != '\0')
             length++;

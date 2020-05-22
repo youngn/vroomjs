@@ -33,9 +33,6 @@
 
 using namespace v8;
 
-#define JSOBJECT_MARSHAL_TYPE_DYNAMIC       1
-#define JSOBJECT_MARSHAL_TYPE_DICTIONARY    2
-
 // jsvalue (JsValue on the CLR side) is a struct that can be easily marshaled
 // by simply blitting its value (being only 16 bytes should be quite fast too).
 
@@ -233,19 +230,19 @@ public:
 	// Conversions. Note that all the conversion functions should be called
     // with an HandleScope already on the stack or sill misarabily fail.
     jsvalue ErrorFromV8(TryCatch& trycatch);
-    jsvalue StringFromV8(Handle<Value> value);
-    jsvalue WrappedFromV8(Handle<Object> obj);
-    jsvalue ManagedFromV8(Handle<Object> obj);
-    jsvalue AnyFromV8(Handle<Value> value, Handle<Object> thisArg = Handle<Object>());
+    jsvalue StringFromV8(Local<String> value);
+    jsvalue WrappedFromV8(Local<Object> obj);
+    jsvalue ManagedFromV8(Local<Object> obj);
+    jsvalue AnyFromV8(Local<Value> value, Local<Object> thisArg = Local<Object>());
    
 	Persistent<Script> *CompileScript(const uint16_t* str, const uint16_t *resourceName, jsvalue *error);
 
 	// Converts JS function Arguments to an array of jsvalue to call managed code.
-    jsvalue ArrayFromArguments(const Arguments& args);
+    jsvalue ArrayFromArguments(const FunctionCallbackInfo<Value>& args);
 
-	Handle<Value> AnyToV8(jsvalue value, int32_t contextId); 
+	Local<Value> AnyToV8(jsvalue value, int32_t contextId);
     // Needed to create an array of args on the stack for calling functions.
-    int32_t ArrayToV8Args(jsvalue value, int32_t contextId, Handle<Value> preallocatedArgs[]);     
+    int32_t ArrayToV8Args(jsvalue value, int32_t contextId, Local<Value> preallocatedArgs[]);
 
 	// Dispose a Persistent<Object> that was pinned on the CLR side by JsObject.
     void DisposeObject(Persistent<Object>* obj);
@@ -265,8 +262,8 @@ private:
 		INCREMENT(js_mem_debug_engine_count);
 	}
 
-	Isolate *isolate_;
-    
+	Isolate* isolate_;
+	ArrayBuffer::Allocator* allocator_;
 	
 	Persistent<FunctionTemplate> *managed_template_;
 	Persistent<FunctionTemplate> *valueof_function_template_;
@@ -291,7 +288,7 @@ class JsContext {
 
 	jsvalue GetGlobal();
     jsvalue GetVariable(const uint16_t* name);
-    jsvalue SetVariable(const uint16_t* name, jsvalue value);
+	jsvalue SetVariable(const uint16_t* name, jsvalue value);
 	jsvalue GetPropertyNames(Persistent<Object>* obj);
     jsvalue GetPropertyValue(Persistent<Object>* obj, const uint16_t* name);
     jsvalue SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, jsvalue value);
@@ -328,12 +325,12 @@ class ManagedRef {
     
     inline int32_t Id() { return id_; }
     
-    Handle<Value> GetPropertyValue(Local<String> name);
-    Handle<Value> SetPropertyValue(Local<String> name, Local<Value> value);
-	Handle<Value> GetValueOf();
-    Handle<Value> Invoke(const Arguments& args);
-    Handle<Boolean> DeleteProperty(Local<String> name);
-	Handle<Array> EnumerateProperties();
+	Local<Value> GetPropertyValue(Local<String> name);
+	Local<Value> SetPropertyValue(Local<String> name, Local<Value> value);
+	Local<Value> GetValueOf();
+	Local<Value> Invoke(const FunctionCallbackInfo<Value>& args);
+	Local<Boolean> DeleteProperty(Local<String> name);
+	Local<Array> EnumerateProperties();
 
     ~ManagedRef() { 
 		engine_->CallRemove(contextId_, id_); 
