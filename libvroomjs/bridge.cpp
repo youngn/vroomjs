@@ -167,8 +167,6 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_dispose_object" << std::endl;
 #endif
-        assert(engine != NULL);
-
         if (engine != NULL) {
             // Allow V8 GC to reclaim the JS Object
             engine->DisposeObject(obj);
