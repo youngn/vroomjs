@@ -6,44 +6,6 @@ using System.Threading;
 namespace VroomJs {
 	public class JsEngine : IDisposable {
 
-		delegate void KeepaliveRemoveDelegate(int context, int slot);
-		delegate JsValue KeepAliveGetPropertyValueDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name);
-		delegate JsValue KeepAliveSetPropertyValueDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
-		delegate JsValue KeepAliveValueOfDelegate(int context, int slot);
-		delegate JsValue KeepAliveInvokeDelegate(int context, int slot, JsValue args);
-		delegate JsValue KeepAliveDeletePropertyDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name);
-		delegate JsValue KeepAliveEnumeratePropertiesDelegate(int context, int slot);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static extern void js_set_object_marshal_type(JsObjectMarshalType objectMarshalType);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static extern void js_dump_allocated_items();
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static extern IntPtr jsengine_new(
-			KeepaliveRemoveDelegate keepaliveRemove,
-			KeepAliveGetPropertyValueDelegate keepaliveGetPropertyValue,
-			KeepAliveSetPropertyValueDelegate keepaliveSetPropertyValue,
-			KeepAliveValueOfDelegate keepaliveValueOf,
-			KeepAliveInvokeDelegate keepaliveInvoke,
-			KeepAliveDeletePropertyDelegate keepaliveDeleteProperty,
-			KeepAliveEnumeratePropertiesDelegate keepaliveEnumerateProperties,
-			int maxYoungSpace, int maxOldSpace
-		);
-		
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static extern void jsengine_terminate_execution(HandleRef engine);
-			
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static extern void jsengine_dump_heap_stats(HandleRef engine);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static extern void jsengine_dispose(HandleRef engine);
-
-		[DllImport("VroomJsNative")]
-		static extern void jsengine_dispose_object(HandleRef engine, IntPtr obj);
-		
 		// Make sure the delegates we pass to the C++ engine won't fly away during a GC.
 		readonly KeepaliveRemoveDelegate _keepalive_remove;
 		readonly KeepAliveGetPropertyValueDelegate _keepalive_get_property_value;
@@ -60,15 +22,20 @@ namespace VroomJs {
 		private int _currentScriptId = 0;
 
 		public static void DumpAllocatedItems() {
-			js_dump_allocated_items();
+			NativeApi.js_dump_allocated_items();
 		}
 
 		static JsEngine() {
-			JsObjectMarshalType objectMarshalType = JsObjectMarshalType.Dictionary;
-#if NET40
-        	objectMarshalType = JsObjectMarshalType.Dynamic;
-#endif
-			js_set_object_marshal_type(objectMarshalType);
+		}
+
+		public static void Initialize(string directoryPath)
+		{
+			NativeApi.js_initialize(directoryPath);
+		}
+
+		public static void Shutdown()
+		{
+			NativeApi.js_shutdown();
 		}
 
 		readonly HandleRef _engine;
@@ -82,7 +49,7 @@ namespace VroomJs {
 			_keepalive_delete_property = new KeepAliveDeletePropertyDelegate(KeepAliveDeleteProperty);
 			_keepalive_enumerate_properties = new KeepAliveEnumeratePropertiesDelegate(KeepAliveEnumerateProperties);
 			
-			_engine = new HandleRef(this, jsengine_new(
+			_engine = new HandleRef(this, NativeApi.jsengine_new(
 				_keepalive_remove,
 				_keepalive_get_property_value,
 				_keepalive_set_property_value, 
@@ -95,11 +62,11 @@ namespace VroomJs {
 		}
 
 		public void TerminateExecution() {
-			jsengine_terminate_execution(_engine);
+			NativeApi.jsengine_terminate_execution(_engine);
 		}
 
 		public void DumpHeapStats() {
-			jsengine_dump_heap_stats(_engine);
+			NativeApi.jsengine_dump_heap_stats(_engine);
 		}
 
 		public void DisposeObject(IntPtr ptr) {
@@ -107,9 +74,9 @@ namespace VroomJs {
 			// the first argument because we need to free the memory allocated by
 			// "new" but not the object on the V8 heap: it has already been freed.
 			if (_disposed)
-				jsengine_dispose_object(new HandleRef(this, IntPtr.Zero), ptr);
+				NativeApi.jsengine_dispose_object(new HandleRef(this, IntPtr.Zero), ptr);
 			else
-				jsengine_dispose_object(_engine, ptr);
+				NativeApi.jsengine_dispose_object(_engine, ptr);
 		}
 
 		private JsValue KeepAliveValueOf(int contextId, int slot) {
@@ -236,18 +203,18 @@ namespace VroomJs {
 
             if (disposing) {
             	foreach (var aliveContext in _aliveContexts) {
-					JsContext.jscontext_dispose(aliveContext.Value.Handle);
+					NativeApi.jscontext_dispose(aliveContext.Value.Handle);
             	}
 				_aliveContexts.Clear();
 				foreach (var aliveScript in _aliveScripts) {
-					JsScript.jsscript_dispose(aliveScript.Value.Handle);
+					NativeApi.jsscript_dispose(aliveScript.Value.Handle);
 				}
             }
 #if DEBUG_TRACE_API
 				Console.WriteLine("Calling jsEngine dispose: " + _engine.Handle.ToInt64());
 #endif
-        
-			jsengine_dispose(_engine);
+
+			NativeApi.jsengine_dispose(_engine);
         }
 
         void CheckDisposed()

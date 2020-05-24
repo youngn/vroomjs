@@ -28,10 +28,8 @@ using System.Runtime.InteropServices;
 
 namespace VroomJs
 {
-    class JsConvert
+    internal class JsConvert
     {
-		public static readonly DateTime EPOCH = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
         public JsConvert(JsContext context)
         {
             _context = context;
@@ -65,13 +63,7 @@ namespace VroomJs
 					return Marshal.PtrToStringUni(v.Ptr);
 
 				case JsValueType.Date:
-					/*
-                    // The formula (v.num * 10000) + 621355968000000000L was taken from a StackOverflow
-                    // question and should be OK. Then why do we need to compensate by -26748000000000L
-                    // (a value determined from the failing tests)?!
-                    return new DateTime((long)(v.Num * 10000) + 621355968000000000L - 26748000000000L);
-					 */
-					return EPOCH.AddMilliseconds(v.Num);
+                    return DateTimeOffset.FromUnixTimeMilliseconds((long)v.Num);
 
 				case JsValueType.Array: {
 					var r = new object[v.Length];
@@ -156,7 +148,7 @@ namespace VroomJs
 
             if (type == typeof(String) || type == typeof(Char)) {
                 // We need to allocate some memory on the other side; will be free'd by unmanaged code.
-                return JsContext.jsvalue_alloc_string(obj.ToString());
+                return NativeApi.jsvalue_alloc_string(obj.ToString());
             }
 
             if (type == typeof(Byte))
@@ -181,18 +173,21 @@ namespace VroomJs
             if (type == typeof(Decimal))
                 return new JsValue { Type = JsValueType.Number, Num = (double)(Decimal)obj };
 
-            if (type == typeof(DateTime))
-                return new JsValue { 
-                Type = JsValueType.Date, 
-                Num = Convert.ToInt64(((DateTime)obj).Subtract(EPOCH).TotalMilliseconds) /*(((DateTime)obj).Ticks - 621355968000000000.0 + 26748000000000.0)/10000.0*/
-            };
+            if (type == typeof(DateTimeOffset))
+                return new JsValue {
+                    Type = JsValueType.Date,
+                    Num = ((DateTimeOffset)obj).ToUnixTimeMilliseconds()
+                };
+
+            if (type == typeof(JsObject))
+                return new JsValue { Type = JsValueType.Wrapped, Ptr = ((JsObject)obj).Handle };
 
             // Arrays of anything that can be cast to object[] are recursively convertef after
             // allocating an appropriate jsvalue on the unmanaged side.
 
             var array = obj as object[];
             if (array != null) {
-                JsValue v = JsContext.jsvalue_alloc_array(array.Length);
+                JsValue v = NativeApi.jsvalue_alloc_array(array.Length);
                 if (v.Length != array.Length)
                     throw new JsInteropException("can't allocate memory on the unmanaged side");
                 for (int i=0 ; i < array.Length ; i++)

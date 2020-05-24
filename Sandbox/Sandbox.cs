@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using VroomJs;
 
 namespace Sandbox
@@ -58,18 +59,32 @@ namespace Sandbox
     {
         public static void Main (string[] args) {
 
+			var exePath = Assembly.GetEntryAssembly().Location;
+			var dir = Path.GetFullPath(@".\");
+			JsEngine.Initialize(exePath);
 
-			string lodash = File.ReadAllText(@"c:\lodash.js");
+			//string lodash = File.ReadAllText(@"c:\lodash.js");
 			using (JsEngine engine = new JsEngine()) {
 				//Stopwatch watch = new Stopwatch();
 			//	watch.Start();
-				JsScript script = engine.CompileScript("3+3");
+				//JsScript script = engine.CompileScript("3+3");
 				using (JsContext ctx = engine.CreateContext()) {
-					ctx.Execute(script);
+					ctx.SetVariable("x", 3);
+					var result = ctx.Execute("x");
+					Console.WriteLine(result);
 				}
 			}
+			using (JsEngine engine = new JsEngine())
+			using (JsContext ctx = engine.CreateContext())
+			{
+				ctx.SetVariable("x", 3);
+				var result = ctx.Execute("x");
+				Console.WriteLine(result);
+			}
+			JsEngine.Shutdown();
+			return;
 
-        	debugtest dbg = new debugtest();
+			debugtest dbg = new debugtest();
 
         	//	Delegate.CreateDelegate()
         	//Dictionary<string, object> values = new Dictionary<string, object>();

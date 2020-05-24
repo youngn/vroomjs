@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
@@ -19,3 +20,6 @@ using System.Runtime.InteropServices;
 // and "{Major}.{Minor}.{Build}.*" will update just the revision.
 
 [assembly: AssemblyVersion("1.0.0.0")]
+
+// todo: used signed assembly ref
+[assembly: InternalsVisibleTo("VroomJsTests")]

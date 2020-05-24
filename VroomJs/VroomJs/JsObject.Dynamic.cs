@@ -31,48 +31,56 @@ namespace VroomJs
 {
     public class JsObject : DynamicObject, IDisposable
     {
-        public JsObject(JsContext context, IntPtr ptr)
+        private readonly JsContext _context;
+        private readonly IntPtr _handle;
+        private bool _disposed;
+
+        internal JsObject(JsContext context, IntPtr ptr)
         {
             if (ptr == IntPtr.Zero)
-                throw new ArgumentException("can't wrap an empty object (ptr is Zero)", "ptr");
+                throw new ArgumentException("Invalid pointer", nameof(ptr));
 
-			_context = context;
+            _context = context;
             _handle = ptr;
-		}
+        }
 
-		readonly JsContext _context;
-        readonly IntPtr _handle;
-
-        public IntPtr Handle {
+        internal IntPtr Handle
+        {
             get { return _handle; }
         }
 
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
-			result = _context.InvokeProperty(this, binder.Name, args);
+            CheckDisposed();
+
+            result = _context.InvokeProperty(this, binder.Name, args);
             return true;
         }
 
-		public override bool TryGetMember(GetMemberBinder binder, out object result)
+        public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
-			result = _context.GetPropertyValue(this, binder.Name);
+            CheckDisposed();
+
+            result = _context.GetPropertyValue(this, binder.Name);
             return true;
         }
 
         public override bool TrySetMember(SetMemberBinder binder, object value)
         {
-			_context.SetPropertyValue(this, binder.Name, value);
+            CheckDisposed();
+
+            _context.SetPropertyValue(this, binder.Name, value);
             return true;
         }
 
-		public override IEnumerable<string> GetDynamicMemberNames() 
-		{
-			return _context.GetMemberNames(this);
-		}
+        public override IEnumerable<string> GetDynamicMemberNames()
+        {
+            CheckDisposed();
+
+            return _context.GetMemberNames(this);
+        }
 
         #region IDisposable implementation
-
-        bool _disposed;
 
         public void Dispose()
         {
@@ -83,8 +91,7 @@ namespace VroomJs
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed)
-                throw new ObjectDisposedException("JsObject:" + _handle);
-
+                return;
             _disposed = true;
 
             _context.Engine.DisposeObject(this.Handle);
@@ -97,6 +104,12 @@ namespace VroomJs
         }
 
         #endregion
+        
+        private void CheckDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(JsObject));
+        }
     }
 }
 

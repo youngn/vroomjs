@@ -5,20 +5,8 @@ using System.Runtime.InteropServices;
 
 namespace VroomJs
 {
-	public partial class JsContext {
-
-		[DllImport("VroomJsNative")]
-		static extern JsValue jscontext_get_property_names(HandleRef engine, IntPtr ptr);
-
-		[DllImport("VroomJsNative")]
-		static extern JsValue jscontext_get_property_value(HandleRef engine, IntPtr ptr, [MarshalAs(UnmanagedType.LPWStr)] string name);
-
-		[DllImport("VroomJsNative")]
-		static extern JsValue jscontext_set_property_value(HandleRef engine, IntPtr ptr, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
-
-		[DllImport("VroomJsNative")]
-		static extern JsValue jscontext_invoke_property(HandleRef engine, IntPtr ptr, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue args);
-	
+	public partial class JsContext
+    {
 		public IEnumerable<string> GetMemberNames(JsObject obj) 
 		{
 			if (obj == null)
@@ -29,9 +17,9 @@ namespace VroomJs
 			if (obj.Handle == IntPtr.Zero)
 				throw new JsInteropException("wrapped V8 object is empty (IntPtr is Zero)");
 
-			JsValue v = jscontext_get_property_names(_context, obj.Handle);
+			JsValue v = NativeApi.jscontext_get_property_names(_context, obj.Handle);
 			object res = _convert.FromJsValue(v);
-			jsvalue_dispose(v);
+            NativeApi.jsvalue_dispose(v);
 
 			Exception e = res as JsException;
 			if (e != null)
@@ -54,9 +42,9 @@ namespace VroomJs
             if (obj.Handle == IntPtr.Zero)
                 throw new JsInteropException("wrapped V8 object is empty (IntPtr is Zero)");
 
-			JsValue v = jscontext_get_property_value(_context, obj.Handle, name);
+			JsValue v = NativeApi.jscontext_get_property_value(_context, obj.Handle, name);
             object res = _convert.FromJsValue(v);
-            jsvalue_dispose(v);
+            NativeApi.jsvalue_dispose(v);
 
             Exception e = res as JsException;
             if (e != null)
@@ -77,10 +65,10 @@ namespace VroomJs
                 throw new JsInteropException("wrapped V8 object is empty (IntPtr is Zero)");
 
             JsValue a = _convert.ToJsValue(value);
-			JsValue v = jscontext_set_property_value(_context, obj.Handle, name, a);
+			JsValue v = NativeApi.jscontext_set_property_value(_context, obj.Handle, name, a);
             object res = _convert.FromJsValue(v);
-            jsvalue_dispose(v);
-            jsvalue_dispose(a);
+            NativeApi.jsvalue_dispose(v);
+            NativeApi.jsvalue_dispose(a);
 
             Exception e = res as JsException;
             if (e != null)
@@ -103,10 +91,10 @@ namespace VroomJs
             if (args != null)
                 a = _convert.ToJsValue(args);
 
-			JsValue v = jscontext_invoke_property(_context, obj.Handle, name, a);
+			JsValue v = NativeApi.jscontext_invoke_property(_context, obj.Handle, name, a);
             object res = _convert.FromJsValue(v);
-            jsvalue_dispose(v);
-            jsvalue_dispose(a);
+            NativeApi.jsvalue_dispose(v);
+            NativeApi.jsvalue_dispose(a);
 
             Exception e = res as JsException;
             if (e != null)

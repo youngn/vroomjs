@@ -35,42 +35,6 @@ namespace VroomJs
 {
 	public partial class JsContext : IDisposable
 	{
-    	[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-	    static extern IntPtr jscontext_new(int id, HandleRef engine);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		public static extern void jscontext_dispose(HandleRef engine);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static extern void jscontext_force_gc();
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-		static extern JsValue jscontext_execute(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string str, [MarshalAs(UnmanagedType.LPWStr)] string name);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-		static extern JsValue jscontext_execute_script(HandleRef context, HandleRef script);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static extern JsValue jscontext_get_global(HandleRef engine);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static extern JsValue jscontext_get_variable(HandleRef engine, [MarshalAs(UnmanagedType.LPWStr)] string name);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static extern JsValue jscontext_set_variable(HandleRef engine, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static internal extern JsValue jsvalue_alloc_string([MarshalAs(UnmanagedType.LPWStr)] string str);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static internal extern JsValue jsvalue_alloc_array(int length);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static internal extern void jsvalue_dispose(JsValue value);
-
-		[DllImport("VroomJsNative", CallingConvention = CallingConvention.StdCall)]
-		static internal extern JsValue jscontext_invoke(HandleRef engine, IntPtr funcPtr, IntPtr thisPtr, JsValue args);
-
 		private readonly int _id;
 		private readonly JsEngine _engine;
 
@@ -84,7 +48,7 @@ namespace VroomJs
 			_notifyDispose = notifyDispose;
 
             _keepalives = new KeepAliveDictionaryStore();
-			_context = new HandleRef(this, jscontext_new(id, engineHandle));
+			_context = new HandleRef(this, NativeApi.jscontext_new(id, engineHandle));
 			_convert = new JsConvert(this);
 		}
 
@@ -127,12 +91,12 @@ namespace VroomJs
 			}
 			object res;
 			try {
-				JsValue v = jscontext_execute_script(_context, script.Handle);
+				JsValue v = NativeApi.jscontext_execute_script(_context, script.Handle);
 				res = _convert.FromJsValue(v);
 #if DEBUG_TRACE_API
         	Console.WriteLine("Cleaning up return value from execution");
 #endif
-				jsvalue_dispose(v);
+				NativeApi.jsvalue_dispose(v);
 			} finally {
 				if (executionTimeout.HasValue) {
 					timer.Dispose();
@@ -173,13 +137,13 @@ namespace VroomJs
         	object res;
 			try {
 				watch2.Start();
-				JsValue v = jscontext_execute(_context, code, name ?? "<Unnamed Script>");
+				JsValue v = NativeApi.jscontext_execute(_context, code, name ?? "<Unnamed Script>");
 				watch2.Stop();
 				res = _convert.FromJsValue(v);
 #if DEBUG_TRACE_API
         	Console.WriteLine("Cleaning up return value from execution");
 #endif
-				jsvalue_dispose(v);
+				NativeApi.jsvalue_dispose(v);
 			} finally {
 				if (executionTimeout.HasValue) {
 					timer.Dispose();
@@ -202,9 +166,9 @@ namespace VroomJs
 		public object GetGlobal() 
 		{
 			CheckDisposed();	
-			JsValue v = jscontext_get_global(_context);
+			JsValue v = NativeApi.jscontext_get_global(_context);
             object res = _convert.FromJsValue(v);
-            jsvalue_dispose(v);
+			NativeApi.jsvalue_dispose(v);
 
             Exception e = res as JsException;
             if (e != null)
@@ -219,12 +183,12 @@ namespace VroomJs
 
             CheckDisposed();
 
-            JsValue v = jscontext_get_variable(_context, name);
+            JsValue v = NativeApi.jscontext_get_variable(_context, name);
             object res = _convert.FromJsValue(v);
 #if DEBUG_TRACE_API
 			Console.WriteLine("Cleaning up return value get variable.");
 #endif
-			jsvalue_dispose(v);
+			NativeApi.jsvalue_dispose(v);
 
             Exception e = res as JsException;
             if (e != null)
@@ -240,12 +204,12 @@ namespace VroomJs
             CheckDisposed();
 
             JsValue a = _convert.ToJsValue(value);
-            JsValue b = jscontext_set_variable(_context, name, a);
+            JsValue b = NativeApi.jscontext_set_variable(_context, name, a);
 #if DEBUG_TRACE_API
 			Console.WriteLine("Cleaning up return value from set variable");
 #endif
-            jsvalue_dispose(a);
-			jsvalue_dispose(b);
+			NativeApi.jsvalue_dispose(a);
+			NativeApi.jsvalue_dispose(b);
 			// TODO: Check the result of the operation for errors.
         }
 
@@ -261,7 +225,7 @@ namespace VroomJs
 
 		public void Flush()
         {
-            jscontext_force_gc();
+			NativeApi.jscontext_force_gc();
         }
 
         #region Keep-alive management and callbacks.
@@ -303,8 +267,8 @@ namespace VroomJs
             CheckDisposed();
 
             _disposed = true;
-			
-			jscontext_dispose(_context);
+
+			NativeApi.jscontext_dispose(_context);
 
 			if (disposing) {
 				_keepalives.Clear();
@@ -651,10 +615,10 @@ namespace VroomJs
 			if (args != null)
 				a = _convert.ToJsValue(args);
 
-			JsValue v = jscontext_invoke(_context, funcPtr, thisPtr, a);
+			JsValue v = NativeApi.jscontext_invoke(_context, funcPtr, thisPtr, a);
 			object res = _convert.FromJsValue(v);
-			jsvalue_dispose(v);
-			jsvalue_dispose(a);
+			NativeApi.jsvalue_dispose(v);
+			NativeApi.jsvalue_dispose(a);
 
 			Exception e = res as JsException;
 			if (e != null)

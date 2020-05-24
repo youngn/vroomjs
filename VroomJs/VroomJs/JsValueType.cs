@@ -23,29 +23,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-using System;
-using System.Runtime.InteropServices;
-
 namespace VroomJs
-{ 
-	enum JsValueType
-	{
+{
+    internal enum JsValueType
+    {
         UnknownError = -1,
-		Empty = 0,
+        Empty = 0,
         Null = 1,
         Boolean = 2,
         Integer = 3,
         Number = 4,
         String = 5,
         Date = 6,
-		Index = 7,
+        Index = 7,
         Array = 10,
         StringError = 11,
         Managed = 12,
         ManagedError = 13,
         Wrapped = 14,
         Dictionary = 15,
-		Error = 16,
-		Function = 17
+        Error = 16,
+        Function = 17
     }
 }

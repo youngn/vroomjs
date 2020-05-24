@@ -494,6 +494,9 @@ Local<Value> JsEngine::AnyToV8(jsvalue v, int32_t contextId)
     }
     if (v.type == JSVALUE_TYPE_DATE) {
         return Date::New(isolate_->GetCurrentContext(), v.value.num).ToLocalChecked();
+    }
+    if (v.type == JSVALUE_TYPE_WRAPPED) {
+        auto pObj = (Persistent<Object>*)v.value.ptr;
         return Local<Object>::New(isolate_, *pObj);
     }
 	

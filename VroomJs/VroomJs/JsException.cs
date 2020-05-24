@@ -41,7 +41,7 @@ namespace VroomJs
 
 			JsException exception;
 			if (type == "SyntaxError") {
-				exception = new JsSyntaxError(type, resource, message, line, column);
+				exception = new JsSyntaxException(type, resource, message, line, column);
 			} else {
 				exception = new JsException(type, resource, message, line, column, nativeException);
 			}
@@ -101,8 +101,8 @@ namespace VroomJs
     	public int Column { get { return _column; } }
 	}
 
-	public class JsSyntaxError : JsException {
-		internal JsSyntaxError(string type, string resource, string message, int line, int col) 
+	public class JsSyntaxException : JsException {
+		internal JsSyntaxException(string type, string resource, string message, int line, int col) 
 			: base(type, resource, message, line, col, null) {
 		}
 	}
