@@ -233,6 +233,29 @@ jsvalue JsContext::GetPropertyValue(Persistent<Object>* obj, const uint16_t* nam
     }
 }
 
+jsvalue JsContext::GetPropertyValue(Persistent<Object>* obj, const uint32_t index)
+{
+    assert(obj != nullptr);
+
+    Locker locker(isolate_);
+    Isolate::Scope isolate_scope(isolate_);
+    HandleScope scope(isolate_);
+
+    auto ctx = Local<Context>::New(isolate_, *context_);
+    Context::Scope contextScope(ctx);
+
+    auto objLocal = Local<Object>::New(isolate_, *obj);
+
+    TryCatch trycatch(isolate_);
+
+    Local<Value> value;
+    if (objLocal->Get(ctx, index).ToLocal(&value)) {
+        return engine_->AnyFromV8(value);
+    } else {
+        return engine_->ErrorFromV8(trycatch);
+    }
+}
+
 jsvalue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, jsvalue value)
 {
     assert(obj != nullptr);
@@ -250,6 +273,29 @@ jsvalue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint16_t* nam
     auto objLocal = Local<Object>::New(isolate_, *obj);
 
     objLocal->Set(ctx, var_name, v).Check();
+
+    // This return value would be needed in order to pass an error back.
+    // However, it seems that Set can never fail, so we just return empty.
+    jsvalue none;
+    none.type = JSVALUE_TYPE_EMPTY;
+    return none;
+}
+
+jsvalue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint32_t index, jsvalue value)
+{
+    assert(obj != nullptr);
+
+    Locker locker(isolate_);
+    Isolate::Scope isolate_scope(isolate_);
+    HandleScope scope(isolate_);
+
+    auto ctx = Local<Context>::New(isolate_, *context_);
+    Context::Scope contextScope(ctx);
+
+    auto v = engine_->AnyToV8(value, id_);
+    auto objLocal = Local<Object>::New(isolate_, *obj);
+
+    objLocal->Set(ctx, index, v).Check();
 
     // This return value would be needed in order to pass an error back.
     // However, it seems that Set can never fail, so we just return empty.

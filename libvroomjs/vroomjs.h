@@ -53,6 +53,7 @@ using namespace v8;
 #define JSVALUE_TYPE_DICT           15
 #define JSVALUE_TYPE_ERROR          16
 #define JSVALUE_TYPE_FUNCTION       17
+#define JSVALUE_TYPE_JSARRAY        18
 
 #ifdef _WIN32 
 #define EXPORT __declspec(dllexport)
@@ -91,9 +92,9 @@ extern "C"
             int32_t     i32;
             int64_t     i64;
             double      num;
-            void       *ptr;
-            uint16_t   *str;
-            jsvalue    *arr;
+            void*       ptr;
+            uint16_t*   str;
+            jsvalue*    arr;
         } value;
         
         int32_t         type;
@@ -291,10 +292,12 @@ class JsContext {
 	jsvalue SetVariable(const uint16_t* name, jsvalue value);
 	jsvalue GetPropertyNames(Persistent<Object>* obj);
     jsvalue GetPropertyValue(Persistent<Object>* obj, const uint16_t* name);
-    jsvalue SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, jsvalue value);
-    jsvalue InvokeProperty(Persistent<Object>* obj, const uint16_t* name, jsvalue args);
+	jsvalue GetPropertyValue(Persistent<Object>* obj, const uint32_t index);
+	jsvalue SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, jsvalue value);
+	jsvalue SetPropertyValue(Persistent<Object>* obj, const uint32_t index, jsvalue value);
+	jsvalue InvokeProperty(Persistent<Object>* obj, const uint16_t* name, jsvalue args);
     jsvalue InvokeFunction(Persistent<Function>* func, Persistent<Object>* thisArg, jsvalue args);
-     
+
 	void Dispose();
      
 	inline int32_t GetId() {

@@ -400,15 +400,20 @@ jsvalue JsEngine::AnyFromV8(Local<Value> value, Local<Object> thisArg)
     }
     else if (value->IsArray()) {
         auto arr = Local<Array>::Cast(value);
-        v.length = arr->Length();
-        jsvalue* array = new jsvalue[v.length];
-        for (int i = 0; i < v.length; i++) {
-            // todo: Get returns a MaybeLocal... could it possibly be empty?
-            auto x = arr->Get(isolate_->GetCurrentContext(), i).ToLocalChecked();
-            array[i] = AnyFromV8(x);
-        }
-        v.type = JSVALUE_TYPE_ARRAY;
-        v.value.arr = array;
+
+        v.type = JSVALUE_TYPE_JSARRAY;
+        v.length = 0;
+        v.value.ptr = new Persistent<Array>(isolate_, arr);
+
+        //v.length = arr->Length();
+        //jsvalue* array = new jsvalue[v.length];
+        //for (int i = 0; i < v.length; i++) {
+        //    // todo: Get returns a MaybeLocal... could it possibly be empty?
+        //    auto x = arr->Get(isolate_->GetCurrentContext(), i).ToLocalChecked();
+        //    array[i] = AnyFromV8(x);
+        //}
+        //v.type = JSVALUE_TYPE_ARRAY;
+        //v.value.arr = array;
     }
     else if (value->IsFunction()) {
 		auto function = Local<Function>::Cast(value);
@@ -499,7 +504,11 @@ Local<Value> JsEngine::AnyToV8(jsvalue v, int32_t contextId)
         auto pObj = (Persistent<Object>*)v.value.ptr;
         return Local<Object>::New(isolate_, *pObj);
     }
-	
+    if (v.type == JSVALUE_TYPE_JSARRAY) {
+        auto pObj = (Persistent<Array>*)v.value.ptr;
+        return Local<Array>::New(isolate_, *pObj);
+    }
+
     // Arrays are converted to JS native arrays.
     if (v.type == JSVALUE_TYPE_ARRAY) {
         auto arr = Array::New(isolate_, v.length);

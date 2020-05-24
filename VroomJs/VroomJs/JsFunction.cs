@@ -5,11 +5,11 @@ using System.Reflection;
 
 namespace VroomJs
 {
-    public sealed class JsFunction : JsObjectBase
+    public class JsFunction : JsObject
     {
         private readonly IntPtr _thisPtr;
 
-        public JsFunction(JsContext context, IntPtr objectHandle, IntPtr thisPtr)
+        internal JsFunction(JsContext context, IntPtr objectHandle, IntPtr thisPtr)
             :base(context, objectHandle)
         {
             _thisPtr = thisPtr;

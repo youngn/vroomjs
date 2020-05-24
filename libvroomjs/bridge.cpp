@@ -231,10 +231,10 @@ extern "C"
         return context->GetVariable(name);
     }
 
-    EXPORT jsvalue CALLINGCONVENTION jscontext_get_property_value(JsContext* context, Persistent<Object>* obj, const uint16_t* name)
+    EXPORT jsvalue CALLINGCONVENTION jsobject_get_named_property_value(JsContext* context, Persistent<Object>* obj, const uint16_t* name)
     {
 #ifdef DEBUG_TRACE_API
-		std::wcout << "jscontext_get_property_value" << std::endl;
+		std::wcout << "jsobject_get_named_property_value" << std::endl;
 #endif
         assert(context != NULL);
         assert(obj != NULL);
@@ -243,10 +243,10 @@ extern "C"
         return context->GetPropertyValue(obj, name);
     }
     
-    EXPORT jsvalue CALLINGCONVENTION jscontext_set_property_value(JsContext* context, Persistent<Object>* obj, const uint16_t* name, jsvalue value)
+    EXPORT jsvalue CALLINGCONVENTION jsobject_set_named_property_value(JsContext* context, Persistent<Object>* obj, const uint16_t* name, jsvalue value)
     {
 #ifdef DEBUG_TRACE_API
-		std::wcout << "jscontext_set_property_value" << std::endl;
+		std::wcout << "jsobject_set_named_property_value" << std::endl;
 #endif
         assert(context != NULL);
         assert(obj != NULL);
@@ -255,7 +255,29 @@ extern "C"
         return context->SetPropertyValue(obj, name, value);
     }    
 
-	EXPORT jsvalue CALLINGCONVENTION jscontext_get_property_names(JsContext* context, Persistent<Object>* obj)
+    EXPORT jsvalue CALLINGCONVENTION jsobject_get_indexed_property_value(JsContext* context, Persistent<Object>* obj, const uint32_t index)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jsobject_get_indexed_property_value" << std::endl;
+#endif
+        assert(context != NULL);
+        assert(obj != NULL);
+
+        return context->GetPropertyValue(obj, index);
+    }
+
+    EXPORT jsvalue CALLINGCONVENTION jsobject_set_indexed_property_value(JsContext* context, Persistent<Object>* obj, const uint32_t index, jsvalue value)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jsobject_set_indexed_property_value" << std::endl;
+#endif
+        assert(context != NULL);
+        assert(obj != NULL);
+
+        return context->SetPropertyValue(obj, index, value);
+    }
+
+	EXPORT jsvalue CALLINGCONVENTION jsobject_get_property_names(JsContext* context, Persistent<Object>* obj)
     {
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_get_property_names" << std::endl;
@@ -266,7 +288,7 @@ extern "C"
         return context->GetPropertyNames(obj);
     }    
 	    
-    EXPORT jsvalue CALLINGCONVENTION jscontext_invoke_property(JsContext* context, Persistent<Object>* obj, const uint16_t* name, jsvalue args)
+    EXPORT jsvalue CALLINGCONVENTION jsobject_invoke_property(JsContext* context, Persistent<Object>* obj, const uint16_t* name, jsvalue args)
     {
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_invoke_property" << std::endl;

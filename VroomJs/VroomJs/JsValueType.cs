@@ -37,12 +37,14 @@ namespace VroomJs
         Date = 6,
         Index = 7,
         Array = 10,
+
         StringError = 11,
         Managed = 12,
         ManagedError = 13,
         Wrapped = 14,
         Dictionary = 15,
         Error = 16,
-        Function = 17
+        Function = 17,
+        JsArray = 18,
     }
 }

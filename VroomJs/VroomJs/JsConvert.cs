@@ -96,14 +96,14 @@ namespace VroomJs
 						}
 					}
 					return new JsException(msg, inner);
-#if NET40
+
                 case JsValueType.Wrapped:
                     return new JsObject(_context, v.Ptr);
-#else
-				case JsValueType.Dictionary:
-            		return JsDictionaryObject(v);
-#endif
-				case JsValueType.Error:
+
+                case JsValueType.JsArray:
+                    return new JsArray(_context, v.Ptr);
+
+                case JsValueType.Error:
             		return JsException.Create(this, (JsError)Marshal.PtrToStructure(v.Ptr, typeof(JsError)));
 
 				case JsValueType.Function:
@@ -181,6 +181,9 @@ namespace VroomJs
 
             if (type == typeof(JsObject))
                 return new JsValue { Type = JsValueType.Wrapped, Ptr = ((JsObject)obj).Handle };
+
+            if (type == typeof(JsArray))
+                return new JsValue { Type = JsValueType.JsArray, Ptr = ((JsArray)obj).Handle };
 
             // Arrays of anything that can be cast to object[] are recursively convertef after
             // allocating an appropriate jsvalue on the unmanaged side.
