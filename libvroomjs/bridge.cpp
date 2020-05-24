@@ -278,7 +278,7 @@ extern "C"
 	EXPORT jsvalue CALLINGCONVENTION jsobject_get_property_names(JsContext* context, Persistent<Object>* obj)
     {
 #ifdef DEBUG_TRACE_API
-		std::wcout << "jscontext_get_property_names" << std::endl;
+		std::wcout << "jsobject_get_property_names" << std::endl;
 #endif
         assert(context != NULL);
         assert(obj != NULL);
@@ -289,7 +289,7 @@ extern "C"
     EXPORT jsvalue CALLINGCONVENTION jsobject_invoke_property(JsContext* context, Persistent<Object>* obj, const uint16_t* name, jsvalue args)
     {
 #ifdef DEBUG_TRACE_API
-		std::wcout << "jscontext_invoke_property" << std::endl;
+		std::wcout << "jsobject_invoke_property" << std::endl;
 #endif
         assert(context != NULL);
         assert(obj != NULL);
@@ -298,16 +298,17 @@ extern "C"
         return context->InvokeProperty(obj, name, args);
     }        
 
-	EXPORT jsvalue CALLINGCONVENTION jscontext_invoke(JsContext* context, Persistent<Function>* funcArg, Persistent<Object>* thisArg, jsvalue args)
+	EXPORT jsvalue CALLINGCONVENTION jsfunction_invoke(JsContext* context, Persistent<Function>* obj, jsvalue receiver, int argCount, jsvalue* args)
     {
 #ifdef DEBUG_TRACE_API
-		std::wcout << "jscontext_invoke" << std::endl;
+		std::wcout << "jsfunction_invoke" << std::endl;
 #endif
         assert(context != NULL);
-        assert(funcArg != NULL);
-        assert(thisArg != NULL);
+        assert(obj != NULL);
+        assert(argCount >= 0);
+        assert(argCount == 0 || args != NULL);
 
-        return context->InvokeFunction(funcArg, thisArg, args);
+        return context->InvokeFunction(obj, receiver, argCount, args);
     }        
 
 	EXPORT JsScript* CALLINGCONVENTION jsscript_new(JsEngine *engine)
@@ -394,7 +395,7 @@ extern "C"
 				delete[] value.value.str;
 			}
         }
-		else if (value.type == JSVALUE_TYPE_ARRAY || value.type == JSVALUE_TYPE_FUNCTION) {
+		else if (value.type == JSVALUE_TYPE_ARRAY) {
 		    for (int i=0 ; i < value.length ; i++) {
                 jsvalue_dispose(value.value.arr[i]);
 			}

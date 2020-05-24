@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -7,34 +8,35 @@ namespace VroomJs
 {
     public class JsFunction : JsObject
     {
-        private readonly IntPtr _thisPtr;
-
-        internal JsFunction(JsContext context, IntPtr objectHandle, IntPtr thisPtr)
+        internal JsFunction(JsContext context, IntPtr objectHandle)
             :base(context, objectHandle)
         {
-            _thisPtr = thisPtr;
         }
 
-        public object Invoke(object[] args)
+        public object Invoke(object receiver, params object[] args)
         {
             CheckDisposed();
 
-            var a = JsValue.Null; // Null value unless we're given args.
-            if (args != null)
-                a = Convert.ToJsValue(args);
+            var jsargs = (args ?? Array.Empty<object>()).Select(Convert.ToJsValue).ToArray();
+            var recv = Convert.ToJsValue(receiver);
 
-            var v = NativeApi.jscontext_invoke(Context.Handle, Handle, _thisPtr, a);
+            var v = NativeApi.jsfunction_invoke(Context.Handle, Handle, recv, jsargs.Length, jsargs);
             var res = Convert.FromJsValue(v);
             NativeApi.jsvalue_dispose(v);
-            NativeApi.jsvalue_dispose(a);
+            NativeApi.jsvalue_dispose(recv);
+
+            foreach(var x in jsargs)
+                NativeApi.jsvalue_dispose(x);
 
             var e = res as JsException;
             if (e != null)
                 throw e;
+
             return res;
         }
 
-        public object MakeDelegate(Type type, object[] args)
+        // todo: what is this for?
+        internal object MakeDelegate(Type type)
         {
             if (type.BaseType != typeof(MulticastDelegate))
             {
@@ -73,19 +75,5 @@ namespace VroomJs
 
             return Expression.Lambda(type, callExpression, parameters).Compile();
         }
-
-        #region IDisposable implementation
- 
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            if (_thisPtr != IntPtr.Zero)
-            {
-                Context.Engine.DisposeObject(_thisPtr);
-            }
-        }
-
-        #endregion
      }
 }

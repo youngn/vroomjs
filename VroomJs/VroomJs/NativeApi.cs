@@ -82,9 +82,6 @@ namespace VroomJs
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern JsValue jscontext_set_variable(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
 
-        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern JsValue jscontext_invoke(HandleRef context, IntPtr funcPtr, IntPtr thisPtr, JsValue args);
-
         #endregion
 
         #region jsobject
@@ -106,6 +103,9 @@ namespace VroomJs
 
         [DllImport(DllName)]
         public static extern JsValue jsobject_invoke_property(HandleRef context, IntPtr obj, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue args);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+        public static extern JsValue jsfunction_invoke(HandleRef context, IntPtr obj, JsValue receiver, int argCount, [In]JsValue[] args);
 
         #endregion
 

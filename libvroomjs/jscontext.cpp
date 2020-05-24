@@ -304,10 +304,11 @@ jsvalue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint32_t inde
     return none;
 }
 
-jsvalue JsContext::InvokeFunction(Persistent<Function>* func, Persistent<Object>* thisArg, jsvalue args) {
+jsvalue JsContext::InvokeFunction(Persistent<Function>* func, jsvalue receiver, int argCount, jsvalue* args)
+{
     assert(func != nullptr);
-    assert(thisArg != nullptr);
-    assert(args.type == JSVALUE_TYPE_ARRAY);
+    assert(argCount >= 0);
+    assert(argCount == 0 || args != NULL);
 
     Locker locker(isolate_);
     Isolate::Scope isolate_scope(isolate_);
@@ -317,37 +318,19 @@ jsvalue JsContext::InvokeFunction(Persistent<Function>* func, Persistent<Object>
     Context::Scope contextScope(ctx);
 
     auto funcLocal = Local<Function>::New(isolate_, *func);
-
-    // todo: this seems odd - can it really not be a function, given funcLocal is Local<Function> ??
-    // If we could move this check further upstream, we may not need JSVALUE_TYPE_STRING_ERROR (it has very few uses)
-    if (funcLocal.IsEmpty() || !funcLocal->IsFunction()) {
-
-        auto str_value = String::NewFromUtf8(isolate_, "isn't a function").ToLocalChecked();
-        jsvalue v = engine_->StringFromV8(str_value);
-        v.type = JSVALUE_TYPE_STRING_ERROR;
-        return v;
-    }
+    auto recv = engine_->AnyToV8(receiver, id_);
 
     TryCatch trycatch(isolate_);
 
-    auto receiver = Local<Object>::New(isolate_, *thisArg);
-
-    // todo: can receiver really be empty?
-    if (receiver.IsEmpty()) {
-        receiver = ctx->Global();
+    std::vector<Local<Value>> argv(argCount);
+    if (args != nullptr) {
+        for (int i = 0; i < argCount; i++) {
+            argv[i] = engine_->AnyToV8(args[i], id_);
+        }
     }
 
-    // todo: could we potentially pass an array of jsvalues into this function?
-    // i.e. as opposed to assuming we're dealing with a JS array for the args vector
-    std::vector<Local<Value>> argv(args.length);
-    engine_->ArrayToV8Args(args, id_, &argv[0]);
-
-    // TODO: Check ArrayToV8Args return value (but right now can't fail, right?)
-
-    auto funcLocal2 = Local<Function>::Cast(funcLocal);
-
     Local<Value> retVal;
-    if (funcLocal2->Call(ctx, receiver, args.length, &argv[0]).ToLocal(&retVal)) {
+    if (funcLocal->Call(ctx, recv, argCount, &argv[0]).ToLocal(&retVal)) {
         return engine_->AnyFromV8(retVal);
     } else {
         return engine_->ErrorFromV8(trycatch);

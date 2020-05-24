@@ -404,36 +404,14 @@ jsvalue JsEngine::AnyFromV8(Local<Value> value, Local<Object> thisArg)
         v.type = JSVALUE_TYPE_JSARRAY;
         v.length = 0;
         v.value.ptr = new Persistent<Array>(isolate_, arr);
-
-        //v.length = arr->Length();
-        //jsvalue* array = new jsvalue[v.length];
-        //for (int i = 0; i < v.length; i++) {
-        //    // todo: Get returns a MaybeLocal... could it possibly be empty?
-        //    auto x = arr->Get(isolate_->GetCurrentContext(), i).ToLocalChecked();
-        //    array[i] = AnyFromV8(x);
-        //}
-        //v.type = JSVALUE_TYPE_ARRAY;
-        //v.value.arr = array;
     }
     else if (value->IsFunction()) {
-		auto function = Local<Function>::Cast(value);
-		jsvalue* array = new jsvalue[2];
-        array[0].value.ptr = new Persistent<Function>(Isolate::GetCurrent(), function);
-        array[0].length = 0;
-        array[0].type = JSVALUE_TYPE_JSOBJECT;
-        if (!thisArg.IsEmpty()) {
-            array[1].value.ptr = new Persistent<Object>(Isolate::GetCurrent(), thisArg);
-            array[1].length = 0;
-            array[1].type = JSVALUE_TYPE_JSOBJECT;
-        }
-        else {
-            array[1].value.ptr = NULL;
-            array[1].length = 0;
-            array[1].type = JSVALUE_TYPE_NULL;
-        }
+        auto function = Local<Function>::Cast(value);
+
         v.type = JSVALUE_TYPE_FUNCTION;
-        v.value.arr = array;
-    }
+        v.length = 0;
+        v.value.ptr = new Persistent<Function>(isolate_, function);
+    } 
     else if (value->IsObject()) {
         auto obj = Local<Object>::Cast(value);
         if (obj->InternalFieldCount() == 1)
@@ -507,6 +485,10 @@ Local<Value> JsEngine::AnyToV8(jsvalue v, int32_t contextId)
     if (v.type == JSVALUE_TYPE_JSARRAY) {
         auto pObj = (Persistent<Array>*)v.value.ptr;
         return Local<Array>::New(isolate_, *pObj);
+    }
+    if (v.type == JSVALUE_TYPE_FUNCTION) {
+        auto pObj = (Persistent<Function>*)v.value.ptr;
+        return Local<Function>::New(isolate_, *pObj);
     }
 
     // Arrays are converted to JS native arrays.

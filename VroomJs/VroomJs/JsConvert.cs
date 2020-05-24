@@ -107,12 +107,9 @@ namespace VroomJs
             		return JsException.Create(this, (JsError)Marshal.PtrToStructure(v.Ptr, typeof(JsError)));
 
 				case JsValueType.Function:
-					var fa = new JsValue[2];
-					for (int i = 0; i < 2; i++) {
-						fa[i] = (JsValue)Marshal.PtrToStructure(new IntPtr(v.Ptr.ToInt64() + (16 * i)), typeof(JsValue));
-					}
-            		return new JsFunction(_context, fa[0].Ptr, fa[1].Ptr);
-            	default:
+                    return new JsFunction(_context, v.Ptr);
+
+                default:
                     throw new InvalidOperationException("unknown type code: " + v.Type);
             }           
         }

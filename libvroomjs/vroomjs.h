@@ -296,7 +296,7 @@ class JsContext {
 	jsvalue SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, jsvalue value);
 	jsvalue SetPropertyValue(Persistent<Object>* obj, const uint32_t index, jsvalue value);
 	jsvalue InvokeProperty(Persistent<Object>* obj, const uint16_t* name, jsvalue args);
-    jsvalue InvokeFunction(Persistent<Function>* func, Persistent<Object>* thisArg, jsvalue args);
+    jsvalue InvokeFunction(Persistent<Function>* func, jsvalue receiver, int argCount, jsvalue* args);
 
 	void Dispose();
      
