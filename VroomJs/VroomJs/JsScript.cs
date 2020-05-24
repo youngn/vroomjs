@@ -1,75 +1,86 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace VroomJs {
-	public class JsScript : IDisposable {
+namespace VroomJs
+{
+    // todo: sealed?
+    public class JsScript : IDisposable
+    {
+        private readonly int _id;
+        private readonly JsEngine _engine;
+        private readonly HandleRef _scriptHandle;
+        private readonly Action<int> _notifyDispose;
+        private bool _disposed;
 
-		private readonly int _id;
-		private readonly JsEngine _engine;
+        internal JsScript(int id, JsEngine engine, HandleRef engineHandle, JsConvert convert, string code, string name, Action<int> notifyDispose)
+        {
+            _id = id;
+            _engine = engine;
+            _notifyDispose = notifyDispose;
 
-		public JsEngine Engine {
-			get { return _engine; }
-		}
+            _scriptHandle = new HandleRef(this, NativeApi.jsscript_new(engineHandle));
 
-		private readonly HandleRef _script;
+            JsValue v = NativeApi.jsscript_compile(_scriptHandle, code, name);
+            object res = convert.FromJsValue(v);
+            Exception e = res as JsException;
+            if (e != null)
+            {
+                throw e;
+            }
+        }
 
-		internal HandleRef Handle {
-			get { return _script; }
-		}
+        public JsEngine Engine
+        {
+            get { return _engine; }
+        }
 
-		internal JsScript(int id, JsEngine engine, HandleRef engineHandle, JsConvert convert, string code, string name, Action<int> notifyDispose) {
-			_id = id;
-			_engine = engine;
-			_notifyDispose = notifyDispose;
+        #region IDisposable implementation
 
-			_script = new HandleRef(this, NativeApi.jsscript_new(engineHandle));
-			
-			JsValue v = NativeApi.jsscript_compile(_script, code, name);
-			object res = convert.FromJsValue(v);
-			Exception e = res as JsException;
-			if (e != null) {
-				throw e;
-			}
-		}
 
-		#region IDisposable implementation
+        public bool IsDisposed
+        {
+            get { return _disposed; }
+        }
 
-		private readonly Action<int> _notifyDispose;
-		bool _disposed;
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+            _disposed = true;
 
-		public bool IsDisposed {
-			get { return _disposed; }
-		}
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-		public void Dispose() {
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
+        protected virtual void Dispose(bool disposing)
+        {
+            NativeApi.jsscript_dispose(_scriptHandle);
 
-		protected virtual void Dispose(bool disposing) {
-			CheckDisposed();
+            if(disposing)
+            {
+                _notifyDispose(_id);
+            }
+        }
 
-			_disposed = true;
+        ~JsScript()
+        {
+            Dispose(false);
+        }
 
-			NativeApi.jsscript_dispose(_script);
+        #endregion
 
-			_notifyDispose(_id);
-		}
-
-		void CheckDisposed() {
-			if (_engine.IsDisposed) {
-				throw new ObjectDisposedException("JsScript: engine has been disposed");
-			}
-			if (_disposed)
-				throw new ObjectDisposedException("JsScript:" + _script.Handle);
-		}
-
-		~JsScript() {
-			if (!_engine.IsDisposed && !_disposed)
-				Dispose(false);
-		}
-
-		#endregion
-
-	}
+        internal HandleRef Handle
+        {
+            get { return _scriptHandle; }
+        }
+        private void CheckDisposed()
+        {
+            if (_engine.IsDisposed)
+            {
+                throw new ObjectDisposedException("JsScript: engine has been disposed");
+            }
+            if (_disposed)
+                throw new ObjectDisposedException("JsScript:" + _scriptHandle.Handle);
+        }
+    }
 }

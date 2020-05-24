@@ -10,8 +10,7 @@ namespace VroomJsTests
         [OneTimeSetUp]
         public void Setup()
         {
-            var exePath = Assembly.GetAssembly(typeof(MarshalTests)).Location;
-            JsEngine.Initialize(exePath);
+            JsEngine.Initialize();
         }
 
         [OneTimeTearDown]

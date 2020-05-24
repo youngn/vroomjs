@@ -59,9 +59,7 @@ namespace Sandbox
     {
         public static void Main (string[] args) {
 
-			var exePath = Assembly.GetEntryAssembly().Location;
-			var dir = Path.GetFullPath(@".\");
-			JsEngine.Initialize(exePath);
+			JsEngine.Initialize();
 
 			//string lodash = File.ReadAllText(@"c:\lodash.js");
 			using (JsEngine engine = new JsEngine()) {

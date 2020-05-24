@@ -62,7 +62,7 @@ namespace VroomJs
 		public static extern IntPtr jscontext_new(int id, HandleRef engine);
 
 		[DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-		public static extern void jscontext_dispose(HandleRef engine);
+		public static extern void jscontext_dispose(HandleRef context);
 
 		[DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
 		public static extern void jscontext_force_gc();
@@ -74,28 +74,28 @@ namespace VroomJs
 		public static extern JsValue jscontext_execute_script(HandleRef context, HandleRef script);
 
 		[DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-		public static extern JsValue jscontext_get_global(HandleRef engine);
+		public static extern JsValue jscontext_get_global(HandleRef context);
 
 		[DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-		public static extern JsValue jscontext_get_variable(HandleRef engine, [MarshalAs(UnmanagedType.LPWStr)] string name);
+		public static extern JsValue jscontext_get_variable(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string name);
 
 		[DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-		public static extern JsValue jscontext_set_variable(HandleRef engine, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
+		public static extern JsValue jscontext_set_variable(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
 
 		[DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-		public static extern JsValue jscontext_invoke(HandleRef engine, IntPtr funcPtr, IntPtr thisPtr, JsValue args);
+		public static extern JsValue jscontext_invoke(HandleRef context, IntPtr funcPtr, IntPtr thisPtr, JsValue args);
 
 		[DllImport(DllName)]
-		public static extern JsValue jscontext_get_property_names(HandleRef engine, IntPtr ptr);
+		public static extern JsValue jscontext_get_property_names(HandleRef context, IntPtr obj);
 
 		[DllImport(DllName)]
-		public static extern JsValue jscontext_get_property_value(HandleRef engine, IntPtr ptr, [MarshalAs(UnmanagedType.LPWStr)] string name);
+		public static extern JsValue jscontext_get_property_value(HandleRef context, IntPtr obj, [MarshalAs(UnmanagedType.LPWStr)] string name);
 
 		[DllImport(DllName)]
-		public static extern JsValue jscontext_set_property_value(HandleRef engine, IntPtr ptr, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
+		public static extern JsValue jscontext_set_property_value(HandleRef context, IntPtr obj, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
 
 		[DllImport(DllName)]
-		public static extern JsValue jscontext_invoke_property(HandleRef engine, IntPtr ptr, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue args);
+		public static extern JsValue jscontext_invoke_property(HandleRef context, IntPtr obj, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue args);
 
 		#endregion
 
