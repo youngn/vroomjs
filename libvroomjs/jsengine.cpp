@@ -523,15 +523,3 @@ Local<Value> JsEngine::AnyToV8(jsvalue v, int32_t contextId)
     // todo: throw?
     return Null(isolate_);
 }
-
-int32_t JsEngine::ArrayToV8Args(jsvalue value, int32_t contextId, Local<Value> preallocatedArgs[])
-{
-    if (value.type != JSVALUE_TYPE_ARRAY)
-        return -1;
-        
-    for (int i=0 ; i < value.length ; i++) {
-        preallocatedArgs[i] = AnyToV8(value.value.arr[i], contextId);
-    }
-    
-    return value.length;
-}

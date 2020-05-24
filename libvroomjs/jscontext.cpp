@@ -337,48 +337,4 @@ jsvalue JsContext::InvokeFunction(Persistent<Function>* func, jsvalue receiver, 
     }
 }
 
-jsvalue JsContext::InvokeProperty(Persistent<Object>* obj, const uint16_t* name, jsvalue args)
-{
-    assert(obj != nullptr);
-    assert(name != nullptr);
-    assert(args.type == JSVALUE_TYPE_ARRAY);
-
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    HandleScope scope(isolate_);
-
-    auto ctx = Local<Context>::New(isolate_, *context_);
-    Context::Scope contextScope(ctx);
-
-    auto var_name = String::NewFromTwoByte(isolate_, name).ToLocalChecked();
-
-    TryCatch trycatch(isolate_);
-
-    auto objLocal = Local<Object>::New(isolate_, *obj);
-    Local<Value> propValue;
-    if (!objLocal->Get(ctx, var_name).ToLocal(&propValue) || !propValue->IsFunction()) {
-
-        auto str_value = String::NewFromUtf8(isolate_, "property not found or isn't a function").ToLocalChecked();
-        jsvalue v = engine_->StringFromV8(str_value);
-        v.type = JSVALUE_TYPE_STRING_ERROR;
-        return v;
-    }
-
-    // todo: could we potentially pass an array of jsvalues into this function?
-    // i.e. as opposed to assuming we're dealing with a JS array for the args vector
-    std::vector<Local<Value>> argv(args.length);
-    engine_->ArrayToV8Args(args, id_, &argv[0]);
-    // TODO: Check ArrayToV8Args return value (but right now can't fail, right?)   
-
-    auto funcLocal2 = Local<Function>::Cast(propValue);
-
-    Local<Value> value;
-    if (funcLocal2->Call(ctx, objLocal, args.length, &argv[0]).ToLocal(&value)) {
-        return engine_->AnyFromV8(value);
-    } else {
-        return engine_->ErrorFromV8(trycatch);
-    }
-}
-
-
 

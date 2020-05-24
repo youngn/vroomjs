@@ -128,26 +128,22 @@ namespace VroomJs
                 throw e;
         }
 
-        public object InvokeProperty(string name, object[] args)
+        public object InvokeMethod(string name, params object[] args)
         {
-            if (name == null)
-                throw new ArgumentNullException(nameof(name));
+            var func = GetPropertyValue(name) as JsFunction;
+            if (func == null)
+                throw new InvalidOperationException($"'{name}' is not a function.");
 
-            CheckDisposed();
+            return func.Invoke(this, args);
+        }
 
-            var a = JsValue.Null; // Null value unless we're given args.
-            if (args != null)
-                a = Convert.ToJsValue(args);
+        public object InvokeMethod(int index, params object[] args)
+        {
+            var func = GetPropertyValue(index) as JsFunction;
+            if (func == null)
+                throw new InvalidOperationException($"{index} is not a function.");
 
-            var v = NativeApi.jsobject_invoke_property(_context.Handle, _objectHandle, name, a);
-            var res = Convert.FromJsValue(v);
-            NativeApi.jsvalue_dispose(v);
-            NativeApi.jsvalue_dispose(a);
-
-            Exception e = res as JsException;
-            if (e != null)
-                throw e;
-            return res;
+            return func.Invoke(this, args);
         }
 
         public object this[string name]
@@ -166,7 +162,7 @@ namespace VroomJs
 
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
-            result = InvokeProperty(binder.Name, args);
+            result = InvokeMethod(binder.Name, args);
             return true;
         }
 

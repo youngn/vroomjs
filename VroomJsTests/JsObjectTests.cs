@@ -137,6 +137,56 @@ namespace VroomJsTests
         }
 
         [Test]
+        public void Test_InvokeMethod_named()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                var obj = (JsObject)context.Execute("({ a: 1, b: function(x) { return x + this.a; } })");
+                var result = obj.InvokeMethod("b", 3);
+
+                Assert.AreEqual(4, result);
+            }
+        }
+
+        [Test]
+        public void Test_InvokeMethod_dynamic()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                dynamic obj = context.Execute("({ a: 1, b: function(x) { return x + this.a; } })");
+                var result = obj.b(3);
+
+                Assert.AreEqual(4, result);
+            }
+        }
+
+        [Test]
+        public void Test_InvokeMethod_indexed()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                var obj1 = (JsObject)context.Execute("({ a: 1, 2: function(x) { return x + this.a; } })");
+                var result = obj1.InvokeMethod(2, 3);
+
+                Assert.AreEqual(4, result);
+            }
+        }
+
+        [Test]
+        public void Test_InvokeMethod_invalid()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                var obj = (JsObject)context.Execute("({ a: 1, 2: 'a' })");
+
+                Assert.Throws<InvalidOperationException>(() => obj.InvokeMethod("a"));
+                Assert.Throws<InvalidOperationException>(() => obj.InvokeMethod("b"));
+                Assert.Throws<InvalidOperationException>(() => obj.InvokeMethod(1));
+                Assert.Throws<InvalidOperationException>(() => obj.InvokeMethod(2));
+            }
+        }
+
+        [Test]
         public void Test_GetPropertyNames()
         {
             using (var context = Engine.CreateContext())

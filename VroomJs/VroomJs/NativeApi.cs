@@ -101,9 +101,6 @@ namespace VroomJs
         [DllImport(DllName)]
         public static extern JsValue jsobject_set_indexed_property_value(HandleRef context, IntPtr obj, int index, JsValue value);
 
-        [DllImport(DllName)]
-        public static extern JsValue jsobject_invoke_property(HandleRef context, IntPtr obj, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue args);
-
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern JsValue jsfunction_invoke(HandleRef context, IntPtr obj, JsValue receiver, int argCount, [In]JsValue[] args);
 

@@ -242,8 +242,6 @@ public:
     jsvalue ArrayFromArguments(const FunctionCallbackInfo<Value>& args);
 
 	Local<Value> AnyToV8(jsvalue value, int32_t contextId);
-    // Needed to create an array of args on the stack for calling functions.
-    int32_t ArrayToV8Args(jsvalue value, int32_t contextId, Local<Value> preallocatedArgs[]);
 
 	// Dispose a Persistent<Object> that was pinned on the CLR side by JsObject.
     void DisposeObject(Persistent<Object>* obj);
@@ -295,7 +293,6 @@ class JsContext {
 	jsvalue GetPropertyValue(Persistent<Object>* obj, const uint32_t index);
 	jsvalue SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, jsvalue value);
 	jsvalue SetPropertyValue(Persistent<Object>* obj, const uint32_t index, jsvalue value);
-	jsvalue InvokeProperty(Persistent<Object>* obj, const uint16_t* name, jsvalue args);
     jsvalue InvokeFunction(Persistent<Function>* func, jsvalue receiver, int argCount, jsvalue* args);
 
 	void Dispose();

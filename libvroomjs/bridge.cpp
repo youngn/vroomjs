@@ -286,18 +286,6 @@ extern "C"
         return context->GetPropertyNames(obj);
     }    
 	    
-    EXPORT jsvalue CALLINGCONVENTION jsobject_invoke_property(JsContext* context, Persistent<Object>* obj, const uint16_t* name, jsvalue args)
-    {
-#ifdef DEBUG_TRACE_API
-		std::wcout << "jsobject_invoke_property" << std::endl;
-#endif
-        assert(context != NULL);
-        assert(obj != NULL);
-        assert(name != NULL);
-
-        return context->InvokeProperty(obj, name, args);
-    }        
-
 	EXPORT jsvalue CALLINGCONVENTION jsfunction_invoke(JsContext* context, Persistent<Function>* obj, jsvalue receiver, int argCount, jsvalue* args)
     {
 #ifdef DEBUG_TRACE_API
