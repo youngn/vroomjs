@@ -97,7 +97,7 @@ namespace VroomJs
 					}
 					return new JsException(msg, inner);
 
-                case JsValueType.Wrapped:
+                case JsValueType.JsObject:
                     return new JsObject(_context, v.Ptr);
 
                 case JsValueType.JsArray:
@@ -180,7 +180,7 @@ namespace VroomJs
                 };
 
             if (type == typeof(JsObject))
-                return new JsValue { Type = JsValueType.Wrapped, Ptr = ((JsObject)obj).Handle };
+                return new JsValue { Type = JsValueType.JsObject, Ptr = ((JsObject)obj).Handle };
 
             if (type == typeof(JsArray))
                 return new JsValue { Type = JsValueType.JsArray, Ptr = ((JsArray)obj).Handle };

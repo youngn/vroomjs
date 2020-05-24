@@ -49,7 +49,7 @@ using namespace v8;
 #define JSVALUE_TYPE_STRING_ERROR   11
 #define JSVALUE_TYPE_MANAGED        12
 #define JSVALUE_TYPE_MANAGED_ERROR  13
-#define JSVALUE_TYPE_WRAPPED        14
+#define JSVALUE_TYPE_JSOBJECT       14
 #define JSVALUE_TYPE_DICT           15
 #define JSVALUE_TYPE_ERROR          16
 #define JSVALUE_TYPE_FUNCTION       17

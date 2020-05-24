@@ -343,7 +343,7 @@ jsvalue JsEngine::WrappedFromV8(Local<Object> obj)
 {
     jsvalue v;
        
-    v.type = JSVALUE_TYPE_WRAPPED;
+    v.type = JSVALUE_TYPE_JSOBJECT;
     v.length = 0;
     v.value.ptr = new Persistent<Object>(isolate_, obj);
     
@@ -420,11 +420,11 @@ jsvalue JsEngine::AnyFromV8(Local<Value> value, Local<Object> thisArg)
 		jsvalue* array = new jsvalue[2];
         array[0].value.ptr = new Persistent<Function>(Isolate::GetCurrent(), function);
         array[0].length = 0;
-        array[0].type = JSVALUE_TYPE_WRAPPED;
+        array[0].type = JSVALUE_TYPE_JSOBJECT;
         if (!thisArg.IsEmpty()) {
             array[1].value.ptr = new Persistent<Object>(Isolate::GetCurrent(), thisArg);
             array[1].length = 0;
-            array[1].type = JSVALUE_TYPE_WRAPPED;
+            array[1].type = JSVALUE_TYPE_JSOBJECT;
         }
         else {
             array[1].value.ptr = NULL;
@@ -500,7 +500,7 @@ Local<Value> JsEngine::AnyToV8(jsvalue v, int32_t contextId)
     if (v.type == JSVALUE_TYPE_DATE) {
         return Date::New(isolate_->GetCurrentContext(), v.value.num).ToLocalChecked();
     }
-    if (v.type == JSVALUE_TYPE_WRAPPED) {
+    if (v.type == JSVALUE_TYPE_JSOBJECT) {
         auto pObj = (Persistent<Object>*)v.value.ptr;
         return Local<Object>::New(isolate_, *pObj);
     }

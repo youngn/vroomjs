@@ -41,7 +41,7 @@ namespace VroomJs
         StringError = 11,
         Managed = 12,
         ManagedError = 13,
-        Wrapped = 14,
+        JsObject = 14,
         Dictionary = 15,
         Error = 16,
         Function = 17,
