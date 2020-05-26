@@ -12,23 +12,23 @@ JsConvert::JsConvert(Isolate* isolate) {
 JsValue JsConvert::AnyFromV8(Local<Value> value, Local<Object> thisArg) const
 {
     if (value->IsNull() || value->IsUndefined()) {
-       return JsValue::FromNull();
+       return JsValue::ForNull();
     }
 
     if (value->IsBoolean()) {
-        return JsValue::FromBoolean(value->BooleanValue(isolate_));
+        return JsValue::ForBoolean(value->BooleanValue(isolate_));
     }
 
     if (value->IsInt32()) {
-        return JsValue::FromInt32(value->Int32Value(isolate_->GetCurrentContext()).FromMaybe(0));
+        return JsValue::ForInt32(value->Int32Value(isolate_->GetCurrentContext()).FromMaybe(0));
     }
 
     if (value->IsUint32()) {
-        return JsValue::FromUInt32(value->Uint32Value(isolate_->GetCurrentContext()).FromMaybe(0));
+        return JsValue::ForUInt32(value->Uint32Value(isolate_->GetCurrentContext()).FromMaybe(0));
     }
 
     if (value->IsNumber()) {
-        return JsValue::FromNumber(value->NumberValue(isolate_->GetCurrentContext()).FromMaybe(0.0));
+        return JsValue::ForNumber(value->NumberValue(isolate_->GetCurrentContext()).FromMaybe(0.0));
     }
 
     if (value->IsString()) {
@@ -39,21 +39,21 @@ JsValue JsConvert::AnyFromV8(Local<Value> value, Local<Object> thisArg) const
         // todo: is this the best way to convert?
         uint16_t* str = new uint16_t[len + 1];
         s->Write(isolate_, str);
-        return JsValue::FromString(len, str);
+        return JsValue::ForString(len, str);
     }
 
     if (value->IsDate()) {
-        return JsValue::FromDate(value->NumberValue(isolate_->GetCurrentContext()).FromMaybe(0.0));
+        return JsValue::ForDate(value->NumberValue(isolate_->GetCurrentContext()).FromMaybe(0.0));
     }
 
     if (value->IsArray()) {
         auto arr = Local<Array>::Cast(value);
-        return JsValue::FromJsArray(new Persistent<Array>(isolate_, arr));
+        return JsValue::ForJsArray(new Persistent<Array>(isolate_, arr));
     }
 
     if (value->IsFunction()) {
         auto function = Local<Function>::Cast(value);
-        return JsValue::FromJsFunction(new Persistent<Function>(isolate_, function));
+        return JsValue::ForJsFunction(new Persistent<Function>(isolate_, function));
     }
 
     if (value->IsObject()) {
@@ -62,12 +62,12 @@ JsValue JsConvert::AnyFromV8(Local<Value> value, Local<Object> thisArg) const
             //v = ManagedFromV8(obj);
         }
         else {
-            return JsValue::FromJsObject(new Persistent<Object>(isolate_, obj));
+            return JsValue::ForJsObject(new Persistent<Object>(isolate_, obj));
         }
     }
 
     // Default to a generic error.
-    return JsValue::FromUnknownError();
+    return JsValue::ForUnknownError();
 }
 
 Local<Value> JsConvert::AnyToV8(JsValue value, int32_t contextId) const
@@ -153,7 +153,7 @@ JsValue JsConvert::ErrorFromV8(TryCatch& trycatch) const
         if (obj->InternalFieldCount() == 1) {
             Local<External> wrap = Local<External>::Cast(obj->GetInternalField(0));
             ManagedRef* ref = (ManagedRef*)wrap->Value();
-            return JsValue::FromManagedError(ref->Id());
+            return JsValue::ForManagedError(ref->Id());
         }
     }
 
@@ -174,7 +174,7 @@ JsValue JsConvert::ErrorFromV8(TryCatch& trycatch) const
     }
 
     error->exception = AnyFromV8(exception);
-    return JsValue::FromError(error);
+    return JsValue::ForError(error);
 }
 
 

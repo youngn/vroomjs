@@ -380,24 +380,24 @@ namespace VroomJs
                         var upperCamelCase = Char.ToUpper(name[0]) + name.Substring(1);
                         if (TrySetMemberValue(type, obj, upperCamelCase, value))
                         {
-                            return JsValue.Null;
+                            return JsValue.ForNull();
                         }
                         if (TrySetMemberValue(type, obj, name, value))
                         {
-                            return JsValue.Null;
+                            return JsValue.ForNull();
                         }
                     }
 
-                    return JsValue.Error(KeepAliveAdd(
+                    return JsValue.ForManagedError(KeepAliveAdd(
                         new InvalidOperationException(String.Format("property not found on {0}: {1} ", type, name))));
                 }
                 catch (Exception e)
                 {
-                    return JsValue.Error(KeepAliveAdd(e));
+                    return JsValue.ForManagedError(KeepAliveAdd(e));
                 }
             }
 
-            return JsValue.Error(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
         internal bool TryGetMemberValue(Type type, object obj, string name, out JsValue value)
@@ -415,7 +415,7 @@ namespace VroomJs
                 }
                 else
                 {
-                    value = JsValue.Null;
+                    value = JsValue.ForNull();
                 }
                 return true;
             }
@@ -469,7 +469,7 @@ namespace VroomJs
                 return true;
             }
 
-            value = JsValue.Null;
+            value = JsValue.ForNull();
             return false;
         }
 
@@ -482,7 +482,7 @@ namespace VroomJs
             // to be from a proper FunctionTemplate.
             if (!string.IsNullOrEmpty(name) && name.Equals("valueOf", StringComparison.InvariantCultureIgnoreCase))
             {
-                return JsValue.Empty;
+                return JsValue.ForEmpty();
             }
 
             // TODO: This is pretty slow: use a cache of generated code to make it faster.
@@ -518,7 +518,7 @@ namespace VroomJs
                     }
 
                     // Else an error.
-                    return JsValue.Error(KeepAliveAdd(
+                    return JsValue.ForManagedError(KeepAliveAdd(
                         new InvalidOperationException(String.Format("property not found on {0}: {1} ", type, name))));
                 }
                 catch (TargetInvocationException e)
@@ -526,16 +526,16 @@ namespace VroomJs
                     // Client code probably isn't interested in the exception part related to
                     // reflection, so we unwrap it and pass to V8 only the real exception thrown.
                     if (e.InnerException != null)
-                        return JsValue.Error(KeepAliveAdd(e.InnerException));
+                        return JsValue.ForManagedError(KeepAliveAdd(e.InnerException));
                     throw;
                 }
                 catch (Exception e)
                 {
-                    return JsValue.Error(KeepAliveAdd(e));
+                    return JsValue.ForManagedError(KeepAliveAdd(e));
                 }
             }
 
-            return JsValue.Error(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
         internal JsValue KeepAliveValueOf(int slot)
@@ -552,7 +552,7 @@ namespace VroomJs
                 }
                 return _convert.ToJsValue(obj);
             }
-            return JsValue.Error(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
         internal JsValue KeepAliveInvoke(int slot, JsValue args)
@@ -618,15 +618,15 @@ namespace VroomJs
                 }
                 catch (TargetInvocationException e)
                 {
-                    return JsValue.Error(KeepAliveAdd(e.InnerException));
+                    return JsValue.ForManagedError(KeepAliveAdd(e.InnerException));
                 }
                 catch (Exception e)
                 {
-                    return JsValue.Error(KeepAliveAdd(e));
+                    return JsValue.ForManagedError(KeepAliveAdd(e));
                 }
             }
 
-            return JsValue.Error(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
         private static void CheckAndResolveJsFunctions(Type type, string methodName, BindingFlags flags, object[] args)
@@ -671,7 +671,7 @@ namespace VroomJs
                 }
                 return _convert.ToJsValue(false);
             }
-            return JsValue.Error(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
         internal JsValue KeepAliveEnumerateProperties(int slot)
@@ -703,7 +703,7 @@ namespace VroomJs
                     }).Select(z => z.Name).ToArray();
                 return _convert.ToJsValue(values);
             }
-            return JsValue.Error(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
     }
 }

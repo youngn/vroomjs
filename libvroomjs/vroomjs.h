@@ -148,51 +148,51 @@ extern "C"
 
 class JsValue {
 public:
-	static JsValue FromUnknownError() {
+	static JsValue ForUnknownError() {
 		return JsValue(JSVALUE_TYPE_UNKNOWN_ERROR, 0, 0);
 	}
-	static JsValue FromNull() {
+	static JsValue ForNull() {
 		return JsValue(JSVALUE_TYPE_NULL, 0, 0);
 	}
-	static JsValue FromBoolean(bool value) {
+	static JsValue ForBoolean(bool value) {
 		return JsValue(JSVALUE_TYPE_BOOLEAN, 0, (int32_t)value);
 	}
-	static JsValue FromInt32(int32_t value) {
+	static JsValue ForInt32(int32_t value) {
 		return JsValue(JSVALUE_TYPE_INTEGER, 0, value);
 	}
-	static JsValue FromUInt32(uint32_t value) {
+	static JsValue ForUInt32(uint32_t value) {
 		return JsValue(JSVALUE_TYPE_INDEX, 0, (int64_t)value);
 	}
-	static JsValue FromNumber(double value) {
+	static JsValue ForNumber(double value) {
 		return JsValue(JSVALUE_TYPE_NUMBER, 0, value);
 	}
-	static JsValue FromString(int32_t length, uint16_t* value) {
+	static JsValue ForString(int32_t length, uint16_t* value) {
 		assert(value != nullptr);
 		return JsValue(JSVALUE_TYPE_STRING, length, value);
 	}
-	static JsValue FromDate(double value) {
+	static JsValue ForDate(double value) {
 		return JsValue(JSVALUE_TYPE_DATE, 0, value);
 	}
-	static JsValue FromJsArray(Persistent<Array>* value) {
+	static JsValue ForJsArray(Persistent<Array>* value) {
 		assert(value != nullptr);
 		return JsValue(JSVALUE_TYPE_JSARRAY, 0, (void*)value);
 	}
-	static JsValue FromJsFunction(Persistent<Function>* value) {
+	static JsValue ForJsFunction(Persistent<Function>* value) {
 		assert(value != nullptr);
 		return JsValue(JSVALUE_TYPE_FUNCTION, 0, (void*)value);
 	}
-	static JsValue FromJsObject(Persistent<Object>* value) {
+	static JsValue ForJsObject(Persistent<Object>* value) {
 		assert(value != nullptr);
 		return JsValue(JSVALUE_TYPE_JSOBJECT, 0, (void*)value);
 	}
-	static JsValue FromError(jserror* value) {
+	static JsValue ForError(jserror* value) {
 		assert(value != nullptr);
 		return JsValue(JSVALUE_TYPE_ERROR, 0, (void*)value);
 	}
-	static JsValue FromManagedError(int32_t id) {
+	static JsValue ForManagedError(int32_t id) {
 		return JsValue(JSVALUE_TYPE_MANAGED_ERROR, id, 0);
 	}
-	static JsValue FromManagedObject(int32_t id) {
+	static JsValue ForManagedObject(int32_t id) {
 		return JsValue(JSVALUE_TYPE_MANAGED, id, 0);
 	}
 
