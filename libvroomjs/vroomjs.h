@@ -133,6 +133,17 @@ extern "C"
 	typedef jsvalue (CALLINGCONVENTION *keepalive_invoke_f) (int context, int id, jsvalue args);
 	typedef jsvalue (CALLINGCONVENTION *keepalive_delete_property_f) (int context, int id, uint16_t* name);
 	typedef jsvalue (CALLINGCONVENTION *keepalive_enumerate_properties_f) (int context, int id);
+
+	struct jscallbacks
+	{
+		keepalive_remove_f remove;
+		keepalive_get_property_value_f get_property_value;
+		keepalive_set_property_value_f set_property_value;
+		keepalive_valueof_f valueof;
+		keepalive_invoke_f invoke;
+		keepalive_delete_property_f delete_property;
+		keepalive_enumerate_properties_f enumerate_properties;
+	};
 }
 
 class JsValue {
@@ -304,73 +315,65 @@ private:
 // by the JsEngine on the CLR side.
 class JsEngine {
 public:
-	JsEngine(int32_t max_young_space, int32_t max_old_space);
+	JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks callbacks);
 	void TerminateExecution();
-
-	inline void SetRemoveDelegate(keepalive_remove_f delegate) { keepalive_remove_ = delegate; }
-    inline void SetGetPropertyValueDelegate(keepalive_get_property_value_f delegate) { keepalive_get_property_value_ = delegate; }
-    inline void SetSetPropertyValueDelegate(keepalive_set_property_value_f delegate) { keepalive_set_property_value_ = delegate; }
-    inline void SetValueOfDelegate(keepalive_valueof_f delegate) { keepalive_valueof_ = delegate; }
-	inline void SetInvokeDelegate(keepalive_invoke_f delegate) { keepalive_invoke_ = delegate; }
-	inline void SetDeletePropertyDelegate(keepalive_delete_property_f delegate) { keepalive_delete_property_ = delegate; }
-	inline void SetEnumeratePropertiesDelegate(keepalive_enumerate_properties_f delegate) { keepalive_enumerate_properties_ = delegate; }
 
 	// Call delegates into managed code.
     inline void CallRemove(int32_t context, int id) {
-		if (keepalive_remove_ == NULL) {
+		if (callbacks_.remove == NULL) {
 			return;
 		}
-		keepalive_remove_(context, id); 
+		callbacks_.remove(context, id);
 	}
     inline jsvalue CallGetPropertyValue(int32_t context, int32_t id, uint16_t* name) {
-		if (keepalive_get_property_value_ == NULL) {
+		if (callbacks_.get_property_value == NULL) {
 			jsvalue v;
 			v.type == JSVALUE_TYPE_NULL;
 			return v;
 		}
-		jsvalue value = keepalive_get_property_value_(context, id, name);
+		jsvalue value = callbacks_.get_property_value(context, id, name);
 		return value;
 	}
     inline jsvalue CallSetPropertyValue(int32_t context, int32_t id, uint16_t* name, jsvalue value) {
-		if (keepalive_set_property_value_ == NULL) {
+		if (callbacks_.set_property_value == NULL) {
 			jsvalue v;
 			v.type == JSVALUE_TYPE_NULL;
 			return v;
 		}
-		return keepalive_set_property_value_(context, id, name, value); 
+		return callbacks_.set_property_value(context, id, name, value);
 	}
 	inline jsvalue CallValueOf(int32_t context, int32_t id) { 
-		if (keepalive_valueof_ == NULL) {
+		if (callbacks_.valueof == NULL) {
 			jsvalue v;
 			v.type == JSVALUE_TYPE_NULL;
 			return v;
 		}
-		return keepalive_valueof_(context, id); 
+		return callbacks_.valueof(context, id);
 	}
     inline jsvalue CallInvoke(int32_t context, int32_t id, jsvalue args) { 
-		if (keepalive_invoke_ == NULL) {
+		if (callbacks_.invoke == NULL) {
 			jsvalue v;
 			v.type == JSVALUE_TYPE_NULL;
 			return v;
 		}
-		return keepalive_invoke_(context, id, args); 
+		return callbacks_.invoke(context, id, args);
 	}
 	inline jsvalue CallDeleteProperty(int32_t context, int32_t id, uint16_t* name) {
-		if (keepalive_delete_property_ == NULL) {
+		if (callbacks_.delete_property == NULL) {
 			jsvalue v;
 			v.type == JSVALUE_TYPE_NULL;
 			return v;
 		}
-		jsvalue value = keepalive_delete_property_(context, id, name);
+		jsvalue value = callbacks_.delete_property(context, id, name);
 		return value;
 	}
 	inline jsvalue CallEnumerateProperties(int32_t context, int32_t id) {
-		if (keepalive_enumerate_properties_ == NULL) {
+		if (callbacks_.enumerate_properties == NULL) {
 			jsvalue v;
 			v.type == JSVALUE_TYPE_NULL;
 			return v;
 		}
-		jsvalue value = keepalive_enumerate_properties_(context, id);
+		jsvalue value = callbacks_.enumerate_properties(context, id);
 		return value;
 	}
 	
@@ -405,14 +408,8 @@ private:
 	
 	Persistent<FunctionTemplate> *managed_template_;
 	Persistent<FunctionTemplate> *valueof_function_template_;
-	
-	keepalive_remove_f keepalive_remove_;
-    keepalive_get_property_value_f keepalive_get_property_value_;
-    keepalive_set_property_value_f keepalive_set_property_value_;
-	keepalive_valueof_f keepalive_valueof_;
-    keepalive_invoke_f keepalive_invoke_;
-	keepalive_delete_property_f keepalive_delete_property_;
-	keepalive_enumerate_properties_f keepalive_enumerate_properties_;
+
+	jscallbacks callbacks_;
 
 	JsConvert* convert_;
 };

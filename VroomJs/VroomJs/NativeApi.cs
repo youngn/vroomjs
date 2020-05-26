@@ -3,14 +3,6 @@ using System.Runtime.InteropServices;
 
 namespace VroomJs
 {
-    delegate void KeepaliveRemoveDelegate(int context, int slot);
-    delegate JsValue KeepAliveGetPropertyValueDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name);
-    delegate JsValue KeepAliveSetPropertyValueDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
-    delegate JsValue KeepAliveValueOfDelegate(int context, int slot);
-    delegate JsValue KeepAliveInvokeDelegate(int context, int slot, JsValue args);
-    delegate JsValue KeepAliveDeletePropertyDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name);
-    delegate JsValue KeepAliveEnumeratePropertiesDelegate(int context, int slot);
-
     static class NativeApi
     {
         private const string DllName = "VroomJsNative";
@@ -32,14 +24,9 @@ namespace VroomJs
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern IntPtr jsengine_new(
-            KeepaliveRemoveDelegate keepaliveRemove,
-            KeepAliveGetPropertyValueDelegate keepaliveGetPropertyValue,
-            KeepAliveSetPropertyValueDelegate keepaliveSetPropertyValue,
-            KeepAliveValueOfDelegate keepaliveValueOf,
-            KeepAliveInvokeDelegate keepaliveInvoke,
-            KeepAliveDeletePropertyDelegate keepaliveDeleteProperty,
-            KeepAliveEnumeratePropertiesDelegate keepaliveEnumerateProperties,
-            int maxYoungSpace, int maxOldSpace
+            JsCallbacks callbacks,
+            int maxYoungSpace,
+            int maxOldSpace
         );
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]

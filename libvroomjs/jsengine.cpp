@@ -114,7 +114,7 @@ static void managed_valueof(const FunctionCallbackInfo<Value>& args)
     args.GetReturnValue().Set(ref->GetValueOf());
 }
 
-JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space)
+JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks callbacks)
 {
     allocator_ = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 
@@ -167,6 +167,8 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space)
     fo->PrototypeTemplate()->Set(isolate_, "valueOf", fp);
 
     convert_ = new JsConvert(isolate_);
+
+    callbacks_ = callbacks;
 
     // Do this last, in case anything above fails
     INCREMENT(js_mem_debug_engine_count);
@@ -259,13 +261,7 @@ void JsEngine::Dispose()
         delete allocator_;
         allocator_ = NULL;
 
-	    keepalive_remove_ = NULL;
-		keepalive_get_property_value_ = NULL;
-		keepalive_set_property_value_ = NULL;
-		keepalive_valueof_ = NULL;
-		keepalive_invoke_ = NULL;
-		keepalive_delete_property_ = NULL;
-		keepalive_enumerate_properties_ = NULL;
+        memset(&callbacks_, 0, sizeof(jscallbacks));
 
         delete convert_;
         convert_ = NULL;

@@ -65,35 +65,23 @@ extern "C"
         v8platform = nullptr;
     }
 
-	EXPORT JsEngine* CALLINGCONVENTION jsengine_new(keepalive_remove_f keepalive_remove, 
-                           keepalive_get_property_value_f keepalive_get_property_value,
-                           keepalive_set_property_value_f keepalive_set_property_value,
-						   keepalive_valueof_f keepalive_valueof,
-                           keepalive_invoke_f keepalive_invoke,
-						   keepalive_delete_property_f keepalive_delete_property,
-						   keepalive_enumerate_properties_f keepalive_enumerate_properties,
-						   int32_t max_young_space, int32_t max_old_space) 
+	EXPORT JsEngine* CALLINGCONVENTION jsengine_new(
+        jscallbacks callbacks,
+		int32_t max_young_space,
+        int32_t max_old_space) 
 	{
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsengine_new" << std::endl;
 #endif
-        assert(keepalive_remove != NULL);
-        assert(keepalive_get_property_value != NULL);
-        assert(keepalive_set_property_value != NULL);
-        assert(keepalive_valueof != NULL);
-        assert(keepalive_invoke != NULL);
-        assert(keepalive_delete_property != NULL);
-        assert(keepalive_enumerate_properties != NULL);
+        assert(callbacks.remove != NULL);
+        assert(callbacks.get_property_value != NULL);
+        assert(callbacks.set_property_value != NULL);
+        assert(callbacks.valueof != NULL);
+        assert(callbacks.invoke != NULL);
+        assert(callbacks.delete_property != NULL);
+        assert(callbacks.enumerate_properties != NULL);
 
-        JsEngine *engine = new JsEngine(max_young_space, max_old_space);
-        engine->SetRemoveDelegate(keepalive_remove);
-        engine->SetGetPropertyValueDelegate(keepalive_get_property_value);
-        engine->SetSetPropertyValueDelegate(keepalive_set_property_value);
-        engine->SetValueOfDelegate(keepalive_valueof);
-        engine->SetInvokeDelegate(keepalive_invoke);
-        engine->SetDeletePropertyDelegate(keepalive_delete_property);
-        engine->SetEnumeratePropertiesDelegate(keepalive_enumerate_properties);
-        return engine;
+        return new JsEngine(max_young_space, max_old_space, callbacks);
 	}
 
 	EXPORT void CALLINGCONVENTION jsengine_terminate_execution(JsEngine* engine) {

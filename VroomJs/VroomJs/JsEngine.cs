@@ -25,13 +25,7 @@ namespace VroomJs
         }
 
         // Make sure the delegates we pass to the C++ engine won't fly away during a GC.
-        private readonly KeepaliveRemoveDelegate _keepalive_remove;
-        private readonly KeepAliveGetPropertyValueDelegate _keepalive_get_property_value;
-        private readonly KeepAliveSetPropertyValueDelegate _keepalive_set_property_value;
-        private readonly KeepAliveValueOfDelegate _keepalive_valueof;
-        private readonly KeepAliveInvokeDelegate _keepalive_invoke;
-        private readonly KeepAliveDeletePropertyDelegate _keepalive_delete_property;
-        private readonly KeepAliveEnumeratePropertiesDelegate _keepalive_enumerate_properties;
+        private readonly JsCallbacks _callbacks;
 
         private readonly HandleRef _engineHandle;
         private readonly Dictionary<int, JsContext> _aliveContexts = new Dictionary<int, JsContext>();
@@ -43,22 +37,18 @@ namespace VroomJs
 
         public JsEngine(int maxYoungSpace = -1, int maxOldSpace = -1)
         {
-            _keepalive_remove = new KeepaliveRemoveDelegate(KeepAliveRemove);
-            _keepalive_get_property_value = new KeepAliveGetPropertyValueDelegate(KeepAliveGetPropertyValue);
-            _keepalive_set_property_value = new KeepAliveSetPropertyValueDelegate(KeepAliveSetPropertyValue);
-            _keepalive_valueof = new KeepAliveValueOfDelegate(KeepAliveValueOf);
-            _keepalive_invoke = new KeepAliveInvokeDelegate(KeepAliveInvoke);
-            _keepalive_delete_property = new KeepAliveDeletePropertyDelegate(KeepAliveDeleteProperty);
-            _keepalive_enumerate_properties = new KeepAliveEnumeratePropertiesDelegate(KeepAliveEnumerateProperties);
+            _callbacks = new JsCallbacks(
+                KeepAliveRemove,
+                KeepAliveGetPropertyValue,
+                KeepAliveSetPropertyValue,
+                KeepAliveValueOf,
+                KeepAliveInvoke,
+                KeepAliveDeleteProperty,
+                KeepAliveEnumerateProperties
+            );
 
             _engineHandle = new HandleRef(this, NativeApi.jsengine_new(
-                _keepalive_remove,
-                _keepalive_get_property_value,
-                _keepalive_set_property_value,
-                _keepalive_valueof,
-                _keepalive_invoke,
-                _keepalive_delete_property,
-                _keepalive_enumerate_properties,
+                _callbacks,
                 maxYoungSpace,
                 maxOldSpace));
         }

@@ -41,6 +41,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VroomJs\BoundWeakDelegate.cs" />
     <Compile Include="VroomJs\JsArray.cs" />
+    <Compile Include="VroomJs\JsCallbacks.cs" />
     <Compile Include="VroomJs\JsContext.cs" />
     <Compile Include="VroomJs\JsEngine.cs" />
     <Compile Include="VroomJs\JsError.cs" />
