@@ -102,21 +102,24 @@ extern "C"
         int32_t         length; // Also used as slot index on the CLR side.
 	};
  
-	struct jserror
+	struct jserrorinfo
 	{
-		jsvalue type;
 		int32_t line;
 		int32_t column;
 		jsvalue resource;
 		jsvalue message;
-		jsvalue exception;
+		jsvalue error;
+		jsvalue type;
 	};
 	
 	EXPORT void CALLINGCONVENTION jsvalue_dispose(jsvalue value);
 }
 
+class JsValue;
+class JsErrorInfo;
 class JsEngine;
 class JsContext;
+
 
 // The only way for the C++/V8 side to call into the CLR is to use the function
 // pointers (CLR, delegates) defined below.
@@ -150,6 +153,9 @@ class JsValue {
 public:
 	static JsValue ForUnknownError() {
 		return JsValue(JSVALUE_TYPE_UNKNOWN_ERROR, 0, 0);
+	}
+	static JsValue ForEmpty() {
+		return JsValue(JSVALUE_TYPE_EMPTY, 0, 0);
 	}
 	static JsValue ForNull() {
 		return JsValue(JSVALUE_TYPE_NULL, 0, 0);
@@ -185,7 +191,7 @@ public:
 		assert(value != nullptr);
 		return JsValue(JSVALUE_TYPE_JSOBJECT, 0, (void*)value);
 	}
-	static JsValue ForError(jserror* value) {
+	static JsValue ForError(JsErrorInfo* value) {
 		assert(value != nullptr);
 		return JsValue(JSVALUE_TYPE_ERROR, 0, (void*)value);
 	}
@@ -273,6 +279,29 @@ private:
 	}
 
 	jsvalue v;
+};
+
+class JsErrorInfo {
+public:
+	inline JsErrorInfo(jsvalue message, int32_t line, int32_t column, jsvalue resource, jsvalue type, jsvalue error) {
+		v.message = message;
+		v.line = line;
+		v.column = column;
+		v.resource = resource;
+		v.type = type;
+		v.error = error;
+	}
+
+	inline JsErrorInfo(const jserrorinfo& value) {
+		v = value;
+	}
+
+	operator jserrorinfo() const {
+		return v;
+	}
+
+private:
+	jserrorinfo v;
 };
 
 class JsConvert {

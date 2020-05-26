@@ -386,11 +386,12 @@ extern "C"
 			}
 		}
 		else if (value.type == JSVALUE_TYPE_ERROR) {
-			jserror *error = (jserror*)value.value.ptr;
-			jsvalue_dispose(error->resource);
-			jsvalue_dispose(error->message);
-			jsvalue_dispose(error->exception);
-			delete error;
+			jserrorinfo *info = (jserrorinfo*)value.value.ptr;
+			jsvalue_dispose(info->resource);
+			jsvalue_dispose(info->message);
+			jsvalue_dispose(info->error);
+            jsvalue_dispose(info->type);
+            delete info;
 		}
     }       
 }

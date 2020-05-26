@@ -141,40 +141,37 @@ Local<Value> JsConvert::AnyToV8(JsValue value, int32_t contextId) const
 
 JsValue JsConvert::ErrorFromV8(TryCatch& trycatch) const
 {
+    assert(trycatch.HasCaught()); // an exception has been caught
+
     HandleScope scope(isolate_);
 
+    auto ctx = isolate_->GetCurrentContext();
+
     auto exception = trycatch.Exception();
+    assert(!exception.IsEmpty());
 
-    // If this is a managed exception we need to place its ID inside the jsvalue
-    // and set the type JSVALUE_TYPE_MANAGED_ERROR to make sure the CLR side will
-    // throw on it.
-    if (exception->IsObject()) {
-        auto obj = Local<Object>::Cast(exception);
-        if (obj->InternalFieldCount() == 1) {
-            Local<External> wrap = Local<External>::Cast(obj->GetInternalField(0));
-            ManagedRef* ref = (ManagedRef*)wrap->Value();
-            return JsValue::ForManagedError(ref->Id());
-        }
+    // Is this a managed exception?
+    Local<Object> obj;
+    if (exception->ToObject(ctx).ToLocal(&obj) && obj->InternalFieldCount() == 1) {
+        auto wrap = Local<External>::Cast(obj->GetInternalField(0));
+        auto ref = (ManagedRef*)wrap->Value();
+        return JsValue::ForManagedError(ref->Id());
     }
-
-    jserror* error = new jserror();
-    memset(error, 0, sizeof(jserror));
 
     auto message = trycatch.Message();
+    auto hasMessage = !message.IsEmpty();
 
-    if (!message.IsEmpty()) {
-        error->line = message->GetLineNumber(isolate_->GetCurrentContext()).FromMaybe(0);
-        error->column = message->GetStartColumn();
-        error->resource = AnyFromV8(message->GetScriptResourceName());
-        error->message = AnyFromV8(message->Get());
-    }
-    if (exception->IsObject()) {
-        Local<Object> obj2 = Local<Object>::Cast(exception);
-        error->type = AnyFromV8(obj2->GetConstructorName());
-    }
+    auto line = hasMessage ? message->GetLineNumber(isolate_->GetCurrentContext()).FromMaybe(0) : 0;
+    auto column = hasMessage ? message->GetStartColumn() : 0;
+    auto resource = hasMessage ? AnyFromV8(message->GetScriptResourceName()) : JsValue::ForEmpty();
+    auto text = hasMessage ? AnyFromV8(message->Get()) : JsValue::ForEmpty();
+    auto error = AnyFromV8(exception);
 
-    error->exception = AnyFromV8(exception);
-    return JsValue::ForError(error);
+    // todo: is ctor name really useful? I think JS Error has a .name property, and that's more important - see MDN
+    auto type = exception->IsObject() ? AnyFromV8(Local<Object>::Cast(exception)->GetConstructorName()) : JsValue::ForEmpty();
+
+    auto errorInfo = new JsErrorInfo(text, line, column, resource, type, error);
+    return JsValue::ForError(errorInfo);
 }
 
 

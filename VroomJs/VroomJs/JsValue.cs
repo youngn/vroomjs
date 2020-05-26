@@ -154,10 +154,10 @@ namespace VroomJs
             Debug.Assert(Type == JsValueType.Managed);
             return Length;
         }
-        public JsError ErrorValue()
+        public JsErrorInfo ErrorValue()
         {
             Debug.Assert(Type == JsValueType.Error);
-            return (JsError)Marshal.PtrToStructure(Ptr, typeof(JsError));
+            return (JsErrorInfo)Marshal.PtrToStructure(Ptr, typeof(JsErrorInfo));
         }
 
         #endregion

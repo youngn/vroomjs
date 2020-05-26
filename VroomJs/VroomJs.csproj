@@ -44,7 +44,7 @@
     <Compile Include="VroomJs\JsCallbacks.cs" />
     <Compile Include="VroomJs\JsContext.cs" />
     <Compile Include="VroomJs\JsEngine.cs" />
-    <Compile Include="VroomJs\JsError.cs" />
+    <Compile Include="VroomJs\JsErrorInfo.cs" />
     <Compile Include="VroomJs\JsExecutionTimedOutException.cs" />
     <Compile Include="VroomJs\JsFunction.cs" />
     <Compile Include="VroomJs\JsObject.cs" />
