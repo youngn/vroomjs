@@ -140,7 +140,7 @@ extern "C"
 		std::wcout << "jscontext_new" << std::endl;
 #endif
         assert(engine != NULL);
-        return JsContext::New(id, engine);
+        return engine->NewContext(id);
     }
 
 	EXPORT void CALLINGCONVENTION jscontext_force_gc()

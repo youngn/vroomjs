@@ -167,6 +167,8 @@ JsEngine* JsEngine::New(int32_t max_young_space = -1, int32_t max_old_space = -1
     Context::Scope contextScope(ctx);
 
     fo->PrototypeTemplate()->Set(engine->isolate_, "valueOf", fp);
+
+    engine->convert_ = new JsConvert(engine->isolate_);
     return engine;
 }
 
@@ -197,7 +199,7 @@ Persistent<Script> *JsEngine::CompileScript(const uint16_t* str, const uint16_t 
     {
         // Compilation failed e.g. syntax error
         // TODO: this can't possibly work right - the retval from ErrorFromV8 is a stack var
-        *error = ErrorFromV8(trycatch);
+        *error = convert_->ErrorFromV8(trycatch);
         // todo: should we not just return here? e.g. return null
     }
 
@@ -226,6 +228,11 @@ void JsEngine::DumpHeapStats()
 	std::wcout << "Heap size executable " << (stats.total_heap_size_executable() / Mega) << std::endl;
 	std::wcout << "Total physical size " << (stats.total_physical_size() / Mega) << std::endl;
 	std::wcout << "Used heap size " << (stats.used_heap_size() / Mega) << std::endl;
+}
+
+JsContext* JsEngine::NewContext(int32_t id)
+{
+    return JsContext::New(id, this, convert_);
 }
 
 void JsEngine::Dispose()
@@ -259,6 +266,9 @@ void JsEngine::Dispose()
 		keepalive_invoke_ = NULL;
 		keepalive_delete_property_ = NULL;
 		keepalive_enumerate_properties_ = NULL;
+
+        delete convert_;
+        convert_ = NULL;
 	}
 }
 
@@ -271,84 +281,6 @@ void JsEngine::DisposeObject(Persistent<Object>* obj)
     
 	obj->Reset();
 }
-
-jsvalue JsEngine::ErrorFromV8(TryCatch& trycatch)
-{
-    jsvalue v;
-
-    HandleScope scope(isolate_);
-    
-    auto exception = trycatch.Exception();
-
-    v.type = JSVALUE_TYPE_UNKNOWN_ERROR;
-    v.value.str = 0;
-    v.length = 0;
-
-    // If this is a managed exception we need to place its ID inside the jsvalue
-    // and set the type JSVALUE_TYPE_MANAGED_ERROR to make sure the CLR side will
-    // throw on it.
-
-    if (exception->IsObject()) {
-        auto obj = Local<Object>::Cast(exception);
-        if (obj->InternalFieldCount() == 1) {
-        Local<External> wrap = Local<External>::Cast(obj->GetInternalField(0));
-        ManagedRef* ref = (ManagedRef*)wrap->Value();
-        v.type = JSVALUE_TYPE_MANAGED_ERROR;
-        v.length = ref->Id();
-        return v;
-        }
-    }
-
-	jserror *error = new jserror();
-	memset(error, 0, sizeof(jserror));
-	
-	Local<Message> message = trycatch.Message();
-
-	if (!message.IsEmpty()) {
-		error->line = message->GetLineNumber(isolate_->GetCurrentContext()).FromMaybe(0);
-		error->column = message->GetStartColumn();
-		error->resource = AnyFromV8(message->GetScriptResourceName());
-		error->message = AnyFromV8(message->Get());
-	}
-	if (exception->IsObject()) {
-        Local<Object> obj2 = Local<Object>::Cast(exception);
-	    error->type = AnyFromV8(obj2->GetConstructorName());
-	}
-
-	error->exception = AnyFromV8(exception);
-	v.type = JSVALUE_TYPE_ERROR;
-	v.value.ptr = error;
-    
-	return v;
-}
-    
-jsvalue JsEngine::StringFromV8(Local<String> value)
-{
-    // From how this is used in the code, the assumption
-    // seems to be that the value will not be empty.
-    assert(!value.IsEmpty());
-
-    jsvalue v;
-    v.length = value->Length();
-
-    // todo: is this the best way to convert?
-    v.value.str = new uint16_t[v.length+1];
-    value->Write(isolate_, v.value.str);
-    v.type = JSVALUE_TYPE_STRING;
-
-    return v;
-}   
-
-jsvalue JsEngine::WrappedFromV8(Local<Object> obj)
-{
-    jsvalue v;
-       
-    v.type = JSVALUE_TYPE_JSOBJECT;
-    v.length = 0;
-    v.value.ptr = new Persistent<Object>(isolate_, obj);
-    
-    return v;
-} 
 
 jsvalue JsEngine::ManagedFromV8(Local<Object> obj)
 {
@@ -363,74 +295,13 @@ jsvalue JsEngine::ManagedFromV8(Local<Object> obj)
     return v;
 }
     
-jsvalue JsEngine::AnyFromV8(Local<Value> value, Local<Object> thisArg)
-{
-    jsvalue v;
-    
-    // Initialize to a generic error.
-    v.type = JSVALUE_TYPE_UNKNOWN_ERROR;
-    v.length = 0;
-    v.value.str = 0;
-    
-    if (value->IsNull() || value->IsUndefined()) {
-        v.type = JSVALUE_TYPE_NULL;
-    }                
-    else if (value->IsBoolean()) {
-        v.type = JSVALUE_TYPE_BOOLEAN;
-        v.value.i32 = value->BooleanValue(isolate_) ? 1 : 0;
-    }
-    else if (value->IsInt32()) {
-        v.type = JSVALUE_TYPE_INTEGER;
-        v.value.i32 = value->Int32Value(isolate_->GetCurrentContext()).FromMaybe(0);
-    }
-    else if (value->IsUint32()) {
-        v.type = JSVALUE_TYPE_INDEX;
-        v.value.i64 = value->Uint32Value(isolate_->GetCurrentContext()).FromMaybe(0);
-    }
-    else if (value->IsNumber()) {
-        v.type = JSVALUE_TYPE_NUMBER;
-        v.value.num = value->NumberValue(isolate_->GetCurrentContext()).FromMaybe(0.0);
-    }
-    else if (value->IsString()) {
-        v = StringFromV8(Local<String>::Cast(value));
-    }
-    else if (value->IsDate()) {
-        v.type = JSVALUE_TYPE_DATE;
-        v.value.num = value->NumberValue(isolate_->GetCurrentContext()).FromMaybe(0);
-    }
-    else if (value->IsArray()) {
-        auto arr = Local<Array>::Cast(value);
-
-        v.type = JSVALUE_TYPE_JSARRAY;
-        v.length = 0;
-        v.value.ptr = new Persistent<Array>(isolate_, arr);
-    }
-    else if (value->IsFunction()) {
-        auto function = Local<Function>::Cast(value);
-
-        v.type = JSVALUE_TYPE_FUNCTION;
-        v.length = 0;
-        v.value.ptr = new Persistent<Function>(isolate_, function);
-    } 
-    else if (value->IsObject()) {
-        auto obj = Local<Object>::Cast(value);
-        if (obj->InternalFieldCount() == 1)
-            v = ManagedFromV8(obj);
-        else
-            v = WrappedFromV8(obj);
-    }
-
-    // todo: throw?
-    return v;
-}
-
 jsvalue JsEngine::ArrayFromArguments(const FunctionCallbackInfo<Value>& args)
 {
     jsvalue v = jsvalue_alloc_array(args.Length());
     auto thisArg = args.Holder();
 
     for (int i=0 ; i < v.length ; i++) {
-        v.value.arr[i] = AnyFromV8(args[i], thisArg);
+        v.value.arr[i] = convert_->AnyFromV8(args[i], thisArg);
     }
     
     return v;
@@ -455,71 +326,3 @@ static void managed_destroy(const WeakCallbackInfo<Local<Object>>& info)
  //   object.Dispose();
 }
 
-Local<Value> JsEngine::AnyToV8(jsvalue v, int32_t contextId)
-{
-	if (v.type == JSVALUE_TYPE_EMPTY) {
-		return Local<Value>();
-	}
-	if (v.type == JSVALUE_TYPE_NULL) {
-        return Null(isolate_);
-    }
-    if (v.type == JSVALUE_TYPE_BOOLEAN) {
-        return Boolean::New(isolate_, v.value.i32 != 0);
-    }
-    if (v.type == JSVALUE_TYPE_INTEGER) {
-        return Int32::New(isolate_, v.value.i32);
-    }
-    if (v.type == JSVALUE_TYPE_NUMBER) {
-        return Number::New(isolate_, v.value.num);
-    }
-    if (v.type == JSVALUE_TYPE_STRING) {
-        return String::NewFromTwoByte(isolate_, v.value.str).ToLocalChecked();
-    }
-    if (v.type == JSVALUE_TYPE_DATE) {
-        return Date::New(isolate_->GetCurrentContext(), v.value.num).ToLocalChecked();
-    }
-    if (v.type == JSVALUE_TYPE_JSOBJECT) {
-        auto pObj = (Persistent<Object>*)v.value.ptr;
-        return Local<Object>::New(isolate_, *pObj);
-    }
-    if (v.type == JSVALUE_TYPE_JSARRAY) {
-        auto pObj = (Persistent<Array>*)v.value.ptr;
-        return Local<Array>::New(isolate_, *pObj);
-    }
-    if (v.type == JSVALUE_TYPE_FUNCTION) {
-        auto pObj = (Persistent<Function>*)v.value.ptr;
-        return Local<Function>::New(isolate_, *pObj);
-    }
-
-    // Arrays are converted to JS native arrays.
-    if (v.type == JSVALUE_TYPE_ARRAY) {
-        auto arr = Array::New(isolate_, v.length);
-        for(int i = 0; i < v.length; i++) {
-            arr->Set(isolate_->GetCurrentContext(), i, AnyToV8(v.value.arr[i], contextId));
-        }
-        return arr;        
-    }
-        
-    // This is an ID to a managed object that lives inside the JsContext keep-alive
-    // cache. We just wrap it and the pointer to the engine inside an External. A
-    // managed error is still a CLR object so it is wrapped exactly as a normal
-    // managed object.
-    if (v.type == JSVALUE_TYPE_MANAGED || v.type == JSVALUE_TYPE_MANAGED_ERROR) {
-
-		auto ref = new ManagedRef(this, contextId, v.length);
-        auto t = Local<FunctionTemplate>::New(isolate_, *managed_template_);
-
-		auto obj = t->InstanceTemplate()->NewInstance(isolate_->GetCurrentContext()).ToLocalChecked();
-        obj->SetInternalField(0, External::New(isolate_, ref));
-
-        // todo: not sure if any of this is needed, revisit
-		//Persistent<Object> persistent = Persistent<Object>::New(object);
-		//persistent->SetInternalField(0, External::New(ref));
-		//persistent.MakeWeak(NULL, managed_destroy);
-        //return persistent;
-        return obj;
-    }
-
-    // todo: throw?
-    return Null(isolate_);
-}

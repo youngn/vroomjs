@@ -44,9 +44,9 @@ Local<Value> ManagedRef::GetPropertyValue(Local<String> name)
 
     jsvalue r = engine_->CallGetPropertyValue(contextId_, id_, *s);
     if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        isolate->ThrowException(engine_->AnyToV8(r, contextId_));
+        isolate->ThrowException(convert_->AnyToV8(r, contextId_));
     else
-        res = engine_->AnyToV8(r, contextId_);
+        res = convert_->AnyToV8(r, contextId_);
 
 #ifdef DEBUG_TRACE_API
     std::cout << "cleaning up result from getproperty value" << std::endl;
@@ -68,9 +68,9 @@ Local<Boolean> ManagedRef::DeleteProperty(Local<String> name)
 #endif
     jsvalue r = engine_->CallDeleteProperty(contextId_, id_, *s);
 	if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        isolate->ThrowException(engine_->AnyToV8(r, contextId_));
+        isolate->ThrowException(convert_->AnyToV8(r, contextId_));
     else
-        res = engine_->AnyToV8(r, contextId_);
+        res = convert_->AnyToV8(r, contextId_);
     
 #ifdef DEBUG_TRACE_API
 		std::cout << "cleaning up result from DeleteProperty" << std::endl;
@@ -92,12 +92,12 @@ Local<Value> ManagedRef::SetPropertyValue(Local<String> name, Local<Value> value
 		std::cout << "SetPropertyValue" << std::endl;
 #endif
     
-    jsvalue v = engine_->AnyFromV8(value);
+    jsvalue v = convert_->AnyFromV8(value);
     jsvalue r = engine_->CallSetPropertyValue(contextId_, id_, *s, v);
     if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        isolate->ThrowException(engine_->AnyToV8(r, contextId_));
+        isolate->ThrowException(convert_->AnyToV8(r, contextId_));
     else
-        res = engine_->AnyToV8(r, contextId_);
+        res = convert_->AnyToV8(r, contextId_);
     
 #ifdef DEBUG_TRACE_API
 		std::cout << "cleaning up result from setproperty value" << std::endl;
@@ -118,9 +118,9 @@ Local<Value> ManagedRef::GetValueOf()
     Local<Value> res;
     jsvalue r = engine_->CallValueOf(contextId_, id_);
     if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        Isolate::GetCurrent()->ThrowException(engine_->AnyToV8(r, contextId_));
+        Isolate::GetCurrent()->ThrowException(convert_->AnyToV8(r, contextId_));
     else
-        res = engine_->AnyToV8(r, contextId_);
+        res = convert_->AnyToV8(r, contextId_);
     
 #ifdef DEBUG_TRACE_API
 		std::wcout << "cleaning up result from getting value of" << std::endl;
@@ -140,9 +140,9 @@ Local<Value> ManagedRef::Invoke(const FunctionCallbackInfo<Value>& args)
     jsvalue a = engine_->ArrayFromArguments(args);
     jsvalue r = engine_->CallInvoke(contextId_, id_, a);
     if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        Isolate::GetCurrent()->ThrowException(engine_->AnyToV8(r, contextId_));
+        Isolate::GetCurrent()->ThrowException(convert_->AnyToV8(r, contextId_));
     else
-        res = engine_->AnyToV8(r, contextId_);
+        res = convert_->AnyToV8(r, contextId_);
     
 #ifdef DEBUG_TRACE_API
 		std::wcout << "cleaning up result from invoke" << std::endl;
@@ -163,9 +163,9 @@ Local<Array> ManagedRef::EnumerateProperties()
 #endif
     jsvalue r = engine_->CallEnumerateProperties(contextId_, id_);
 	if (r.type == JSVALUE_TYPE_MANAGED_ERROR)
-        Isolate::GetCurrent()->ThrowException(engine_->AnyToV8(r, contextId_));
+        Isolate::GetCurrent()->ThrowException(convert_->AnyToV8(r, contextId_));
     else
-        res = engine_->AnyToV8(r, contextId_);
+        res = convert_->AnyToV8(r, contextId_);
     
 #ifdef DEBUG_TRACE_API
 		std::cout << "cleaning up result from EnumerateProperties" << std::endl;
