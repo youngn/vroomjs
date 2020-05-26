@@ -304,7 +304,7 @@ private:
 // by the JsEngine on the CLR side.
 class JsEngine {
 public:
-	static JsEngine *New(int32_t max_young_space, int32_t max_old_space);
+	JsEngine(int32_t max_young_space, int32_t max_old_space);
 	void TerminateExecution();
 
 	inline void SetRemoveDelegate(keepalive_remove_f delegate) { keepalive_remove_ = delegate; }
@@ -400,10 +400,6 @@ public:
 	Persistent<Context> *global_context_;
 
 private:
-	inline JsEngine() {
-		INCREMENT(js_mem_debug_engine_count);
-	}
-
 	Isolate* isolate_;
 	ArrayBuffer::Allocator* allocator_;
 	
@@ -424,8 +420,8 @@ private:
 
 class JsContext {
  public:
-    static JsContext* New(int32_t id, JsEngine *engine, JsConvert* convert);
-     
+	JsContext(int32_t id, JsEngine* engine, JsConvert* convert);
+
     // Called by bridge to execute JS from managed code.
 	JsValue Execute(const uint16_t* str, const uint16_t *resourceName);
 	JsValue Execute(JsScript *script);
@@ -451,10 +447,6 @@ class JsContext {
 	}
 
  private:             
-    inline JsContext() {
-		INCREMENT(js_mem_debug_context_count);
-	}
-
 	int32_t id_;
 	JsEngine* engine_;
 	JsConvert* convert_;

@@ -114,19 +114,17 @@ static void managed_valueof(const FunctionCallbackInfo<Value>& args)
     args.GetReturnValue().Set(ref->GetValueOf());
 }
 
-JsEngine* JsEngine::New(int32_t max_young_space = -1, int32_t max_old_space = -1)
+JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space)
 {
-    auto engine = new JsEngine();
-    engine->allocator_ = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
+    allocator_ = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 
     Isolate::CreateParams create_params;
-    create_params.array_buffer_allocator = engine->allocator_;
+    create_params.array_buffer_allocator = allocator_;
 
-    auto pIsolate = Isolate::New(create_params);
-    engine->isolate_ = pIsolate;
+    isolate_ = Isolate::New(create_params);
 
     // todo: SetResourceConstraints doesn't seem to exist anymore
-    //engine->isolate_->Enter();
+    //isolate_->Enter();
     //if (max_young_space > 0 && max_old_space > 0) {
     //	v8::ResourceConstraints constraints;
     //	constraints.set_max_young_space_size(max_young_space * Mega);
@@ -134,14 +132,14 @@ JsEngine* JsEngine::New(int32_t max_young_space = -1, int32_t max_old_space = -1
     //
     //	v8::SetResourceConstraints(&constraints);
     //}
-    //engine->isolate_->Exit();
+    //isolate_->Exit();
 
-    Locker locker(engine->isolate_);
-    Isolate::Scope isolate_scope(engine->isolate_);
-    HandleScope scope(engine->isolate_);
+    Locker locker(isolate_);
+    Isolate::Scope isolate_scope(isolate_);
+    HandleScope scope(isolate_);
 
     // Setup the template we'll use for all managed object references.
-    auto fo = FunctionTemplate::New(engine->isolate_);
+    auto fo = FunctionTemplate::New(isolate_);
     auto obj_template = fo->InstanceTemplate();
     obj_template->SetInternalFieldCount(1);
     obj_template->SetHandler(
@@ -154,22 +152,24 @@ JsEngine* JsEngine::New(int32_t max_young_space = -1, int32_t max_old_space = -1
         )
     );
     obj_template->SetCallAsFunctionHandler(managed_call);
-    engine->managed_template_ = new Persistent<FunctionTemplate>(engine->isolate_, fo);
+    managed_template_ = new Persistent<FunctionTemplate>(isolate_, fo);
 
-    auto fp = FunctionTemplate::New(engine->isolate_, managed_valueof);
-    engine->valueof_function_template_ =
-        new Persistent<FunctionTemplate>(engine->isolate_, fp);
+    auto fp = FunctionTemplate::New(isolate_, managed_valueof);
+    valueof_function_template_ =
+        new Persistent<FunctionTemplate>(isolate_, fp);
 
-    engine->global_context_ =
-        new Persistent<Context>(engine->isolate_, Context::New(engine->isolate_));
+    global_context_ =
+        new Persistent<Context>(isolate_, Context::New(isolate_));
 
-    auto ctx = Local<Context>::New(engine->isolate_, *engine->global_context_);
+    auto ctx = Local<Context>::New(isolate_, *global_context_);
     Context::Scope contextScope(ctx);
 
-    fo->PrototypeTemplate()->Set(engine->isolate_, "valueOf", fp);
+    fo->PrototypeTemplate()->Set(isolate_, "valueOf", fp);
 
-    engine->convert_ = new JsConvert(engine->isolate_);
-    return engine;
+    convert_ = new JsConvert(isolate_);
+
+    // Do this last, in case anything above fails
+    INCREMENT(js_mem_debug_engine_count);
 }
 
 Persistent<Script> *JsEngine::CompileScript(const uint16_t* str, const uint16_t *resourceName, jsvalue *error)
@@ -232,7 +232,7 @@ void JsEngine::DumpHeapStats()
 
 JsContext* JsEngine::NewContext(int32_t id)
 {
-    return JsContext::New(id, this, convert_);
+    return new JsContext(id, this, convert_);
 }
 
 void JsEngine::Dispose()

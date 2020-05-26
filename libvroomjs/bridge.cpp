@@ -85,17 +85,15 @@ extern "C"
         assert(keepalive_delete_property != NULL);
         assert(keepalive_enumerate_properties != NULL);
 
-        JsEngine *engine = JsEngine::New(max_young_space, max_old_space);
-		if (engine != NULL) {
-            engine->SetRemoveDelegate(keepalive_remove);
-            engine->SetGetPropertyValueDelegate(keepalive_get_property_value);
-            engine->SetSetPropertyValueDelegate(keepalive_set_property_value);
-			engine->SetValueOfDelegate(keepalive_valueof);
-            engine->SetInvokeDelegate(keepalive_invoke);
-			engine->SetDeletePropertyDelegate(keepalive_delete_property);
-			engine->SetEnumeratePropertiesDelegate(keepalive_enumerate_properties);
-        }
-		return engine;
+        JsEngine *engine = new JsEngine(max_young_space, max_old_space);
+        engine->SetRemoveDelegate(keepalive_remove);
+        engine->SetGetPropertyValueDelegate(keepalive_get_property_value);
+        engine->SetSetPropertyValueDelegate(keepalive_set_property_value);
+        engine->SetValueOfDelegate(keepalive_valueof);
+        engine->SetInvokeDelegate(keepalive_invoke);
+        engine->SetDeletePropertyDelegate(keepalive_delete_property);
+        engine->SetEnumeratePropertiesDelegate(keepalive_enumerate_properties);
+        return engine;
 	}
 
 	EXPORT void CALLINGCONVENTION jsengine_terminate_execution(JsEngine* engine) {

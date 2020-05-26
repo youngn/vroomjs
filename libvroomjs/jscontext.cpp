@@ -32,24 +32,21 @@ using namespace v8;
 
 long js_mem_debug_context_count;
 
-// todo: could we just build this into the ctor, or at least make the ctor accept params?
-JsContext* JsContext::New(int id, JsEngine* engine, JsConvert* convert)
+JsContext::JsContext(int32_t id, JsEngine* engine, JsConvert* convert)
 {
-    JsContext* context = new JsContext();
-    context->id_ = id;
-    context->engine_ = engine;
-    context->isolate_ = engine->GetIsolate();
+    id_ = id;
+    engine_ = engine;
+    isolate_ = engine->GetIsolate();
 
-    Locker locker(context->isolate_);
-    Isolate::Scope isolate_scope(context->isolate_);
-    HandleScope scope(context->isolate_);
+    Locker locker(isolate_);
+    Isolate::Scope isolate_scope(isolate_);
+    HandleScope scope(isolate_);
 
-    context->context_ = new Persistent<Context>(
-        context->isolate_, Context::New(context->isolate_));
+    context_ = new Persistent<Context>(isolate_, Context::New(isolate_));
+    convert_ = convert;
 
-    context->convert_ = convert;
-
-    return context;
+    // Do this last, in case anything above fails
+    INCREMENT(js_mem_debug_context_count);
 }
 
 void JsContext::Dispose()
