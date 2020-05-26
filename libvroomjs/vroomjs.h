@@ -243,13 +243,15 @@ public:
 		return (Persistent<Object>*)v.value.ptr;
 	}
 
+	inline JsValue(const jsvalue& value) {
+		v = value;
+	}
+
 	operator jsvalue() const {
 		return v;
 	}
 
-	inline JsValue(const jsvalue& value) {
-		v = value;
-	}
+	void Dispose();
 
 private:
 	inline JsValue(int32_t type, int32_t length, int32_t i32) {
@@ -298,6 +300,13 @@ public:
 
 	operator jserrorinfo() const {
 		return v;
+	}
+
+	void Dispose() {
+		((JsValue*)&v.message)->Dispose();
+		((JsValue*)&v.resource)->Dispose();
+		((JsValue*)&v.type)->Dispose();
+		((JsValue*)&v.error)->Dispose();
 	}
 
 private:

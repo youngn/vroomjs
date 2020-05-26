@@ -262,6 +262,7 @@
     <ClCompile Include="jsengine.cpp" />
     <ClCompile Include="jsscript.cpp" />
     <ClCompile Include="jsconvert.cpp" />
+    <ClCompile Include="jsvalue.cpp" />
     <ClCompile Include="managedref.cpp" />
   </ItemGroup>
   <ItemGroup>
