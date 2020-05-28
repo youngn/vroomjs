@@ -31,10 +31,6 @@ namespace VroomJs
     [Serializable]
     public class JsInteropException :JsException
 	{
-        public JsInteropException()
-        {
-        }
-
         public JsInteropException(string message) : base(message)
         {
         }

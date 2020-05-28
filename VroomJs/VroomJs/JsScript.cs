@@ -12,7 +12,7 @@ namespace VroomJs
         private readonly Action<int> _notifyDispose;
         private bool _disposed;
 
-        internal JsScript(int id, JsEngine engine, HandleRef engineHandle, JsConvert convert, string code, string name, Action<int> notifyDispose)
+        internal JsScript(int id, JsEngine engine, HandleRef engineHandle, JsContext context, string code, string name, Action<int> notifyDispose)
         {
             _id = id;
             _engine = engine;
@@ -21,7 +21,7 @@ namespace VroomJs
             _scriptHandle = new HandleRef(this, NativeApi.jsscript_new(engineHandle));
 
             JsValue v = NativeApi.jsscript_compile(_scriptHandle, code, name);
-            object res = convert.FromJsValue(v);
+            object res = v.Extract(context);
             Exception e = res as JsException;
             if (e != null)
             {

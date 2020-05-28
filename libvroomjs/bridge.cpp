@@ -282,7 +282,7 @@ extern "C"
         assert(argCount >= 0);
         assert(argCount == 0 || args != NULL);
 
-        return context->InvokeFunction(obj, receiver, argCount, args);
+        return context->InvokeFunction(obj, receiver, argCount, (JsValue*)args);
     }        
 
 	EXPORT JsScript* CALLINGCONVENTION jsscript_new(JsEngine *engine)
@@ -364,6 +364,6 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsvalue_dispose" << std::endl;
 #endif
-        ((JsValue*)&value)->Dispose();
+        JsValueDisposer::DisposeValue(value);
     }       
 }

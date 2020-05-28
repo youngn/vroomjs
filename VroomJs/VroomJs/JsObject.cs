@@ -53,8 +53,7 @@ namespace VroomJs
 
             // todo: make this more efficient by marshaling as a string array, rather than a JsArray
             var v = NativeApi.jsobject_get_property_names(_context.Handle, _objectHandle);
-            var res = Convert.FromJsValue(v);
-            NativeApi.jsvalue_dispose(v);
+            var res = v.Extract(_context);
 
             Exception e = res as JsException;
             if (e != null)
@@ -72,8 +71,7 @@ namespace VroomJs
             CheckDisposed();
 
             var v = NativeApi.jsobject_get_named_property_value(_context.Handle, _objectHandle, name);
-            var res = Convert.FromJsValue(v);
-            NativeApi.jsvalue_dispose(v);
+            var res = v.Extract(_context);
 
             Exception e = res as JsException;
             if (e != null)
@@ -86,8 +84,7 @@ namespace VroomJs
             CheckDisposed();
 
             var v = NativeApi.jsobject_get_indexed_property_value(_context.Handle, _objectHandle, index);
-            var res = Convert.FromJsValue(v);
-            NativeApi.jsvalue_dispose(v);
+            var res = v.Extract(_context);
 
             Exception e = res as JsException;
             if (e != null)
@@ -102,11 +99,9 @@ namespace VroomJs
 
             CheckDisposed();
 
-            var a = Convert.ToJsValue(value);
+            var a = JsValue.ForValue(value, _context);
             var v = NativeApi.jsobject_set_named_property_value(_context.Handle, _objectHandle, name, a);
-            var res = Convert.FromJsValue(v);
-            NativeApi.jsvalue_dispose(v);
-            NativeApi.jsvalue_dispose(a);
+            var res = v.Extract(_context);
 
             Exception e = res as JsException;
             if (e != null)
@@ -117,11 +112,9 @@ namespace VroomJs
         {
             CheckDisposed();
 
-            var a = Convert.ToJsValue(value);
+            var a = JsValue.ForValue(value, _context);
             var v = NativeApi.jsobject_set_indexed_property_value(_context.Handle, _objectHandle, index, a);
-            var res = Convert.FromJsValue(v);
-            NativeApi.jsvalue_dispose(v);
-            NativeApi.jsvalue_dispose(a);
+            var res = v.Extract(_context);
 
             Exception e = res as JsException;
             if (e != null)
@@ -213,8 +206,6 @@ namespace VroomJs
         {
             get { return _objectHandle; }
         }
-
-        internal JsConvert Convert => _context.Convert;
 
         internal JsContext Context => _context;
 

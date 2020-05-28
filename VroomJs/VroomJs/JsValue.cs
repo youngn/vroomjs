@@ -42,6 +42,94 @@ namespace VroomJs
         [FieldOffset(12)] private int Length; // Length of array or string or managed object keepalive index.
         [FieldOffset(12)] private int Index;
 
+        public static JsValue ForValue(object obj, JsContext context)
+        {
+            if (obj == null)
+                return ForNull();
+
+            var type = obj.GetType();
+
+            // Check for nullable types (we will cast the value out of the box later).
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+                type = type.GetGenericArguments()[0];
+
+            if (type == typeof(bool))
+                return ForBoolean((bool)obj);
+
+            if (type == typeof(string) || type == typeof(char))
+            {
+                // We need to allocate some memory on the other side; will be free'd by unmanaged code.
+                return NativeApi.jsvalue_alloc_string(obj.ToString());
+            }
+
+            if (type == typeof(byte))
+                return ForInt32((byte)obj);
+            if (type == typeof(short))
+                return ForInt32((short)obj);
+            if (type == typeof(ushort))
+                return ForInt32((ushort)obj);
+            if (type == typeof(int))
+                return ForInt32((int)obj);
+            if (type == typeof(uint))
+                return ForInt32((int)(uint)obj);
+
+            if (type == typeof(long))
+                return ForNumber((long)obj); // todo: overflow?
+            if (type == typeof(ulong))
+                return ForNumber((ulong)obj); // todo: overflow?
+            if (type == typeof(float))
+                return ForNumber((float)obj);
+            if (type == typeof(double))
+                return ForNumber((double)obj);
+            if (type == typeof(decimal))
+                return ForNumber((double)(decimal)obj);
+
+            if (type == typeof(DateTimeOffset))
+                return ForDate(((DateTimeOffset)obj).ToUnixTimeMilliseconds());
+
+            if (type == typeof(JsObject))
+                return ForJsObject((JsObject)obj);
+
+            if (type == typeof(JsArray))
+                return ForJsArray((JsArray)obj);
+
+            if (type == typeof(JsFunction))
+                return ForJsFunction((JsFunction)obj);
+
+            // Arrays of anything that can be cast to object[] are recursively convertef after
+            // allocating an appropriate jsvalue on the unmanaged side.
+            //var array = obj as object[];
+            //if (array != null)
+            //{
+            //    JsValue v = NativeApi.jsvalue_alloc_array(array.Length);
+            //    if (v.Length != array.Length)
+            //        throw new JsInteropException("can't allocate memory on the unmanaged side");
+            //    for (int i = 0; i < array.Length; i++)
+            //        Marshal.StructureToPtr(ToJsValue(array[i]), new IntPtr(v.Ptr.ToInt64() + (16 * i)), false);
+            //    return v;
+            //}
+
+            // Every object explicitly converted to a value becomes an entry of the
+            // _keepalives list, to make sure the GC won't collect it while still in
+            // use by the unmanaged Javascript engine. We don't try to track duplicates
+            // because adding the same object more than one time acts more or less as
+            // reference counting.
+            return ForManagedObject(context.KeepAliveAdd(obj));
+        }
+
+        public object Extract(JsContext context)
+        {
+            var result = GetValue(context);
+            Dispose();
+            return result;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("[JsValue({0})]", Type);
+        }
+
         #region Factory methods
 
         public static JsValue ForEmpty()
@@ -102,69 +190,175 @@ namespace VroomJs
 
         #endregion
 
-        #region Value extractors
+        #region Value getters
 
-        public bool BooleanValue()
+        private object GetValue(JsContext context)
+        {
+#if DEBUG_TRACE_API
+			Console.WriteLine("Converting Js value to .net");
+#endif
+            switch (Type)
+            {
+                case JsValueType.Empty:
+                case JsValueType.Null:
+                    return null;
+
+                case JsValueType.Boolean:
+                    return BooleanValue();
+
+                case JsValueType.Integer:
+                    return Int32Value();
+
+                case JsValueType.Index:
+                    return UInt32Value();
+
+                case JsValueType.Number:
+                    return NumberValue();
+
+                case JsValueType.String:
+                    return StringValue();
+
+                case JsValueType.Date:
+                    return DateValue();
+
+                //case JsValueType.Array:
+                //    {
+                //        var r = new object[v.Length];
+                //        for (int i = 0; i < v.Length; i++)
+                //        {
+                //            var vi = (JsValue)Marshal.PtrToStructure(new IntPtr(v.Ptr.ToInt64() + (16 * i)), typeof(JsValue));
+                //            r[i] = FromJsValue(vi);
+                //        }
+                //        return r;
+                //    }
+
+                case JsValueType.UnknownError:
+                    return new JsInteropException("unknown error without reason"); // todo: improve this
+
+                case JsValueType.StringError: // todo: is still used?
+                    return new JsException(StringValue());
+
+                case JsValueType.Managed:
+                    return ManagedValue(context);
+
+                case JsValueType.ManagedError:
+                    // todo: do we really want to wrapping in JsException? maybe better to just rethrow raw?
+                    var inner = ManagedValue(context) as Exception;
+                    var msg = inner?.Message ?? "Unknown error"; // todo: make this better
+                    return new JsException(msg, inner);
+
+                case JsValueType.JsObject:
+                    return JsObjectValue(context);
+
+                case JsValueType.JsArray:
+                    return JsArrayValue(context);
+
+                case JsValueType.Function:
+                    return JsFunctionValue(context);
+
+                case JsValueType.Error:
+                    return ErrorValue(context);
+
+                default:
+                    throw new InvalidOperationException("unknown type code: " + Type);
+            }
+        }
+
+        private bool BooleanValue()
         {
             Debug.Assert(Type == JsValueType.Boolean);
             return I32 != 0;
         }
-        public int Int32Value()
+        private int Int32Value()
         {
             Debug.Assert(Type == JsValueType.Integer);
             return I32;
         }
-        public uint UInt32Value()
+        private uint UInt32Value()
         {
             Debug.Assert(Type == JsValueType.Index);
             return (uint)I64;
         }
-        public double NumberValue()
+        private double NumberValue()
         {
             Debug.Assert(Type == JsValueType.Number);
             return Num;
         }
-        public string StringValue()
+        private string StringValue()
         {
             Debug.Assert(Type == JsValueType.String || Type == JsValueType.StringError);
             return Marshal.PtrToStringUni(Ptr);
         }
-        public double DateValue()
+        private DateTimeOffset DateValue()
         {
             Debug.Assert(Type == JsValueType.Date);
-            return Num;
+            return DateTimeOffset.FromUnixTimeMilliseconds((long)Num);
         }
-        public IntPtr JsArrayValue()
+        private JsArray JsArrayValue(JsContext context)
         {
             Debug.Assert(Type == JsValueType.JsArray);
-            return Ptr;
+            return new JsArray(context, Ptr);
         }
-        public IntPtr JsFunctionValue()
+        private JsFunction JsFunctionValue(JsContext context)
         {
             Debug.Assert(Type == JsValueType.Function);
-            return Ptr;
+            return new JsFunction(context, Ptr);
         }
-        public IntPtr JsObjectValue()
+        private JsObject JsObjectValue(JsContext context)
         {
             Debug.Assert(Type == JsValueType.JsObject);
-            return Ptr;
+            return new JsObject(context, Ptr);
         }
-        public int ManagedValue()
+        private object ManagedValue(JsContext context)
         {
             Debug.Assert(Type == JsValueType.Managed);
-            return Length;
+            return context.KeepAliveGet(Length);
         }
-        public JsErrorInfo ErrorValue()
+
+        private JsException ErrorValue(JsContext context)
         {
             Debug.Assert(Type == JsValueType.Error);
-            return (JsErrorInfo)Marshal.PtrToStructure(Ptr, typeof(JsErrorInfo));
+
+            var info = (JsErrorInfo)Marshal.PtrToStructure(Ptr, typeof(JsErrorInfo));
+
+            // Use conditional cast to string because it is possible the JsValue is empty
+            var resource = info.Resource.GetValue(context) as string;
+            var message = info.Message.GetValue(context) as string;
+            var type = info.Type.GetValue(context) as string;
+
+            var line = info.Line;
+            var column = info.Column;
+
+            // The error object can be anything is JS - it is not necessarily an Error object,
+            // or even an Object, so we don't cast it.
+            var error = info.Error.GetValue(context);
+
+            if (type == "SyntaxError")
+            {
+                // todo: do we actually get a JS error object here? If so, include it
+                return new JsSyntaxException(type, resource, message, line, column);
+            }
+
+            return new JsException(type, resource, message, line, column, error);
         }
 
         #endregion
 
-        public override string ToString()
+        private void Dispose()
         {
-            return string.Format("[JsValue({0})]", Type);
+            // Dispose of any unmanaged resources.
+            // For efficiency, we only do the pinvoke if we know that the type has
+            // unmanaged resources that require disposal.
+            switch (Type)
+            {
+                case JsValueType.String:
+                case JsValueType.Error:
+                // todo: do these types need disposal?
+                //case JsValueType.Managed:
+                //case JsValueType.ManagedError:
+                    NativeApi.jsvalue_dispose(this);
+                    break;
+            }
         }
     }
 }

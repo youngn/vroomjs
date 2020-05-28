@@ -38,7 +38,6 @@ namespace VroomJs
         private readonly int _id;
         private readonly JsEngine _engine;
         private readonly HandleRef _contextHandle;
-        private readonly JsConvert _convert;
 
         // Keep objects passed to V8 alive even if no other references exist.
         private readonly IKeepAliveStore _keepalives;
@@ -54,7 +53,6 @@ namespace VroomJs
 
             _keepalives = new KeepAliveDictionaryStore();
             _contextHandle = new HandleRef(this, NativeApi.jscontext_new(id, engineHandle));
-            _convert = new JsConvert(this);
         }
 
         public JsEngine Engine
@@ -97,11 +95,7 @@ namespace VroomJs
             try
             {
                 JsValue v = NativeApi.jscontext_execute_script(_contextHandle, script.Handle);
-                res = _convert.FromJsValue(v);
-#if DEBUG_TRACE_API
-        	Console.WriteLine("Cleaning up return value from execution");
-#endif
-                NativeApi.jsvalue_dispose(v);
+                res = v.Extract(this);
             }
             finally
             {
@@ -152,11 +146,7 @@ namespace VroomJs
                 watch2.Start();
                 JsValue v = NativeApi.jscontext_execute(_contextHandle, code, name ?? "<Unnamed Script>");
                 watch2.Stop();
-                res = _convert.FromJsValue(v);
-#if DEBUG_TRACE_API
-        	Console.WriteLine("Cleaning up return value from execution");
-#endif
-                NativeApi.jsvalue_dispose(v);
+                res = v.Extract(this);
             }
             finally
             {
@@ -185,8 +175,7 @@ namespace VroomJs
         {
             CheckDisposed();
             JsValue v = NativeApi.jscontext_get_global(_contextHandle);
-            object res = _convert.FromJsValue(v);
-            NativeApi.jsvalue_dispose(v);
+            object res = v.Extract(this);
 
             Exception e = res as JsException;
             if (e != null)
@@ -202,11 +191,7 @@ namespace VroomJs
             CheckDisposed();
 
             JsValue v = NativeApi.jscontext_get_variable(_contextHandle, name);
-            object res = _convert.FromJsValue(v);
-#if DEBUG_TRACE_API
-			Console.WriteLine("Cleaning up return value get variable.");
-#endif
-            NativeApi.jsvalue_dispose(v);
+            object res = v.Extract(this);
 
             Exception e = res as JsException;
             if (e != null)
@@ -221,13 +206,11 @@ namespace VroomJs
 
             CheckDisposed();
 
-            JsValue a = _convert.ToJsValue(value);
+            JsValue a = JsValue.ForValue(value, this);
             JsValue b = NativeApi.jscontext_set_variable(_contextHandle, name, a);
-#if DEBUG_TRACE_API
-			Console.WriteLine("Cleaning up return value from set variable");
-#endif
-            NativeApi.jsvalue_dispose(a);
-            NativeApi.jsvalue_dispose(b);
+
+            // Extract the return value so that it gets cleaned up, even if not used
+            var result = b.Extract(this);
             // TODO: Check the result of the operation for errors.
         }
 
@@ -311,8 +294,6 @@ namespace VroomJs
             get { return _contextHandle; }
         }
 
-        internal JsConvert Convert => _convert;
-
         internal void CheckDisposed()
         {
             if (_disposed)
@@ -327,7 +308,7 @@ namespace VroomJs
             if (typeof(IDictionary).IsAssignableFrom(type))
             {
                 IDictionary dictionary = (IDictionary)obj;
-                dictionary[name] = _convert.FromJsValue(value);
+                dictionary[name] = value.Extract(this);
                 return true;
             }
 
@@ -344,7 +325,7 @@ namespace VroomJs
             PropertyInfo pi = type.GetProperty(name, flags | BindingFlags.SetProperty);
             if (pi != null)
             {
-                pi.SetValue(obj, _convert.FromJsValue(value), null);
+                pi.SetValue(obj, value.Extract(this), null);
                 return true;
             }
 
@@ -411,7 +392,7 @@ namespace VroomJs
                 if (dictionary.Contains(name))
                 {
                     result = dictionary[name];
-                    value = _convert.ToJsValue(result);
+                    value = JsValue.ForValue(result, this);
                 }
                 else
                 {
@@ -435,7 +416,7 @@ namespace VroomJs
             if (pi != null)
             {
                 result = pi.GetValue(obj, null);
-                value = _convert.ToJsValue(result);
+                value = JsValue.ForValue(result, this);
                 return true;
             }
 
@@ -444,7 +425,7 @@ namespace VroomJs
             if (fi != null)
             {
                 result = fi.GetValue(obj);
-                value = _convert.ToJsValue(result);
+                value = JsValue.ForValue(result, this);
                 return true;
             }
 
@@ -465,7 +446,7 @@ namespace VroomJs
                 {
                     result = new WeakDelegate(obj, name);
                 }
-                value = _convert.ToJsValue(result);
+                value = JsValue.ForValue(result, this);
                 return true;
             }
 
@@ -548,9 +529,9 @@ namespace VroomJs
                 if (mi != null)
                 {
                     object result = mi.Invoke(obj, new object[0]);
-                    return _convert.ToJsValue(result);
+                    return JsValue.ForValue(result, this);
                 }
-                return _convert.ToJsValue(obj);
+                return JsValue.ForValue(obj, this);
             }
             return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
@@ -572,8 +553,8 @@ namespace VroomJs
 #if DEBUG_TRACE_API
 					Console.WriteLine("constructing " + constructorType.Name);
 #endif
-                    object[] constructorArgs = (object[])_convert.FromJsValue(args);
-                    return _convert.ToJsValue(Activator.CreateInstance(constructorType, constructorArgs));
+                    object[] constructorArgs = (object[])args.Extract(this);
+                    return JsValue.ForValue(Activator.CreateInstance(constructorType, constructorArgs), this);
                 }
 
                 WeakDelegate func = obj as WeakDelegate;
@@ -586,7 +567,7 @@ namespace VroomJs
 #if DEBUG_TRACE_API
 				Console.WriteLine("invoking " + obj.Target + " method " + obj.MethodName);
 #endif
-                object[] a = (object[])_convert.FromJsValue(args);
+                object[] a = (object[])args.Extract(this);
 
                 BindingFlags flags = BindingFlags.Public
                         | BindingFlags.InvokeMethod | BindingFlags.FlattenHierarchy;
@@ -614,7 +595,7 @@ namespace VroomJs
                 try
                 {
                     object result = type.InvokeMember(func.MethodName, flags, null, func.Target, a);
-                    return _convert.ToJsValue(result);
+                    return JsValue.ForValue(result, this);
                 }
                 catch (TargetInvocationException e)
                 {
@@ -666,10 +647,10 @@ namespace VroomJs
                     if (dictionary.Contains(name))
                     {
                         dictionary.Remove(name);
-                        return _convert.ToJsValue(true);
+                        return JsValue.ForValue(true, this);
                     }
                 }
-                return _convert.ToJsValue(false);
+                return JsValue.ForValue(false, this);
             }
             return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
@@ -691,7 +672,7 @@ namespace VroomJs
                 {
                     IDictionary dictionary = (IDictionary)obj;
                     string[] keys = dictionary.Keys.Cast<string>().ToArray();
-                    return _convert.ToJsValue(keys);
+                    return JsValue.ForValue(keys, this);
                 }
 
                 string[] values = obj.GetType().GetMembers(
@@ -701,7 +682,7 @@ namespace VroomJs
                         var method = m as MethodBase;
                         return method == null || !method.IsSpecialName;
                     }).Select(z => z.Name).ToArray();
-                return _convert.ToJsValue(values);
+                return JsValue.ForValue(values, this);
             }
             return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }

@@ -17,16 +17,11 @@ namespace VroomJs
         {
             CheckDisposed();
 
-            var jsargs = (args ?? Array.Empty<object>()).Select(Convert.ToJsValue).ToArray();
-            var recv = Convert.ToJsValue(receiver);
+            var jsargs = (args ?? Array.Empty<object>()).Select(a => JsValue.ForValue(a, Context)).ToArray();
+            var recv = JsValue.ForValue(receiver, Context);
 
             var v = NativeApi.jsfunction_invoke(Context.Handle, Handle, recv, jsargs.Length, jsargs);
-            var res = Convert.FromJsValue(v);
-            NativeApi.jsvalue_dispose(v);
-            NativeApi.jsvalue_dispose(recv);
-
-            foreach(var x in jsargs)
-                NativeApi.jsvalue_dispose(x);
+            var res = v.Extract(Context);
 
             var e = res as JsException;
             if (e != null)

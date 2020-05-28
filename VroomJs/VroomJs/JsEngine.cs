@@ -71,12 +71,14 @@ namespace VroomJs
 
             CheckDisposed();
 
-            var id = Interlocked.Increment(ref _currentScriptId);
+            throw new NotImplementedException("Broken because we don't have a JsContext at this point.");
 
-            var script = new JsScript(id, this, _engineHandle, new JsConvert(null), code, name, ScriptDisposed);
-            _aliveScripts.Add(id, script);
+            //var id = Interlocked.Increment(ref _currentScriptId);
 
-            return script;
+            //var script = new JsScript(id, this, _engineHandle, new JsConvert(null), code, name, ScriptDisposed);
+            //_aliveScripts.Add(id, script);
+
+            //return script;
         }
 
         public void TerminateExecution()

@@ -31,37 +31,11 @@ namespace VroomJs
     [Serializable]
     public class JsException : Exception
     {
-        internal static JsException Create(JsConvert convert, JsErrorInfo info)
-        {
-            // Use conditional cast to string because it is possible the JsValue is empty
-            var resource = (string)convert.FromJsValue(info.Resource) as string;
-            var message = (string)convert.FromJsValue(info.Message) as string;
-            var type = convert.FromJsValue(info.Type) as string;
-            var line = info.Line;
-            var column = info.Column;
-
-            // The error object can be anything is JS - it is not necessarily an Error object,
-            // or even an Object.
-            var error = convert.FromJsValue(info.Error);
-
-            if (type == "SyntaxError")
-            {
-                // todo: do we actually get a JS error object here? If so, include it
-                return new JsSyntaxException(type, resource, message, line, column);
-            }
-
-            return new JsException(type, resource, message, line, column, error);
-        }
-
         private string _resource;
         private int _line;
         private int _column;
         private string _type;
         private readonly object _error;
-
-        public JsException()
-        {
-        }
 
         public JsException(string message)
             : base(message)

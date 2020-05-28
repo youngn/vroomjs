@@ -32,7 +32,7 @@ using namespace v8;
 
 long js_mem_debug_context_count;
 
-JsContext::JsContext(int32_t id, JsEngine* engine, JsConvert* convert)
+JsContext::JsContext(int32_t id, JsEngine* engine)
 {
     id_ = id;
     engine_ = engine;
@@ -43,7 +43,6 @@ JsContext::JsContext(int32_t id, JsEngine* engine, JsConvert* convert)
     HandleScope scope(isolate_);
 
     context_ = new Persistent<Context>(isolate_, Context::New(isolate_));
-    convert_ = convert;
 
     // Do this last, in case anything above fails
     INCREMENT(js_mem_debug_context_count);
@@ -84,14 +83,14 @@ JsValue JsContext::Execute(const uint16_t* str, const uint16_t* resourceName = N
     if (!Script::Compile(isolate_->GetCurrentContext(), source, &scriptOrigin).ToLocal(&script))
     {
         // Compilation failed e.g. syntax error
-        return convert_->ErrorFromV8(trycatch);
+        return JsValue::ForError(trycatch);
     }
 
     Local<Value> result;
     if (script->Run(isolate_->GetCurrentContext()).ToLocal(&result)) {
-        return convert_->AnyFromV8(result);
+        return JsValue::ForValue(result);
     } else {
-        return convert_->ErrorFromV8(trycatch);
+        return JsValue::ForError(trycatch);
     }
 }
 
@@ -110,13 +109,13 @@ JsValue JsContext::Execute(JsScript* jsscript)
 
     Local<Value> result;
     if (script->Run(isolate_->GetCurrentContext()).ToLocal(&result)) {
-        return convert_->AnyFromV8(result);
+        return JsValue::ForValue(result);
     } else {
-        return convert_->ErrorFromV8(trycatch);
+        return JsValue::ForError(trycatch);
     }
 }
 
-JsValue JsContext::SetVariable(const uint16_t* name, jsvalue value)
+JsValue JsContext::SetVariable(const uint16_t* name, JsValue value)
 {
     assert(name != nullptr);
 
@@ -127,7 +126,7 @@ JsValue JsContext::SetVariable(const uint16_t* name, jsvalue value)
     auto ctx = Local<Context>::New(isolate_, *context_);
     Context::Scope contextScope(ctx);
 
-    auto v = convert_->AnyToV8(value, id_);
+    auto v = value.Extract(id_);
     auto var_name = String::NewFromTwoByte(isolate_, name).ToLocalChecked();
 
     ctx->Global()->Set(ctx, var_name, v).Check();
@@ -140,7 +139,6 @@ JsValue JsContext::SetVariable(const uint16_t* name, jsvalue value)
 }
 
 JsValue JsContext::GetGlobal() {
-    jsvalue v;
 
     Locker locker(isolate_);
     Isolate::Scope isolate_scope(isolate_);
@@ -153,12 +151,10 @@ JsValue JsContext::GetGlobal() {
 
     Local<Value> value = ctx->Global();
     if (!value.IsEmpty()) {
-        v = convert_->AnyFromV8(value);
+        return JsValue::ForValue(value);
     } else {
-        v = convert_->ErrorFromV8(trycatch);
+        return JsValue::ForError(trycatch);
     }
-
-    return v;
 }
 
 JsValue JsContext::GetVariable(const uint16_t* name)
@@ -178,9 +174,9 @@ JsValue JsContext::GetVariable(const uint16_t* name)
 
     Local<Value> value;
     if (ctx->Global()->Get(ctx, var_name).ToLocal(&value)) {
-        return convert_->AnyFromV8(value);
+        return JsValue::ForValue(value);
     } else {
-        return convert_->ErrorFromV8(trycatch);
+        return JsValue::ForError(trycatch);
     }
 }
 
@@ -200,9 +196,9 @@ JsValue JsContext::GetPropertyNames(Persistent<Object>* obj)
     Local<Object> objLocal = Local<Object>::New(isolate_, *obj);
     Local<Value> value = objLocal->GetPropertyNames(ctx).ToLocalChecked();
     if (!value.IsEmpty()) {
-        return convert_->AnyFromV8(value);
+        return JsValue::ForValue(value);
     } else {
-        return convert_->ErrorFromV8(trycatch);
+        return JsValue::ForError(trycatch);
     }
 }
 
@@ -226,9 +222,9 @@ JsValue JsContext::GetPropertyValue(Persistent<Object>* obj, const uint16_t* nam
 
     Local<Value> value;
     if (objLocal->Get(ctx, var_name).ToLocal(&value)) {
-        return convert_->AnyFromV8(value);
+        return JsValue::ForValue(value);
     } else {
-        return convert_->ErrorFromV8(trycatch);
+        return JsValue::ForError(trycatch);
     }
 }
 
@@ -249,13 +245,13 @@ JsValue JsContext::GetPropertyValue(Persistent<Object>* obj, const uint32_t inde
 
     Local<Value> value;
     if (objLocal->Get(ctx, index).ToLocal(&value)) {
-        return convert_->AnyFromV8(value);
+        return JsValue::ForValue(value);
     } else {
-        return convert_->ErrorFromV8(trycatch);
+        return JsValue::ForError(trycatch);
     }
 }
 
-JsValue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, jsvalue value)
+JsValue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, JsValue value)
 {
     assert(obj != nullptr);
     assert(name != nullptr);
@@ -267,7 +263,7 @@ JsValue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint16_t* nam
     auto ctx = Local<Context>::New(isolate_, *context_);
     Context::Scope contextScope(ctx);
 
-    auto v = convert_->AnyToV8(value, id_);
+    auto v = value.Extract(id_);
     auto var_name = String::NewFromTwoByte(isolate_, name).ToLocalChecked();
     auto objLocal = Local<Object>::New(isolate_, *obj);
 
@@ -280,7 +276,7 @@ JsValue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint16_t* nam
     return none;
 }
 
-JsValue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint32_t index, jsvalue value)
+JsValue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint32_t index, JsValue value)
 {
     assert(obj != nullptr);
 
@@ -291,7 +287,7 @@ JsValue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint32_t inde
     auto ctx = Local<Context>::New(isolate_, *context_);
     Context::Scope contextScope(ctx);
 
-    auto v = convert_->AnyToV8(value, id_);
+    auto v = value.Extract(id_);
     auto objLocal = Local<Object>::New(isolate_, *obj);
 
     objLocal->Set(ctx, index, v).Check();
@@ -303,7 +299,7 @@ JsValue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint32_t inde
     return none;
 }
 
-JsValue JsContext::InvokeFunction(Persistent<Function>* func, jsvalue receiver, int argCount, jsvalue* args)
+JsValue JsContext::InvokeFunction(Persistent<Function>* func, JsValue receiver, int argCount, JsValue* args)
 {
     assert(func != nullptr);
     assert(argCount >= 0);
@@ -317,22 +313,22 @@ JsValue JsContext::InvokeFunction(Persistent<Function>* func, jsvalue receiver, 
     Context::Scope contextScope(ctx);
 
     auto funcLocal = Local<Function>::New(isolate_, *func);
-    auto recv = convert_->AnyToV8(receiver, id_);
+    auto recv = receiver.Extract(id_);
 
     TryCatch trycatch(isolate_);
 
     std::vector<Local<Value>> argv(argCount);
     if (args != nullptr) {
         for (int i = 0; i < argCount; i++) {
-            argv[i] = convert_->AnyToV8(args[i], id_);
+            argv[i] = args[i].Extract(id_);
         }
     }
 
     Local<Value> retVal;
     if (funcLocal->Call(ctx, recv, argCount, &argv[0]).ToLocal(&retVal)) {
-        return convert_->AnyFromV8(retVal);
+        return JsValue::ForValue(retVal);
     } else {
-        return convert_->ErrorFromV8(trycatch);
+        return JsValue::ForError(trycatch);
     }
 }
 

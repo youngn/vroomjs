@@ -116,6 +116,7 @@ extern "C"
 }
 
 class JsValue;
+class JsValueDisposer;
 class JsErrorInfo;
 class JsEngine;
 class JsContext;
@@ -151,6 +152,15 @@ extern "C"
 
 class JsValue {
 public:
+	static JsValue ForValue(Local<Value> value);
+	static JsValue ForError(TryCatch& trycatch);
+
+	Local<Value> Extract(int32_t contextId) {
+		auto result = GetValue(contextId);
+		Dispose();
+		return result;
+	}
+
 	static JsValue ForUnknownError() {
 		return JsValue(JSVALUE_TYPE_UNKNOWN_ERROR, 0, 0);
 	}
@@ -202,48 +212,48 @@ public:
 		return JsValue(JSVALUE_TYPE_MANAGED, id, 0);
 	}
 
-	inline int32_t ValueType() const {
+	int32_t ValueType() const {
 		return v.type;
 	}
 
-	inline bool BooleanValue() const {
+	bool BooleanValue() const {
 		assert(v.type == JSVALUE_TYPE_BOOLEAN);
 		return v.value.i32 != 0;
 	}
-	inline int32_t Int32Value() const {
+	int32_t Int32Value() const {
 		assert(v.type == JSVALUE_TYPE_INTEGER);
 		return v.value.i32;
 	}
-	inline uint32_t UInt32Value() const {
+	uint32_t UInt32Value() const {
 		assert(v.type == JSVALUE_TYPE_INDEX);
 		return (uint32_t)v.value.i64;
 	}
-	inline double NumberValue() const {
+	double NumberValue() const {
 		assert(v.type == JSVALUE_TYPE_NUMBER);
 		return v.value.num;
 	}
-	inline uint16_t* StringValue() const {
+	uint16_t* StringValue() const {
 		assert(v.type == JSVALUE_TYPE_STRING);
 		return v.value.str;
 	}
-	inline double DateValue() const {
+	double DateValue() const {
 		assert(v.type == JSVALUE_TYPE_DATE);
 		return v.value.num;
 	}
-	inline Persistent<Array>* JsArrayValue() const {
+	Persistent<Array>* JsArrayValue() const {
 		assert(v.type == JSVALUE_TYPE_JSARRAY);
 		return (Persistent<Array>*)v.value.ptr;
 	}
-	inline Persistent<Function>* JsFunctionValue() const {
+	Persistent<Function>* JsFunctionValue() const {
 		assert(v.type == JSVALUE_TYPE_FUNCTION);
 		return (Persistent<Function>*)v.value.ptr;
 	}
-	inline Persistent<Object>* JsObjectValue() const {
+	Persistent<Object>* JsObjectValue() const {
 		assert(v.type == JSVALUE_TYPE_JSOBJECT);
 		return (Persistent<Object>*)v.value.ptr;
 	}
 
-	inline JsValue(const jsvalue& value) {
+	JsValue(const jsvalue& value) {
 		v = value;
 	}
 
@@ -251,9 +261,14 @@ public:
 		return v;
 	}
 
+private:
+	friend class JsErrorInfo;
+	friend class JsValueDisposer;
+
 	void Dispose();
 
-private:
+	Local<Value> GetValue(int32_t contextId);
+
 	inline JsValue(int32_t type, int32_t length, int32_t i32) {
 		v.type = type;
 		v.length = length;
@@ -283,6 +298,13 @@ private:
 	jsvalue v;
 };
 
+class JsValueDisposer {
+public:
+	static void DisposeValue(JsValue value) {
+		value.Dispose();
+	}
+};
+
 class JsErrorInfo {
 public:
 	inline JsErrorInfo(jsvalue message, int32_t line, int32_t column, jsvalue resource, jsvalue type, jsvalue error) {
@@ -302,7 +324,7 @@ public:
 		return v;
 	}
 
-	void Dispose() {
+	~JsErrorInfo() {
 		((JsValue*)&v.message)->Dispose();
 		((JsValue*)&v.resource)->Dispose();
 		((JsValue*)&v.type)->Dispose();
@@ -311,21 +333,6 @@ public:
 
 private:
 	jserrorinfo v;
-};
-
-class JsConvert {
-public:
-	JsConvert(Isolate* isolate);
-
-	// Conversions. Note that all the conversion functions should be called
-	// with an HandleScope already on the stack or will miserably fail.
-	// todo: consider adding inner HandleScope so the above comment is moot??
-	JsValue AnyFromV8(Local<Value> value, Local<Object> thisArg = Local<Object>()) const;
-	Local<Value> AnyToV8(JsValue value, int32_t contextId) const;
-	JsValue ErrorFromV8(TryCatch& trycatch) const;
-
-private:
-	Isolate* isolate_;
 };
 
 
@@ -448,14 +455,12 @@ private:
 	Persistent<FunctionTemplate> *valueof_function_template_;
 
 	jscallbacks callbacks_;
-
-	JsConvert* convert_;
 };
 
 
 class JsContext {
  public:
-	JsContext(int32_t id, JsEngine* engine, JsConvert* convert);
+	JsContext(int32_t id, JsEngine* engine);
 
     // Called by bridge to execute JS from managed code.
 	JsValue Execute(const uint16_t* str, const uint16_t *resourceName);
@@ -463,13 +468,13 @@ class JsContext {
 
 	JsValue GetGlobal();
 	JsValue GetVariable(const uint16_t* name);
-	JsValue SetVariable(const uint16_t* name, jsvalue value);
+	JsValue SetVariable(const uint16_t* name, JsValue value);
 	JsValue GetPropertyNames(Persistent<Object>* obj);
 	JsValue GetPropertyValue(Persistent<Object>* obj, const uint16_t* name);
 	JsValue GetPropertyValue(Persistent<Object>* obj, const uint32_t index);
-	JsValue SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, jsvalue value);
-	JsValue SetPropertyValue(Persistent<Object>* obj, const uint32_t index, jsvalue value);
-	JsValue InvokeFunction(Persistent<Function>* func, jsvalue receiver, int argCount, jsvalue* args);
+	JsValue SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, JsValue value);
+	JsValue SetPropertyValue(Persistent<Object>* obj, const uint32_t index, JsValue value);
+	JsValue InvokeFunction(Persistent<Function>* func, JsValue receiver, int argCount, JsValue* args);
 
 	void Dispose();
      
@@ -484,7 +489,6 @@ class JsContext {
  private:             
 	int32_t id_;
 	JsEngine* engine_;
-	JsConvert* convert_;
 	Isolate *isolate_;
 	Persistent<Context> *context_;
 };
@@ -492,11 +496,10 @@ class JsContext {
 
 class ManagedRef {
  public:
-    inline explicit ManagedRef(JsEngine *engine, int32_t contextId, int id, JsConvert* convert) :
+    inline explicit ManagedRef(JsEngine *engine, int32_t contextId, int id) :
 		engine_(engine),
 		contextId_(contextId),
-		id_(id),
-		convert_(convert)
+		id_(id)
 	{
 		INCREMENT(js_mem_debug_managedref_count);
 	}
@@ -522,7 +525,6 @@ class ManagedRef {
 	int32_t contextId_;
 	JsEngine *engine_;
 	int32_t id_;
-	JsConvert* convert_;
 };
 
 #endif

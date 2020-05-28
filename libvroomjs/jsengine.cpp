@@ -166,8 +166,6 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks c
 
     fo->PrototypeTemplate()->Set(isolate_, "valueOf", fp);
 
-    convert_ = new JsConvert(isolate_);
-
     callbacks_ = callbacks;
 
     // Do this last, in case anything above fails
@@ -200,8 +198,8 @@ Persistent<Script> *JsEngine::CompileScript(const uint16_t* str, const uint16_t 
     if (!Script::Compile(isolate_->GetCurrentContext(), source, &scriptOrigin).ToLocal(&script))
     {
         // Compilation failed e.g. syntax error
-        // TODO: this can't possibly work right - the retval from ErrorFromV8 is a stack var
-        *error = convert_->ErrorFromV8(trycatch);
+        // TODO: this can't possibly work right - the retval from JsValue::ForError is a stack var
+        *error = JsValue::ForError(trycatch);
         // todo: should we not just return here? e.g. return null
     }
 
@@ -234,7 +232,7 @@ void JsEngine::DumpHeapStats()
 
 JsContext* JsEngine::NewContext(int32_t id)
 {
-    return new JsContext(id, this, convert_);
+    return new JsContext(id, this);
 }
 
 void JsEngine::Dispose()
@@ -262,9 +260,6 @@ void JsEngine::Dispose()
         allocator_ = NULL;
 
         memset(&callbacks_, 0, sizeof(jscallbacks));
-
-        delete convert_;
-        convert_ = NULL;
 	}
 }
 
@@ -297,7 +292,7 @@ jsvalue JsEngine::ArrayFromArguments(const FunctionCallbackInfo<Value>& args)
     auto thisArg = args.Holder();
 
     for (int i=0 ; i < v.length ; i++) {
-        v.value.arr[i] = convert_->AnyFromV8(args[i], thisArg);
+        //v.value.arr[i] = convert_->AnyFromV8(args[i], thisArg);
     }
     
     return v;
