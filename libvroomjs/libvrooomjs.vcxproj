@@ -258,18 +258,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bridge.cpp" />
-    <ClCompile Include="jscontext.cpp" />
-    <ClCompile Include="jsengine.cpp" />
-    <ClCompile Include="jsscript.cpp" />
-    <ClCompile Include="jsstring.cpp" />
-    <ClCompile Include="jsvalue.cpp" />
-    <ClCompile Include="managedref.cpp" />
+    <ClCompile Include="JsContext.cpp" />
+    <ClCompile Include="JsEngine.cpp" />
+    <ClCompile Include="JsScript.cpp" />
+    <ClCompile Include="JsString.cpp" />
+    <ClCompile Include="JsValue.cpp" />
+    <ClCompile Include="ManagedRef.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="JsContext.h" />
     <ClInclude Include="JsEngine.h" />
     <ClInclude Include="JsErrorInfo.h" />
-    <ClInclude Include="jsscript.h" />
+    <ClInclude Include="JsScript.h" />
     <ClInclude Include="JsString.h" />
     <ClInclude Include="JsValue.h" />
     <ClInclude Include="ManagedRef.h" />
