@@ -1,8 +1,12 @@
-
 #include <cstring>
 #include <iostream>
 #include <cassert>
+
 #include "vroomjs.h"
+#include "JsEngine.h"
+#include "ManagedRef.h"
+#include "JsContext.h"
+
 
 long js_mem_debug_engine_count;
 

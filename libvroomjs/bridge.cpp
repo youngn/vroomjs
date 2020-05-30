@@ -25,8 +25,14 @@
 
 #include <iostream>
 #include <libplatform/libplatform.h>
-#include "vroomjs.h"
 #include <cassert>
+
+#include "vroomjs.h"
+#include "JsEngine.h"
+#include "JsContext.h"
+#include "JsScript.h"
+#include "JsValue.h"
+#include "JsString.h"
 
 using namespace v8;
 

@@ -1,5 +1,8 @@
-#include "vroomjs.h"
 #include <cassert>
+
+#include "vroomjs.h"
+#include "JsString.h"
+
 
 Persistent<String>* JsString::Create(Isolate* isolate, const uint16_t* value, int& len)
 {

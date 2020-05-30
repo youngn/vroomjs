@@ -25,8 +25,14 @@
 
 #include <vector>
 #include <iostream>
-#include "vroomjs.h"
 #include <cassert>
+
+#include "vroomjs.h"
+#include "JsContext.h"
+#include "JsEngine.h"
+#include "JsValue.h"
+#include "JsScript.h"
+
 
 using namespace v8;
 

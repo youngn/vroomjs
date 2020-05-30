@@ -266,6 +266,13 @@
     <ClCompile Include="managedref.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="JsContext.h" />
+    <ClInclude Include="JsEngine.h" />
+    <ClInclude Include="JsErrorInfo.h" />
+    <ClInclude Include="jsscript.h" />
+    <ClInclude Include="JsString.h" />
+    <ClInclude Include="JsValue.h" />
+    <ClInclude Include="ManagedRef.h" />
     <ClInclude Include="vroomjs.h" />
   </ItemGroup>
   <ItemGroup>

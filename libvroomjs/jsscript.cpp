@@ -1,5 +1,8 @@
 #include <cassert>
+
 #include "vroomjs.h"
+#include "JsScript.h"
+#include "JsEngine.h"
 
 long js_mem_debug_script_count;
 

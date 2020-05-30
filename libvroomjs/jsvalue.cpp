@@ -1,5 +1,11 @@
-#include "vroomjs.h"
 #include <cassert>
+
+#include "vroomjs.h"
+#include "JsValue.h"
+#include "JsContext.h"
+#include "JsErrorInfo.h"
+#include "ManagedRef.h"
+
 
 JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
 {

@@ -26,6 +26,10 @@
 #include <iostream>
 
 #include "vroomjs.h"
+#include "ManagedRef.h"
+#include "JsValue.h"
+#include "JsContext.h"
+#include "JsEngine.h"
 
 using namespace v8;
 
@@ -137,4 +141,9 @@ Local<Array> ManagedRef::EnumerateProperties()
         res = r.Extract(context_);
 
 	return Local<Array>::Cast(res);
+}
+
+inline ManagedRef::~ManagedRef() {
+    context_->Engine()->CallRemove(context_->Id(), id_);
+    DECREMENT(js_mem_debug_managedref_count);
 }
