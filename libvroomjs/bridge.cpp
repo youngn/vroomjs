@@ -341,8 +341,37 @@ extern "C"
         }
 
         return v;
-    }    
-    
+    }
+
+    EXPORT jsvalue CALLINGCONVENTION jsstring_new(JsEngine* engine, const uint16_t* value)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jsengine_new_string" << std::endl;
+#endif
+        assert(engine != NULL);
+        assert(value != NULL);
+
+        int len;
+        auto str = JsString::Create(engine->Isolate(), value, len);
+
+        if (str != nullptr)
+            return JsValue::ForJsString(str, len);
+
+        return JsValue::ForEmpty();
+    }
+
+    EXPORT int CALLINGCONVENTION jsstring_get_value(JsEngine* engine, Persistent<String>* str, uint16_t* buffer)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jsstring_get_value" << std::endl;
+#endif
+        assert(engine != NULL);
+        assert(str != NULL);
+        assert(buffer != NULL);
+
+        return JsString::GetValue(engine->Isolate(), str, buffer);
+    }
+
     EXPORT jsvalue CALLINGCONVENTION jsvalue_alloc_array(const int32_t length)
     {
 #ifdef DEBUG_TRACE_API

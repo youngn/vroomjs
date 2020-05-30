@@ -119,5 +119,15 @@ namespace VroomJs
         public static extern void jsvalue_dispose(JsValue value);
 
         #endregion
+
+        #region jssstring
+
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+        public static extern JsValue jsstring_new(HandleRef engine, [MarshalAs(UnmanagedType.LPWStr)] string value);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+        public static extern int jsstring_get_value(HandleRef engine, IntPtr str, [Out]char[] buffer);
+
+        #endregion
     }
 }

@@ -67,7 +67,7 @@ namespace Sandbox
 			//	watch.Start();
 				//JsScript script = engine.CompileScript("3+3");
 				using (JsContext ctx = engine.CreateContext()) {
-					ctx.SetVariable("x", 3);
+					ctx.SetVariable("x", "bob");
 					var result = ctx.Execute("x");
 					Console.WriteLine(result);
 				}

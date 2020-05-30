@@ -1,9 +1,10 @@
 #include "vroomjs.h"
 #include <cassert>
 
-JsValue JsValue::ForValue(Local<Value> value)
+JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
 {
-    auto isolate = Isolate::GetCurrent();
+    auto isolate = context->Isolate();
+    auto ctx = context->Ctx();
 
     if (value->IsNull() || value->IsUndefined()) {
         return ForNull();
@@ -14,29 +15,30 @@ JsValue JsValue::ForValue(Local<Value> value)
     }
 
     if (value->IsInt32()) {
-        return ForInt32(value->Int32Value(isolate->GetCurrentContext()).FromMaybe(0));
+        return ForInt32(value->Int32Value(ctx).FromMaybe(0));
     }
 
     if (value->IsUint32()) {
-        return ForUInt32(value->Uint32Value(isolate->GetCurrentContext()).FromMaybe(0));
+        return ForUInt32(value->Uint32Value(ctx).FromMaybe(0));
     }
 
     if (value->IsNumber()) {
-        return ForNumber(value->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
+        return ForNumber(value->NumberValue(ctx).FromMaybe(0.0));
     }
 
     if (value->IsString()) {
         auto s = Local<String>::Cast(value);
-        auto len = s->Length();
+        return ForJsString(new Persistent<String>(isolate, s), s->Length());
+        //auto len = s->Length();
 
-        // todo: is this the best way to convert?
-        uint16_t* str = new uint16_t[len + 1];
-        s->Write(isolate, str);
-        return ForString(len, str);
+        //// todo: is this the best way to convert?
+        //uint16_t* str = new uint16_t[len + 1];
+        //s->Write(isolate, str);
+        //return ForString(len, str);
     }
 
     if (value->IsDate()) {
-        return ForDate(value->NumberValue(isolate->GetCurrentContext()).FromMaybe(0.0));
+        return ForDate(value->NumberValue(ctx).FromMaybe(0.0));
     }
 
     if (value->IsArray()) {
@@ -63,9 +65,10 @@ JsValue JsValue::ForValue(Local<Value> value)
     return ForUnknownError();
 }
 
-Local<Value> JsValue::GetValue(int32_t contextId)
+Local<Value> JsValue::GetValue(JsContext* context)
 {
-    auto isolate = Isolate::GetCurrent();
+    auto isolate = context->Isolate();
+    auto ctx = context->Ctx();
 
     if (ValueType() == JSVALUE_TYPE_EMPTY) {
         return Local<Value>();
@@ -85,8 +88,12 @@ Local<Value> JsValue::GetValue(int32_t contextId)
     if (ValueType() == JSVALUE_TYPE_STRING) {
         return String::NewFromTwoByte(isolate, StringValue()).ToLocalChecked();
     }
+    if (ValueType() == JSVALUE_TYPE_JSSTRING) {
+        auto pObj = JsStringValue();
+        return Local<String>::New(isolate, *pObj);
+    }
     if (ValueType() == JSVALUE_TYPE_DATE) {
-        return Date::New(isolate->GetCurrentContext(), DateValue()).ToLocalChecked();
+        return Date::New(ctx, DateValue()).ToLocalChecked();
     }
     if (ValueType() == JSVALUE_TYPE_JSOBJECT) {
         auto pObj = JsObjectValue();
@@ -134,11 +141,11 @@ Local<Value> JsValue::GetValue(int32_t contextId)
     return Null(isolate);
 }
 
-JsValue JsValue::ForError(TryCatch& trycatch)
+JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)
 {
     assert(trycatch.HasCaught()); // an exception has been caught
 
-    auto isolate = Isolate::GetCurrent();
+    auto isolate = context->Isolate();
     HandleScope scope(isolate);
 
     auto ctx = isolate->GetCurrentContext();
@@ -159,12 +166,12 @@ JsValue JsValue::ForError(TryCatch& trycatch)
 
     auto line = hasMessage ? message->GetLineNumber(ctx).FromMaybe(0) : 0;
     auto column = hasMessage ? message->GetStartColumn() : 0;
-    auto resource = hasMessage ? JsValue::ForValue(message->GetScriptResourceName()) : JsValue::ForEmpty();
-    auto text = hasMessage ? JsValue::ForValue(message->Get()) : JsValue::ForEmpty();
-    auto error = JsValue::ForValue(exception);
+    auto resource = hasMessage ? JsValue::ForValue(message->GetScriptResourceName(), context) : JsValue::ForEmpty();
+    auto text = hasMessage ? JsValue::ForValue(message->Get(), context) : JsValue::ForEmpty();
+    auto error = JsValue::ForValue(exception, context);
 
-    // todo: is ctor name really useful? I think JS Error has a .name property, and that's more important - see MDN
-    auto type = exception->IsObject() ? JsValue::ForValue(Local<Object>::Cast(exception)->GetConstructorName()) : JsValue::ForEmpty();
+    // todo: is ctor name really useful? JS Error has a .name property, and that's more important - see MDN
+    auto type = exception->IsObject() ? JsValue::ForValue(Local<Object>::Cast(exception)->GetConstructorName(), context) : JsValue::ForEmpty();
 
     auto errorInfo = new JsErrorInfo(text, line, column, resource, type, error);
     return JsValue::ForError(errorInfo);
@@ -178,6 +185,22 @@ void JsValue::Dispose()
     case JSVALUE_TYPE_STRING_ERROR:
         delete[] v.value.str;
         break;
+
+    case JSVALUE_TYPE_JSSTRING:
+    {
+        assert(v.value.ptr != nullptr);
+
+        // todo: do we need all this stuff?
+        // todo: is using the "current" isolate ok? even if runs on finalizer thread? Or do we need to somehow maintain ref to own isolate?
+        //auto isolate = Isolate::GetCurrent();
+        //Locker locker(isolate);
+        //Isolate::Scope isolate_scope(isolate);
+
+        auto obj = (Persistent<String>*)v.value.ptr;
+        obj->Reset();
+        delete obj;
+        break;
+    }
 
     case JSVALUE_TYPE_ARRAY:
         for (int i = 0; i < v.length; i++) {

@@ -199,7 +199,7 @@ Persistent<Script> *JsEngine::CompileScript(const uint16_t* str, const uint16_t 
     {
         // Compilation failed e.g. syntax error
         // TODO: this can't possibly work right - the retval from JsValue::ForError is a stack var
-        *error = JsValue::ForError(trycatch);
+        //*error = JsValue::ForError(trycatch);
         // todo: should we not just return here? e.g. return null
     }
 
@@ -267,6 +267,7 @@ void JsEngine::DisposeObject(Persistent<Object>* obj)
 {
     assert(obj != nullptr);
 
+    // todo: not sure we actually need this stuff just to Reset a Persistent handle
     Locker locker(isolate_);
     Isolate::Scope isolate_scope(isolate_);
     

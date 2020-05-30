@@ -22,12 +22,17 @@ jsvalue JsScript::Compile(const uint16_t* str, const uint16_t *resourceName = NU
 }
 
 void JsScript::Dispose() {
-	auto isolate = engine_->GetIsolate(); 
+
+	if (script_ == nullptr)
+		return;
+
+	auto isolate = engine_->Isolate(); 
 	if(isolate != nullptr) {
+		// todo: do we really need the locker/isolate scope?
 		Locker locker(isolate);
    	 	Isolate::Scope isolate_scope(isolate);
 		script_->Reset();
-    	delete script_;
-		script_ = nullptr;
 	}
+	delete script_;
+	script_ = nullptr;
 }

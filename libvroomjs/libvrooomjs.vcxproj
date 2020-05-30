@@ -261,6 +261,7 @@
     <ClCompile Include="jscontext.cpp" />
     <ClCompile Include="jsengine.cpp" />
     <ClCompile Include="jsscript.cpp" />
+    <ClCompile Include="jsstring.cpp" />
     <ClCompile Include="jsvalue.cpp" />
     <ClCompile Include="managedref.cpp" />
   </ItemGroup>

@@ -35,18 +35,18 @@ Local<Value> ManagedRef::GetPropertyValue(Local<String> name)
 {
     Local<Value> res;
 
-    auto isolate = Isolate::GetCurrent();
+    auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
 #ifdef DEBUG_TRACE_API
     std::cout << "GetPropertyValue" << std::endl;
 #endif
 
-    JsValue r = engine_->CallGetPropertyValue(contextId_, id_, *s);
+    JsValue r = context_->Engine()->CallGetPropertyValue(context_->Id(), id_, *s);
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
-        isolate->ThrowException(r.Extract(contextId_));
+        isolate->ThrowException(r.Extract(context_));
     else
-        res = r.Extract(contextId_);
+        res = r.Extract(context_);
 
     return res;
 }
@@ -55,17 +55,17 @@ Local<Boolean> ManagedRef::DeleteProperty(Local<String> name)
 {
     Local<Value> res;
 
-    auto isolate = Isolate::GetCurrent();
+    auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
 #ifdef DEBUG_TRACE_API
 		std::cout << "DeleteProperty" << std::endl;
 #endif
-    JsValue r = engine_->CallDeleteProperty(contextId_, id_, *s);
+    JsValue r = context_->Engine()->CallDeleteProperty(context_->Id(), id_, *s);
 	if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
-        isolate->ThrowException(r.Extract(contextId_));
+        isolate->ThrowException(r.Extract(context_));
     else
-        res = r.Extract(contextId_);
+        res = r.Extract(context_);
     
 	return res->ToBoolean(isolate);
 }
@@ -74,19 +74,19 @@ Local<Value> ManagedRef::SetPropertyValue(Local<String> name, Local<Value> value
 {
     Local<Value> res;
 
-    auto isolate = Isolate::GetCurrent();
+    auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
 #ifdef DEBUG_TRACE_API
 		std::cout << "SetPropertyValue" << std::endl;
 #endif
     
-    JsValue v = JsValue::ForValue(value);
-    JsValue r = engine_->CallSetPropertyValue(contextId_, id_, *s, v);
+    JsValue v = JsValue::ForValue(value, context_);
+    JsValue r = context_->Engine()->CallSetPropertyValue(context_->Id(), id_, *s, v);
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
-        isolate->ThrowException(r.Extract(contextId_));
+        isolate->ThrowException(r.Extract(context_));
     else
-        res = r.Extract(contextId_);
+        res = r.Extract(context_);
     
     return res;
 }
@@ -98,11 +98,11 @@ Local<Value> ManagedRef::GetValueOf()
 #endif
 
     Local<Value> res;
-    JsValue r = engine_->CallValueOf(contextId_, id_);
+    JsValue r = context_->Engine()->CallValueOf(context_->Id(), id_);
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
-        Isolate::GetCurrent()->ThrowException(r.Extract(contextId_));
+        context_->Isolate()->ThrowException(r.Extract(context_));
     else
-        res = r.Extract(contextId_);
+        res = r.Extract(context_);
     
     return res;
 }
@@ -113,12 +113,12 @@ Local<Value> ManagedRef::Invoke(const FunctionCallbackInfo<Value>& args)
 	std::wcout << "INVOKING..........." << std::endl;
 #endif
     Local<Value> res;
-    JsValue a = engine_->ArrayFromArguments(args);
-    JsValue r = engine_->CallInvoke(contextId_, id_, a);
+    JsValue a = context_->Engine()->ArrayFromArguments(args);
+    JsValue r = context_->Engine()->CallInvoke(context_->Id(), id_, a);
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
-        Isolate::GetCurrent()->ThrowException(r.Extract(contextId_));
+        context_->Isolate()->ThrowException(r.Extract(context_));
     else
-        res = r.Extract(contextId_);
+        res = r.Extract(context_);
 
     return res;
 }
@@ -130,11 +130,11 @@ Local<Array> ManagedRef::EnumerateProperties()
 #ifdef DEBUG_TRACE_API
 		std::cout << "EnumerateProperties" << std::endl;
 #endif
-    JsValue r = engine_->CallEnumerateProperties(contextId_, id_);
+    JsValue r = context_->Engine()->CallEnumerateProperties(context_->Id(), id_);
 	if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
-        Isolate::GetCurrent()->ThrowException(r.Extract(contextId_));
+        context_->Isolate()->ThrowException(r.Extract(context_));
     else
-        res = r.Extract(contextId_);
+        res = r.Extract(context_);
 
 	return Local<Array>::Cast(res);
 }

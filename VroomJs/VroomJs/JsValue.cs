@@ -60,7 +60,8 @@ namespace VroomJs
             if (type == typeof(string) || type == typeof(char))
             {
                 // We need to allocate some memory on the other side; will be free'd by unmanaged code.
-                return NativeApi.jsvalue_alloc_string(obj.ToString());
+                //return NativeApi.jsvalue_alloc_string(obj.ToString());
+                return ForJsString(obj.ToString(), context);
             }
 
             if (type == typeof(byte))
@@ -164,6 +165,13 @@ namespace VroomJs
         {
             return new JsValue { Type = JsValueType.Date, Num = value };
         }
+        private static JsValue ForJsString(string value, JsContext context)
+        {
+            var v = NativeApi.jsstring_new(context.Engine.Handle, value);
+            if (v.Type == JsValueType.Empty)
+                throw new JsInteropException("String exceeds maximum allowable length."); //todo:test?
+            return v;
+        }
         public static JsValue ForJsArray(JsArray value)
         {
             Debug.Assert(value != null);
@@ -217,6 +225,9 @@ namespace VroomJs
 
                 case JsValueType.String:
                     return StringValue();
+
+                case JsValueType.JsString:
+                    return JsStringValue(context);
 
                 case JsValueType.Date:
                     return DateValue();
@@ -289,6 +300,17 @@ namespace VroomJs
             Debug.Assert(Type == JsValueType.String || Type == JsValueType.StringError);
             return Marshal.PtrToStringUni(Ptr);
         }
+        private object JsStringValue(JsContext context)
+        {
+            Debug.Assert(Type == JsValueType.JsString);
+
+            // The value of the string is copied into the buffer with no null terminator.
+            var buffer = new char[Length];
+            var n = NativeApi.jsstring_get_value(context.Engine.Handle, Ptr, buffer);
+            if (n != Length)
+                throw new JsInteropException("Failed to copy string.");
+            return new string(buffer);
+        }
         private DateTimeOffset DateValue()
         {
             Debug.Assert(Type == JsValueType.Date);
@@ -352,6 +374,7 @@ namespace VroomJs
             switch (Type)
             {
                 case JsValueType.String:
+                case JsValueType.JsString:
                 case JsValueType.Error:
                 // todo: do these types need disposal?
                 //case JsValueType.Managed:

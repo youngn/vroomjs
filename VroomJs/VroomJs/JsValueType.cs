@@ -46,5 +46,6 @@ namespace VroomJs
         Error = 16,
         Function = 17,
         JsArray = 18,
+        JsString = 19,
     }
 }

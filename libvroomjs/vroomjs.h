@@ -55,6 +55,7 @@ using namespace v8;
 #define JSVALUE_TYPE_ERROR          16
 #define JSVALUE_TYPE_FUNCTION       17
 #define JSVALUE_TYPE_JSARRAY        18
+#define JSVALUE_TYPE_JSSTRING       19
 
 #ifdef _WIN32 
 #define EXPORT __declspec(dllexport)
@@ -152,11 +153,11 @@ extern "C"
 
 class JsValue {
 public:
-	static JsValue ForValue(Local<Value> value);
-	static JsValue ForError(TryCatch& trycatch);
+	static JsValue ForValue(Local<Value> value, JsContext* context);
+	static JsValue ForError(TryCatch& trycatch, JsContext* context);
 
-	Local<Value> Extract(int32_t contextId) {
-		auto result = GetValue(contextId);
+	Local<Value> Extract(JsContext* context) {
+		auto result = GetValue(context);
 		Dispose();
 		return result;
 	}
@@ -185,6 +186,10 @@ public:
 	static JsValue ForString(int32_t length, uint16_t* value) {
 		assert(value != nullptr);
 		return JsValue(JSVALUE_TYPE_STRING, length, value);
+	}
+	static JsValue ForJsString(Persistent<String>* value, int32_t length) {
+		assert(value != nullptr);
+		return JsValue(JSVALUE_TYPE_JSSTRING, length, (void*)value);
 	}
 	static JsValue ForDate(double value) {
 		return JsValue(JSVALUE_TYPE_DATE, 0, value);
@@ -252,6 +257,10 @@ public:
 		assert(v.type == JSVALUE_TYPE_JSOBJECT);
 		return (Persistent<Object>*)v.value.ptr;
 	}
+	Persistent<String>* JsStringValue() const {
+		assert(v.type == JSVALUE_TYPE_JSSTRING);
+		return (Persistent<String>*)v.value.ptr;
+	}
 
 	JsValue(const jsvalue& value) {
 		v = value;
@@ -267,7 +276,7 @@ private:
 
 	void Dispose();
 
-	Local<Value> GetValue(int32_t contextId);
+	Local<Value> GetValue(JsContext* context);
 
 	inline JsValue(int32_t type, int32_t length, int32_t i32) {
 		v.type = type;
@@ -437,7 +446,7 @@ public:
 	void Dispose();
 	
 	void DumpHeapStats();
-	Isolate *GetIsolate() { return isolate_; }
+	Isolate* Isolate() { return isolate_; }
 	JsContext* NewContext(int32_t id);
 
 	inline virtual ~JsEngine() {
@@ -448,7 +457,7 @@ public:
 	Persistent<Context> *global_context_;
 
 private:
-	Isolate* isolate_;
+	v8::Isolate* isolate_;
 	ArrayBuffer::Allocator* allocator_;
 	
 	Persistent<FunctionTemplate> *managed_template_;
@@ -478,8 +487,11 @@ class JsContext {
 
 	void Dispose();
      
-	inline int32_t GetId() {
-		return id_;
+	int32_t Id() { return id_; }
+	JsEngine* Engine() { return engine_; }
+	Isolate* Isolate() { return isolate_; }
+	Local<Context> Ctx() { 
+		return Local<Context>::New(isolate_, *context_);
 	}
 
 	inline virtual ~JsContext() {
@@ -489,16 +501,22 @@ class JsContext {
  private:             
 	int32_t id_;
 	JsEngine* engine_;
-	Isolate *isolate_;
+	v8::Isolate* isolate_;
 	Persistent<Context> *context_;
+};
+
+class JsString
+{
+public:
+	static Persistent<String>* Create(Isolate* isolate, const uint16_t* value, int& len);
+	static int GetValue(Isolate* isolate, Persistent<String>* str, uint16_t* buffer);
 };
 
 
 class ManagedRef {
  public:
-    inline explicit ManagedRef(JsEngine *engine, int32_t contextId, int id) :
-		engine_(engine),
-		contextId_(contextId),
+    inline explicit ManagedRef(JsContext* context, int id) :
+		context_(context),
 		id_(id)
 	{
 		INCREMENT(js_mem_debug_managedref_count);
@@ -514,7 +532,7 @@ class ManagedRef {
 	Local<Array> EnumerateProperties();
 
     ~ManagedRef() { 
-		engine_->CallRemove(contextId_, id_); 
+		context_->Engine()->CallRemove(context_->Id(), id_);
 		DECREMENT(js_mem_debug_managedref_count);
 	}
     
@@ -522,8 +540,7 @@ class ManagedRef {
     ManagedRef() {
 		INCREMENT(js_mem_debug_managedref_count);
 	}
-	int32_t contextId_;
-	JsEngine *engine_;
+	JsContext* context_;
 	int32_t id_;
 };
 
