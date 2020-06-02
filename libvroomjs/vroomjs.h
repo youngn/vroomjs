@@ -105,12 +105,12 @@ extern "C"
  
 	struct jserrorinfo
 	{
-		int32_t line;
+        jsvalue error;
+        int32_t line;
 		int32_t column;
-		jsvalue resource;
-		jsvalue message;
-		jsvalue error;
-		jsvalue type;
+		uint16_t* resource;
+        uint16_t* message;
+        uint16_t* type;
 	};
 	
 	EXPORT void CALLINGCONVENTION jsvalue_dispose(jsvalue value);

@@ -260,6 +260,7 @@
     <ClCompile Include="bridge.cpp" />
     <ClCompile Include="JsContext.cpp" />
     <ClCompile Include="JsEngine.cpp" />
+    <ClCompile Include="JsErrorInfo.cpp" />
     <ClCompile Include="JsScript.cpp" />
     <ClCompile Include="JsString.cpp" />
     <ClCompile Include="JsValue.cpp" />

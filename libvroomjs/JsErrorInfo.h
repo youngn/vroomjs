@@ -4,8 +4,15 @@
 #include "JsValue.h"
 
 class JsErrorInfo {
+	// The position of the fields are important, as instances of this type
+	// are marshaled to .NET.
+	// Do NOT add any virtual members, as the inclusion of a v-table will
+	// offset the fields.
+
 public:
-	inline JsErrorInfo(jsvalue message, int32_t line, int32_t column, jsvalue resource, jsvalue type, jsvalue error) {
+	static JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context);
+
+	JsErrorInfo(uint16_t* message, int32_t line, int32_t column, uint16_t* resource, uint16_t* type, jsvalue error) {
 		v.message = message;
 		v.line = line;
 		v.column = column;
@@ -14,7 +21,7 @@ public:
 		v.error = error;
 	}
 
-	inline JsErrorInfo(const jserrorinfo& value) {
+	JsErrorInfo(const jserrorinfo& value) {
 		v = value;
 	}
 
@@ -23,12 +30,17 @@ public:
 	}
 
 	~JsErrorInfo() {
-		((JsValue*)&v.message)->Dispose();
-		((JsValue*)&v.resource)->Dispose();
-		((JsValue*)&v.type)->Dispose();
+		if (v.message)
+			delete[] v.message;
+		if (v.resource)
+			delete[] v.resource;
+		if (v.type)
+			delete[] v.type;
 		((JsValue*)&v.error)->Dispose();
 	}
 
 private:
+	static uint16_t* CreateString(Local<String> value, JsContext* context);
+
 	jserrorinfo v;
 };

@@ -152,9 +152,8 @@ JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)
     assert(trycatch.HasCaught()); // an exception has been caught
 
     auto isolate = context->Isolate();
+    auto ctx = context->Ctx();
     HandleScope scope(isolate);
-
-    auto ctx = isolate->GetCurrentContext();
 
     auto exception = trycatch.Exception();
     assert(!exception.IsEmpty());
@@ -164,23 +163,11 @@ JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)
     if (exception->ToObject(ctx).ToLocal(&obj) && obj->InternalFieldCount() == 1) {
         auto wrap = Local<External>::Cast(obj->GetInternalField(0));
         auto ref = (ManagedRef*)wrap->Value();
-        return JsValue::ForManagedError(ref->Id());
+        return ForManagedError(ref->Id());
     }
 
-    auto message = trycatch.Message();
-    auto hasMessage = !message.IsEmpty();
-
-    auto line = hasMessage ? message->GetLineNumber(ctx).FromMaybe(0) : 0;
-    auto column = hasMessage ? message->GetStartColumn() : 0;
-    auto resource = hasMessage ? JsValue::ForValue(message->GetScriptResourceName(), context) : JsValue::ForEmpty();
-    auto text = hasMessage ? JsValue::ForValue(message->Get(), context) : JsValue::ForEmpty();
-    auto error = JsValue::ForValue(exception, context);
-
-    // todo: is ctor name really useful? JS Error has a .name property, and that's more important - see MDN
-    auto type = exception->IsObject() ? JsValue::ForValue(Local<Object>::Cast(exception)->GetConstructorName(), context) : JsValue::ForEmpty();
-
-    auto errorInfo = new JsErrorInfo(text, line, column, resource, type, error);
-    return JsValue::ForError(errorInfo);
+    auto errorInfo = JsErrorInfo::Capture(trycatch, context);
+    return ForError(errorInfo);
 }
 
 void JsValue::Dispose()

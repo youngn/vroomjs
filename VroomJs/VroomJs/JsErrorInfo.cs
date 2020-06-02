@@ -1,15 +1,16 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace VroomJs
 {
     [StructLayout(LayoutKind.Sequential)]
     internal struct JsErrorInfo
     {
+        public JsValue Error;
         public int Line;
         public int Column;
-        public JsValue Resource;
-        public JsValue Message;
-        public JsValue Error;
-        public JsValue Type;
+        public IntPtr Resource;
+        public IntPtr Message;
+        public IntPtr Type;
     }
 }

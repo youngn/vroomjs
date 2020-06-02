@@ -104,6 +104,11 @@ namespace VroomJsTests
                 {
                     Console.WriteLine(e);
 
+                    Assert.AreEqual(1, e.Line);
+                    Assert.AreEqual(0, e.Column);
+                    Assert.AreEqual("TypeError", e.Type);
+                    Assert.AreEqual("<Unnamed Script>: Uncaught TypeError: Uh oh at line 1 column 0.", e.Message);
+
                     // todo: JS stack trace
                 }
             }

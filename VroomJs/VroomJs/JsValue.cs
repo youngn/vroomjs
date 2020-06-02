@@ -341,12 +341,11 @@ namespace VroomJs
         {
             Debug.Assert(Type == JsValueType.Error);
 
-            var info = (JsErrorInfo)Marshal.PtrToStructure(Ptr, typeof(JsErrorInfo));
+            var info = (JsErrorInfo)Marshal.PtrToStructure<JsErrorInfo>(Ptr);
 
-            // Use conditional cast to string because it is possible the JsValue is empty
-            var resource = info.Resource.GetValue(context) as string;
-            var message = info.Message.GetValue(context) as string;
-            var type = info.Type.GetValue(context) as string;
+            var resource = info.Resource != null ? Marshal.PtrToStringUni(info.Resource) : null;
+            var message = info.Message != null ? Marshal.PtrToStringUni(info.Message) : null;
+            var type = info.Type != null ? Marshal.PtrToStringUni(info.Type) : null;
 
             var line = info.Line;
             var column = info.Column;
