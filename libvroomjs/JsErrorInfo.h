@@ -3,49 +3,44 @@
 #include "vroomjs.h"
 #include "JsValue.h"
 
-struct jsstackframe
-{
-    jsstackframe(int32_t line, int32_t column, char16_t* resource, char16_t* function)
-        :line(line), column(column), resource(resource), function(function), next(nullptr) {
-    }
-
-    ~jsstackframe() {
-        if (resource)
-            delete[] resource;
-        if (function)
-            delete[] function;
-        if (next)
-            delete next;
-    }
-
-    int32_t line;
-    int32_t column;
-    char16_t* resource;
-    char16_t* function;
-
-    jsstackframe* next; // linked list
-};
-
-struct jserrorinfo
-{
-    jsvalue error;
-    int32_t line;
-    int32_t column;
-    char16_t* resource;
-    char16_t* description;
-    char16_t* type;
-    char16_t* text;
-    char16_t* stackstr;
-    jsstackframe* stackframes; // head of linked list
-};
-
-
 
 class JsErrorInfo {
-    // The position of the fields are important, as instances of this type
-    // are marshaled to .NET.
-    // Do NOT add any virtual members, as the inclusion of a v-table will
-    // offset the fields.
+private:
+    struct jsstackframe
+    {
+        jsstackframe(int32_t line, int32_t column, char16_t* resource, char16_t* function)
+            :line(line), column(column), resource(resource), function(function), next(nullptr) {
+        }
+
+        ~jsstackframe() {
+            if (resource)
+                delete[] resource;
+            if (function)
+                delete[] function;
+            if (next)
+                delete next;
+        }
+
+        int32_t line;
+        int32_t column;
+        char16_t* resource;
+        char16_t* function;
+
+        jsstackframe* next; // linked list
+    };
+
+    struct jserrorinfo
+    {
+        jsvalue error;
+        int32_t line;
+        int32_t column;
+        char16_t* resource;
+        char16_t* description;
+        char16_t* type;
+        char16_t* text;
+        char16_t* stackstr;
+        jsstackframe* stackframes; // head of linked list
+    };
 
 public:
     static JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context);
@@ -90,5 +85,9 @@ private:
     static jsstackframe* CaptureStackFrames(Local<StackTrace> stackTrace, JsContext* context);
     static char16_t* CreateString(Local<String> value, JsContext* context);
 
+    // The position of the fields are important, as instances of this class
+    // are marshaled to .NET.
+    // Do NOT add any virtual members to this class, as the inclusion of a v-table will
+    // offset the fields.
     jserrorinfo v;
 };

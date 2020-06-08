@@ -47,7 +47,7 @@ JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context)
     return new JsErrorInfo(description, line, column, resource, type, text, error, stackstr, stackFrames);
 }
 
-jsstackframe* JsErrorInfo::CaptureStackFrames(Local<StackTrace> stackTrace, JsContext* context)
+JsErrorInfo::jsstackframe* JsErrorInfo::CaptureStackFrames(Local<StackTrace> stackTrace, JsContext* context)
 {
     // The handle will be empty unless isolate.SetCaptureStackTraceForUncaughtExceptions(true)
     // has been called
