@@ -24,7 +24,10 @@
 // THE SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace VroomJs
@@ -341,26 +344,48 @@ namespace VroomJs
         {
             Debug.Assert(Type == JsValueType.Error);
 
-            var info = (JsErrorInfo)Marshal.PtrToStructure<JsErrorInfo>(Ptr);
+            var info = Marshal.PtrToStructure<JsErrorInfo>(Ptr);
 
             var resource = info.Resource != null ? Marshal.PtrToStringUni(info.Resource) : null;
-            var message = info.Message != null ? Marshal.PtrToStringUni(info.Message) : null;
+            var description = info.Description != null ? Marshal.PtrToStringUni(info.Description) : null;
             var type = info.Type != null ? Marshal.PtrToStringUni(info.Type) : null;
+            var text = info.Text != null ? Marshal.PtrToStringUni(info.Text) : null;
+            var stackStr = info.StackStr != null ? Marshal.PtrToStringUni(info.StackStr) : null;
 
             var line = info.Line;
             var column = info.Column;
+
+            if (type == "SyntaxError")
+            {
+                // todo: do we actually get a JS error object here? If so, include it
+                return new JsSyntaxException(description, resource, line, column, type, text);
+            }
 
             // The error object can be anything is JS - it is not necessarily an Error object,
             // or even an Object, so we don't cast it.
             var error = info.Error.GetValue(context);
 
-            if (type == "SyntaxError")
-            {
-                // todo: do we actually get a JS error object here? If so, include it
-                return new JsSyntaxException(type, resource, message, line, column);
-            }
+            var stackTrace = GetStackFrames(info.StackFrames);
 
-            return new JsException(type, resource, message, line, column, error);
+            return new JsException(description, resource, line, column, error, text, type, stackStr,
+                new JsStackTrace(stackTrace.ToList()));
+        }
+
+        private IEnumerable<JsStackTrace.Frame> GetStackFrames(IntPtr stackFrame)
+        {
+            while(stackFrame != IntPtr.Zero)
+            {
+                var info = Marshal.PtrToStructure<JsStackFrame>(stackFrame);
+
+                var resource = info.Resource != null ? Marshal.PtrToStringUni(info.Resource) : null;
+                var function = info.Function != null ? Marshal.PtrToStringUni(info.Function) : null;
+                var line = info.Line;
+                var column = info.Column;
+
+                yield return new JsStackTrace.Frame(resource, function, line, column);
+
+                stackFrame = info.Next;
+            }
         }
 
         #endregion

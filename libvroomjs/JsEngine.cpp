@@ -127,6 +127,9 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks c
 
     isolate_ = Isolate::New(create_params);
 
+    // todo: is there a perf penalty for this? maybe it should be an option on the engine
+    isolate_->SetCaptureStackTraceForUncaughtExceptions(true);
+
     // todo: SetResourceConstraints doesn't seem to exist anymore
     //isolate_->Enter();
     //if (max_young_space > 0 && max_old_space > 0) {

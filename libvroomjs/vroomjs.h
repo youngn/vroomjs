@@ -102,16 +102,6 @@ extern "C"
         int32_t         type;
         int32_t         length; // Also used as slot index on the CLR side.
 	};
- 
-	struct jserrorinfo
-	{
-        jsvalue error;
-        int32_t line;
-		int32_t column;
-		uint16_t* resource;
-        uint16_t* message;
-        uint16_t* type;
-	};
 	
 	EXPORT void CALLINGCONVENTION jsvalue_dispose(jsvalue value);
 }

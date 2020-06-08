@@ -12,7 +12,7 @@ namespace VroomJsTests
         [TestCaseSource(nameof(TestCases_roundtrip_primitives))]
         public void Test_roundtrip_primitives(object input)
         {
-            using(var context = Engine.CreateContext())
+            using (var context = Engine.CreateContext())
             {
                 context.SetVariable("x", input);
                 var output = context.GetVariable("x");
@@ -92,24 +92,102 @@ namespace VroomJsTests
         [Test]
         public void Test_script_error()
         {
+            const string script =
+                "function alpha() {\n" +
+                "    throw new TypeError('Uh oh');\n" +
+                "}\n" +
+                "function beta() {\n" +
+                "    alpha();\n" +
+                "}\n" +
+                "function gamma() {\n" +
+                "    beta();\n" +
+                "}\n" +
+                "\n" +
+                "gamma()";
+
+            const string stackStr = "TypeError: Uh oh\n" +
+                "    at alpha (<Unnamed Script>:2:11)\n" + 
+                "    at beta (<Unnamed Script>:5:5)\n" + 
+                "    at gamma (<Unnamed Script>:8:5)\n" +
+                "    at <Unnamed Script>:11:1";
+
             using (var context = Engine.CreateContext())
             {
                 try
                 {
-                    context.Execute("throw new TypeError('Uh oh');");
+                    context.Execute(script);
 
                     Assert.Fail("Expected the JS error to be thrown as exception on CLR side.");
                 }
                 catch (JsException e)
                 {
-                    Console.WriteLine(e);
+                    //Console.WriteLine(e);
 
-                    Assert.AreEqual(1, e.Line);
-                    Assert.AreEqual(0, e.Column);
-                    Assert.AreEqual("TypeError", e.Type);
-                    Assert.AreEqual("<Unnamed Script>: Uncaught TypeError: Uh oh at line 1 column 0.", e.Message);
+                    Assert.AreEqual(2, e.Line);
+                    Assert.AreEqual(4, e.Column);
+                    Assert.AreEqual("TypeError", e.ErrorName);
+                    Assert.AreEqual("TypeError: Uh oh", e.ErrorText);
+                    Assert.AreEqual("Uncaught TypeError: Uh oh", e.Description);
+                    Assert.AreEqual(stackStr, e.ErrorStackString);
+                    Assert.AreEqual(stackStr, e.Message); // designed to be identical to ErrorStackString
 
-                    // todo: JS stack trace
+                    Assert.IsNotNull(e.ErrorStackTrace);
+
+                    var error = e.Error as JsObject;
+                    Assert.IsNotNull(error);
+                    Assert.AreEqual("Uh oh", error["message"]);
+                    Assert.AreEqual("TypeError", error["name"]);
+                }
+            }
+        }
+
+        [Test]
+        public void Test_script_error_throws_string()
+        {
+            const string script =
+                "function alpha() {\n" +
+                "    throw 'Uh oh';\n" +
+                "}\n" +
+                "function beta() {\n" +
+                "    alpha();\n" +
+                "}\n" +
+                "function gamma() {\n" +
+                "    beta();\n" +
+                "}\n" +
+                "\n" +
+                "gamma()";
+
+            const string stackStr = "Uh oh\n" +
+                "    at alpha (<Unnamed Script>:2:5)\n" +
+                "    at beta (<Unnamed Script>:5:5)\n" +
+                "    at gamma (<Unnamed Script>:8:5)\n" +
+                "    at <Unnamed Script>:11:1";
+
+            using (var context = Engine.CreateContext())
+            {
+                try
+                {
+                    context.Execute(script);
+
+                    Assert.Fail("Expected the JS error to be thrown as exception on CLR side.");
+                }
+                catch (JsException e)
+                {
+                    //Console.WriteLine(e);
+
+                    Assert.AreEqual(2, e.Line);
+                    Assert.AreEqual(4, e.Column);
+                    Assert.AreEqual(null, e.ErrorName); // no .name property available
+                    Assert.AreEqual("Uh oh", e.ErrorText);
+                    Assert.AreEqual("Uncaught Uh oh", e.Description);
+                    Assert.AreEqual(null, e.ErrorStackString); // no .stack property available
+                    Assert.AreEqual(stackStr, e.Message);
+
+                    Assert.IsNotNull(e.ErrorStackTrace);
+
+                    var error = e.Error as string;
+                    Assert.IsNotNull(error);
+                    Assert.AreEqual("Uh oh", error);
                 }
             }
         }

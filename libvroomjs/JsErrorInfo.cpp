@@ -15,6 +15,9 @@ JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context)
     auto exception = trycatch.Exception();
     assert(!exception.IsEmpty()); // should only be empty if no exception was caught
 
+    auto error = JsValue::ForValue(exception, context);
+    auto text = JsErrorInfo::CreateString(exception->ToString(ctx).FromMaybe(Local<String>()), context);
+
     auto message = trycatch.Message();
     auto hasMessage = !message.IsEmpty();
 
@@ -25,7 +28,7 @@ JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context)
         ? JsErrorInfo::CreateString(message->GetScriptResourceName()->ToString(ctx).FromMaybe(Local<String>()), context)
         : nullptr;
 
-    auto text = hasMessage
+    auto description = hasMessage
         ? JsErrorInfo::CreateString(message->Get(), context)
         : nullptr;
 
@@ -34,13 +37,54 @@ JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context)
         ? JsErrorInfo::CreateString(Local<Object>::Cast(exception)->GetConstructorName(), context)
         : nullptr;
 
-    auto error = JsValue::ForValue(exception, context);
+    Local<Value> stackStrValue;
+    auto stackstr = trycatch.StackTrace(ctx).ToLocal(&stackStrValue)
+        ? JsErrorInfo::CreateString(stackStrValue->ToString(ctx).FromMaybe(Local<String>()), context)
+        : nullptr;
 
-    auto info = new JsErrorInfo(text, line, column, resource, type, error);
-    return info;
+    auto stackFrames = CaptureStackFrames(message->GetStackTrace(), context);
+
+    return new JsErrorInfo(description, line, column, resource, type, text, error, stackstr, stackFrames);
 }
 
-uint16_t* JsErrorInfo::CreateString(Local<String> value, JsContext* context)
+jsstackframe* JsErrorInfo::CaptureStackFrames(Local<StackTrace> stackTrace, JsContext* context)
+{
+    // The handle will be empty unless isolate.SetCaptureStackTraceForUncaughtExceptions(true)
+    // has been called
+    if (stackTrace.IsEmpty())
+        return nullptr;
+
+    auto count = stackTrace->GetFrameCount();
+    if (count == 0)
+        return nullptr;
+
+    auto isolate = context->Isolate();
+
+    jsstackframe* head = nullptr;
+    jsstackframe* current = nullptr;
+    jsstackframe* prev = nullptr;
+
+    for (int i = 0; i < count; i++) {
+
+        auto frame = stackTrace->GetFrame(isolate, i);
+
+        auto line = frame->GetLineNumber();
+        auto column = frame->GetColumn();
+        auto resource = JsErrorInfo::CreateString(frame->GetScriptName(), context);
+        auto function = JsErrorInfo::CreateString(frame->GetFunctionName(), context);
+
+        current = new jsstackframe(line, column, resource, function);
+        if (head == nullptr)
+            head = current;
+        if (prev != nullptr)
+            prev->next = current;
+        prev = current;
+    }
+
+    return head;
+}
+
+char16_t* JsErrorInfo::CreateString(Local<String> value, JsContext* context)
 {
     if (value.IsEmpty())
         return nullptr;
@@ -49,5 +93,5 @@ uint16_t* JsErrorInfo::CreateString(Local<String> value, JsContext* context)
 
     auto str = new uint16_t[len + 1];
     value->Write(context->Isolate(), str);
-    return str;
+    return (char16_t*)str;
 }
