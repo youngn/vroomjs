@@ -143,7 +143,7 @@ Local<Array> ManagedRef::EnumerateProperties()
 	return Local<Array>::Cast(res);
 }
 
-inline ManagedRef::~ManagedRef() {
+ManagedRef::~ManagedRef() {
     context_->Engine()->CallRemove(context_->Id(), id_);
     DECREMENT(js_mem_debug_managedref_count);
 }

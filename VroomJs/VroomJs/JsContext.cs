@@ -238,7 +238,7 @@ namespace VroomJs
 
         internal int KeepAliveAdd(object obj)
         {
-            return _keepalives.Add(obj);
+            return _keepalives.Insert(obj);
         }
 
         internal object KeepAliveGet(int slot)

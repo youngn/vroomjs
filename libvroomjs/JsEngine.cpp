@@ -261,6 +261,7 @@ void JsEngine::Dispose()
 
 		isolate_->Exit();
 		isolate_->Dispose();
+        // Isolates can only be Dispose()'d, not deleted
 		isolate_ = NULL;
 
         delete allocator_;

@@ -88,6 +88,10 @@ public:
 	Isolate* Isolate() { return isolate_; }
 	JsContext* NewContext(int32_t id);
 
+	Local<FunctionTemplate> Template() {
+		return Local<FunctionTemplate>::New(isolate_, *managed_template_);
+	}
+
 	inline virtual ~JsEngine() {
 		DECREMENT(js_mem_debug_engine_count);
 	}

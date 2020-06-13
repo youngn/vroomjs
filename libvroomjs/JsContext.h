@@ -5,6 +5,7 @@
 class JsEngine;
 class JsScript;
 class JsValue;
+class ClrObjectManager;
 
 class JsContext {
 public:
@@ -33,6 +34,10 @@ public:
 		return Local<Context>::New(isolate_, *context_);
 	}
 
+	ClrObjectManager* ClrObjectMgr() {
+		return clrObjectManager_;
+	}
+
 	inline virtual ~JsContext() {
 		DECREMENT(js_mem_debug_context_count);
 	}
@@ -42,5 +47,6 @@ private:
 	JsEngine* engine_;
 	v8::Isolate* isolate_;
 	Persistent<Context>* context_;
+	ClrObjectManager* clrObjectManager_;
 };
 

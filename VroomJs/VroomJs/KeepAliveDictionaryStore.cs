@@ -30,49 +30,57 @@ namespace VroomJs
 {
     public class KeepAliveDictionaryStore : IKeepAliveStore
     {
-        Dictionary<int,object> _store = new Dictionary<int,object>();
-        int _store_index = 1;
+        private Dictionary<int, object> _forwardLookup = new Dictionary<int,object>();
+        private Dictionary<object, int> _reverseLookup = new Dictionary<object, int>();
 
-        public int MaxSlots {
-            get { return Int32.MaxValue; }
-        }
+        private int _idCounter = 0;
 
-        public int AllocatedSlots {
-            get { return _store.Count; }
-        }
+        public int MaxSlots => int.MaxValue;
 
-        public int UsedSlots {
-            get { return _store.Count; }
-        }
+        public int AllocatedSlots => _forwardLookup.Count;
 
-        public int Add(object obj)
+        public int UsedSlots => _forwardLookup.Count;
+
+        public int Insert(object obj)
         {
-            _store.Add(_store_index, obj);
-            return _store_index++;
+            int id;
+            if (_reverseLookup.TryGetValue(obj, out id))
+                return id;
+
+            id = _idCounter++;
+
+            _forwardLookup.Add(id, obj);
+            _reverseLookup.Add(obj, id);
+
+            return id;
         }
 
-        public object Get(int slot)
+        public object Get(int id)
         {
-            object obj;
-            if (_store.TryGetValue(slot, out obj))
+            if (_forwardLookup.TryGetValue(id, out object obj))
                 return obj;
-            return null;
+
+            throw new InvalidOperationException("Object ID not found.");
         }
 
-        public void Remove(int slot)
+        public void Remove(int id)
         {
-            var obj = Get(slot);
-            if (obj != null) {
-                var disposable = obj as IDisposable;
-                if (disposable != null)
-                    disposable.Dispose();
-                _store.Remove(slot);
-            }
+            if (!_forwardLookup.TryGetValue(id, out object obj))
+                return;
+
+            _forwardLookup.Remove(id);
+            _reverseLookup.Remove(obj);
+
+            // todo: not sure if we want this to be responsible for disposal?
+            //var disposable = obj as IDisposable;
+            //if (disposable != null)
+            //    disposable.Dispose();
         }
 
         public void Clear()
         {
-            _store.Clear();
+            _forwardLookup.Clear();
+            _reverseLookup.Clear();
         }
     }
 }

@@ -32,6 +32,8 @@
 #include "JsEngine.h"
 #include "JsValue.h"
 #include "JsScript.h"
+#include "ManagedRef.h"
+#include "ClrObjectManager.h"
 
 
 using namespace v8;
@@ -49,6 +51,8 @@ JsContext::JsContext(int32_t id, JsEngine* engine)
     HandleScope scope(isolate_);
 
     context_ = new Persistent<Context>(isolate_, Context::New(isolate_));
+
+    clrObjectManager_ = new ClrObjectManager(this);
 
     // Do this last, in case anything above fails
     INCREMENT(js_mem_debug_context_count);
@@ -68,6 +72,9 @@ void JsContext::Dispose()
     }
     delete context_;
     context_ = nullptr;
+
+    delete clrObjectManager_;
+    clrObjectManager_ = nullptr;
 
     engine_ = nullptr;
     isolate_ = nullptr;
@@ -346,4 +353,3 @@ JsValue JsContext::InvokeFunction(Persistent<Function>* func, JsValue receiver, 
         return JsValue::ForError(trycatch, this);
     }
 }
-

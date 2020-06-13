@@ -211,7 +211,11 @@ namespace VroomJsTests
                 var output2 = context.GetVariable("x");
 
                 Assert.IsInstanceOf<JsObject>(output2);
-                var obj2 = (JsObject)output;
+                var obj2 = (JsObject)output2;
+
+                // todo: make this assertion hold
+                //Assert.AreSame(obj, obj2);
+
                 Assert.AreEqual(1, obj2["a"]);
                 Assert.AreEqual("bob", obj2["b"]);
                 Assert.AreEqual(true, obj2["c"]);
@@ -237,10 +241,52 @@ namespace VroomJsTests
                 var output2 = context.GetVariable("x");
 
                 Assert.IsInstanceOf<JsArray>(output2);
-                var arr2 = (JsArray)output;
+                var arr2 = (JsArray)output2;
+
+                // todo: make this assertion hold
+                //Assert.AreSame(arr, arr2);
+
                 Assert.AreEqual("a", arr2[0]);
                 Assert.AreEqual(1, arr2[1]);
                 Assert.AreEqual(2, arr2["length"]);
+            }
+        }
+
+        [Test]
+        public void Test_JsFunction()
+        {
+            // Same idea as Test_JsObject above
+            Assert.Fail("TODO");
+        }
+
+        class Foo
+        {
+
+        }
+
+        [Test]
+        public void Test_managed_object()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                var foo = new Foo();
+                context.SetVariable("x", foo);
+
+                // Ensure round-trippable
+                var fooReturned = context.GetVariable("x");
+                Assert.AreSame(foo, fooReturned);
+
+                // Ensure object identity is maintained on script side
+                context.SetVariable("y", foo);
+                Assert.IsTrue((bool)context.Execute("y === x"));
+
+                var foo2 = new Foo();
+                context.SetVariable("y", foo2);
+                var foo2Returned = context.GetVariable("y");
+                Assert.AreSame(foo2, foo2Returned);
+                Assert.AreNotSame(foo, foo2Returned);
+
+                Assert.IsFalse((bool)context.Execute("y === x"));
             }
         }
     }

@@ -34,7 +34,7 @@ namespace VroomJs
         int AllocatedSlots { get; }
         int UsedSlots { get; }
 
-        int Add(object obj);
+        int Insert(object obj);
         object Get(int slot);
         void Remove(int slot);
         void Clear();

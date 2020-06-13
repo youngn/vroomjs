@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using VroomJs;
 
 namespace Sandbox
@@ -59,25 +60,35 @@ namespace Sandbox
     {
         public static void Main (string[] args) {
 
+			//var obj = new object();
+			//var h1 = GCHandle.Alloc(obj);
+			//Console.WriteLine(GCHandle.ToIntPtr(h1));
+			//var h2 = GCHandle.Alloc(obj);
+			//Console.WriteLine(GCHandle.ToIntPtr(h2));
+			//return;
+
 			JsEngine.Initialize();
 
-			//string lodash = File.ReadAllText(@"c:\lodash.js");
-			using (JsEngine engine = new JsEngine()) {
-				//Stopwatch watch = new Stopwatch();
-			//	watch.Start();
-				//JsScript script = engine.CompileScript("3+3");
-				using (JsContext ctx = engine.CreateContext()) {
-					ctx.SetVariable("x", "bob");
-					var result = ctx.Execute("x");
-					Console.WriteLine(result);
-				}
-			}
+			//using (JsEngine engine = new JsEngine())
+			//{
+			//	//Stopwatch watch = new Stopwatch();
+			////	watch.Start();
+			//	//JsScript script = engine.CompileScript("3+3");
+			//	using (JsContext ctx = engine.CreateContext()) {
+			//		ctx.SetVariable("x", "bob");
+			//		var result = ctx.Execute("x");
+			//		Console.WriteLine(result);
+			//	}
+			//}
 			using (JsEngine engine = new JsEngine())
 			using (JsContext ctx = engine.CreateContext())
 			{
-				ctx.SetVariable("x", 3);
-				var result = ctx.Execute("x");
-				Console.WriteLine(result);
+				for(var i = 0; i < 100000; i++)
+				{
+					ctx.SetVariable("x", new object());
+				}
+				Console.WriteLine("Waiting for key...");
+				Console.Read();
 			}
 			JsEngine.Shutdown();
 			return;

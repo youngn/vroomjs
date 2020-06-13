@@ -5,6 +5,7 @@
 #include "JsContext.h"
 #include "JsErrorInfo.h"
 #include "ManagedRef.h"
+#include "ClrObjectManager.h"
 
 
 JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
@@ -54,13 +55,23 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
 
     if (value->IsFunction()) {
         auto function = Local<Function>::Cast(value);
-        return ForJsFunction(new Persistent<Function>(isolate, function));
+
+        // TODO: why is it that the proxy object is a function? It seems like we shouldn't need this 'if' here
+        // (unless the object being proxied is a CLR delegate, in which case it could make sense)
+        if (function->InternalFieldCount() > 0) {
+            auto id = Local<Int32>::Cast(function->GetInternalField(0))->Value();
+            return ForManagedObject(id);
+        }
+        else {
+            return ForJsFunction(new Persistent<Function>(isolate, function));
+        }
     }
 
     if (value->IsObject()) {
         auto obj = Local<Object>::Cast(value);
-        if (obj->InternalFieldCount() == 1) {
-            //v = ManagedFromV8(obj);
+        if (obj->InternalFieldCount() > 0) {
+            auto id = Local<Int32>::Cast(obj->GetInternalField(0))->Value();
+            return ForManagedObject(id);
         }
         else {
             return ForJsObject(new Persistent<Object>(isolate, obj));
@@ -123,24 +134,12 @@ Local<Value> JsValue::GetValue(JsContext* context)
         //return arr;        
     }
 
-    // This is an ID to a managed object that lives inside the JsContext keep-alive
-    // cache. We just wrap it and the pointer to the engine inside an External. A
-    // managed error is still a CLR object so it is wrapped exactly as a normal
-    // managed object.
     if (ValueType() == JSVALUE_TYPE_MANAGED || ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
-
-        //auto ref = new ManagedRef(this, contextId, v.length);
-        //auto t = Local<FunctionTemplate>::New(isolate_, *managed_template_);
-
-        //auto obj = t->InstanceTemplate()->NewInstance(isolate_->GetCurrentContext()).ToLocalChecked();
-        //obj->SetInternalField(0, External::New(isolate_, ref));
-
-        // todo: not sure if any of this is needed, revisit
-        //Persistent<Object> persistent = Persistent<Object>::New(object);
-        //persistent->SetInternalField(0, External::New(ref));
-        //persistent.MakeWeak(NULL, managed_destroy);
-        //return persistent;
-        //return obj;
+        // This is an ID to a managed object that lives inside the JsContext keep-alive
+        // cache. We just wrap it and the pointer to the engine inside an External. A
+        // managed error is still a CLR object so it is wrapped exactly as a normal
+        // managed object.
+        return context->ClrObjectMgr()->GetProxy(v.length);
     }
 
     // todo: throw?
