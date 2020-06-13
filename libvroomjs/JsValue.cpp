@@ -139,7 +139,7 @@ Local<Value> JsValue::GetValue(JsContext* context)
         // cache. We just wrap it and the pointer to the engine inside an External. A
         // managed error is still a CLR object so it is wrapped exactly as a normal
         // managed object.
-        return context->ClrObjectMgr()->GetProxy(v.length);
+        return context->ClrObjectMgr()->GetProxy(ManagedObjectIdValue());
     }
 
     // todo: throw?

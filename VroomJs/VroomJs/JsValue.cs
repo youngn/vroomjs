@@ -43,7 +43,6 @@ namespace VroomJs
         [FieldOffset(8)] public JsValueType Type; // marshaled as integer.
 
         [FieldOffset(12)] private int Length; // Length of array or string
-        [FieldOffset(12)] private int Index;  // Managed object keepalive index
 
         public static JsValue ForValue(object obj, JsContext context)
         {
@@ -192,11 +191,11 @@ namespace VroomJs
         }
         public static JsValue ForManagedError(int id)
         {
-            return new JsValue { Type = JsValueType.ManagedError, Index = id };
+            return new JsValue { Type = JsValueType.ManagedError, I32 = id };
         }
         public static JsValue ForManagedObject(int id)
         {
-            return new JsValue { Type = JsValueType.Managed, Index = id };
+            return new JsValue { Type = JsValueType.Managed, I32 = id };
         }
 
         #endregion
@@ -337,7 +336,7 @@ namespace VroomJs
         private object ManagedValue(JsContext context)
         {
             Debug.Assert(Type == JsValueType.Managed);
-            return context.KeepAliveGet(Index);
+            return context.KeepAliveGet(I32);
         }
 
         private JsException ErrorValue(JsContext context)

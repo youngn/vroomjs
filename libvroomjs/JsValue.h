@@ -65,10 +65,10 @@ public:
 		return JsValue(JSVALUE_TYPE_ERROR, 0, (void*)value);
 	}
 	static JsValue ForManagedError(int32_t id) {
-		return JsValue(JSVALUE_TYPE_MANAGED_ERROR, id, 0);
+		return JsValue(JSVALUE_TYPE_MANAGED_ERROR, 0, id);
 	}
 	static JsValue ForManagedObject(int32_t id) {
-		return JsValue(JSVALUE_TYPE_MANAGED, id, 0);
+		return JsValue(JSVALUE_TYPE_MANAGED, 0, id);
 	}
 
 	int32_t ValueType() const {
@@ -114,6 +114,10 @@ public:
 	Persistent<String>* JsStringValue() const {
 		assert(v.type == JSVALUE_TYPE_JSSTRING);
 		return (Persistent<String>*)v.value.ptr;
+	}
+	int32_t ManagedObjectIdValue() const {
+		assert(v.type == JSVALUE_TYPE_MANAGED || v.type == JSVALUE_TYPE_MANAGED_ERROR);
+		return v.value.i32;
 	}
 
 	JsValue(const jsvalue& value) {

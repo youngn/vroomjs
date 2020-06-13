@@ -38,7 +38,7 @@ Local<Object> ClrObjectManager::GetProxy(int id)
     auto handle = UniquePersistent<Object>(isolate, obj);
     handle.SetWeak(args, ClrObjectManager::managed_destroy, v8::WeakCallbackType::kParameter);
 
-    // The entry in proxyMap_ will own both the UniquePersistent, ManagedRef and the WeakCallbackArgs,
+    // The entry in proxyMap_ will own the UniquePersistent, ManagedRef and the WeakCallbackArgs,
     // and will be responsible for releasing them.
     proxyMap_[id] = Entry(std::move(handle), std::unique_ptr<ManagedRef>(ref), std::unique_ptr<WeakCallbackArgs>(args));
 

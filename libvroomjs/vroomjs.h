@@ -100,7 +100,7 @@ extern "C"
         } value;
         
         int32_t         type;
-        int32_t         length; // Also used as slot index on the CLR side.
+        int32_t         length;
 	};
 	
 	EXPORT void CALLINGCONVENTION jsvalue_dispose(jsvalue value);
