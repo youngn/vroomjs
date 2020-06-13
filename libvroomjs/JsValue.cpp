@@ -59,8 +59,8 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
         // TODO: why is it that the proxy object is a function? It seems like we shouldn't need this 'if' here
         // (unless the object being proxied is a CLR delegate, in which case it could make sense)
         if (function->InternalFieldCount() > 0) {
-            auto id = Local<Int32>::Cast(function->GetInternalField(0))->Value();
-            return ForManagedObject(id);
+            auto ref = (ManagedRef*)Local<External>::Cast(function->GetInternalField(0))->Value();
+            return ForManagedObject(ref->Id());
         }
         else {
             return ForJsFunction(new Persistent<Function>(isolate, function));
@@ -70,8 +70,8 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
     if (value->IsObject()) {
         auto obj = Local<Object>::Cast(value);
         if (obj->InternalFieldCount() > 0) {
-            auto id = Local<Int32>::Cast(obj->GetInternalField(0))->Value();
-            return ForManagedObject(id);
+            auto ref = (ManagedRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
+            return ForManagedObject(ref->Id());
         }
         else {
             return ForJsObject(new Persistent<Object>(isolate, obj));
@@ -161,8 +161,7 @@ JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)
     // Is this a managed exception?
     Local<Object> obj;
     if (exception->ToObject(ctx).ToLocal(&obj) && obj->InternalFieldCount() == 1) {
-        auto wrap = Local<External>::Cast(obj->GetInternalField(0));
-        auto ref = (ManagedRef*)wrap->Value();
+        auto ref = (ManagedRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
         return JsValue::ForManagedError(ref->Id());
     }
 

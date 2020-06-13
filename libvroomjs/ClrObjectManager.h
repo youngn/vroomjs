@@ -28,8 +28,9 @@ private:
     {
         Entry() {}
 
-        Entry(UniquePersistent<Object>&& objectHandle, std::unique_ptr<WeakCallbackArgs>&& callbackArgs)
+        Entry(UniquePersistent<Object>&& objectHandle, std::unique_ptr<ManagedRef>&& managedRef, std::unique_ptr<WeakCallbackArgs>&& callbackArgs)
             : objectHandle(std::move(objectHandle)),
+            managedRef(std::move(managedRef)),
             callbackArgs(std::move(callbackArgs))
         {
         }
@@ -41,6 +42,7 @@ private:
         // only moving
         Entry(Entry&& that) noexcept
             : objectHandle(std::move(that.objectHandle)),
+            managedRef(std::move(that.managedRef)),
             callbackArgs(std::move(that.callbackArgs))
         {
         }
@@ -50,12 +52,22 @@ private:
             if (this != &that)
             {
                 objectHandle = std::move(that.objectHandle);
+                managedRef = std::move(that.managedRef);
                 callbackArgs = std::move(that.callbackArgs);
             }
             return *this;
         }
 
+        // Persistent handle to the proxy object. Note that UniquePersistent automatically
+        // Reset()s upon destruction.
         UniquePersistent<Object> objectHandle;
+
+        // The ManagedRef is only stored here so that it is deterministically deleted
+        // regardless of whether the callback is ever invoked.
+        std::unique_ptr<ManagedRef> managedRef;
+
+        // The WeakCallbackArgs is only stored here so that it is deterministically deleted
+        // regardless of whether the callback is ever invoked.
         std::unique_ptr<WeakCallbackArgs> callbackArgs;
     };
 

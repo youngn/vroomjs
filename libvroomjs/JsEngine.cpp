@@ -307,22 +307,4 @@ jsvalue JsEngine::ArrayFromArguments(const FunctionCallbackInfo<Value>& args)
     return v;
 }
 
-static void managed_destroy(const WeakCallbackInfo<Local<Object>>& info)
-{
-#ifdef DEBUG_TRACE_API
-		std::cout << "managed_destroy" << std::endl;
-#endif
-    // todo: fix this
-    HandleScope scope(info.GetIsolate());
-
-    // todo:  GetInternalField here just returns a void*
-    // are we to assume this points directly to managed obj?
-    auto x = info.GetInternalField(0);
- //   Persistent<Object> self = Persistent<Object>::Cast(object);
- //   Local<External> wrap = Local<External>::Cast(self->GetInternalField(0));
- //   ManagedRef* ref = (ManagedRef*)wrap->Value();
-    ManagedRef* ref = (ManagedRef*)x;
-    delete ref;
- //   object.Dispose();
-}
 

@@ -27,21 +27,20 @@ Local<Object> ClrObjectManager::GetProxy(int id)
         return Local<Object>::New(isolate, search->second.objectHandle);
     }
 
-    //auto ref = new ManagedRef(context_, id);
+    auto ref = new ManagedRef(context_, id);
     auto t = context_->Engine()->Template();
     auto ctx = context_->Ctx();
 
     auto obj = t->InstanceTemplate()->NewInstance(ctx).ToLocalChecked();
-    //obj->SetInternalField(0, External::New(isolate, ref));
-    obj->SetInternalField(0, Int32::New(isolate, id));
+    obj->SetInternalField(0, External::New(isolate, ref));
      
     auto args = new WeakCallbackArgs { this, id };
     auto handle = UniquePersistent<Object>(isolate, obj);
     handle.SetWeak(args, ClrObjectManager::managed_destroy, v8::WeakCallbackType::kParameter);
 
-    // The entry in proxyMap_ will own both the UniquePersistent and the WeakCallbackArgs,
+    // The entry in proxyMap_ will own both the UniquePersistent, ManagedRef and the WeakCallbackArgs,
     // and will be responsible for releasing them.
-    proxyMap_[id] = Entry(std::move(handle), std::unique_ptr<WeakCallbackArgs>(args));
+    proxyMap_[id] = Entry(std::move(handle), std::unique_ptr<ManagedRef>(ref), std::unique_ptr<WeakCallbackArgs>(args));
 
     return obj;
 }
