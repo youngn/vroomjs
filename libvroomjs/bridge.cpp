@@ -221,6 +221,17 @@ extern "C"
         return context->GetVariable(name);
     }
 
+    EXPORT jsvalue CALLINGCONVENTION jscontext_new_array(JsContext* context, int len, const jsvalue* elements)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jscontext_new_array" << std::endl;
+#endif
+        assert(context != NULL);
+        assert(len >= 0);
+
+        return context->CreateArray(len, elements);
+    }
+
     EXPORT jsvalue CALLINGCONVENTION jsobject_get_named_property_value(JsContext* context, Persistent<Object>* obj, const uint16_t* name)
     {
 #ifdef DEBUG_TRACE_API
@@ -323,36 +334,10 @@ extern "C"
         return script->Compile(str, resourceName);
     }
 
-    EXPORT jsvalue CALLINGCONVENTION jsvalue_alloc_string(const uint16_t* str)
-    {
-#ifdef DEBUG_TRACE_API
-		std::wcout << "jsvalue_alloc_string" << std::endl;
-#endif
-        assert(str != NULL);
-
-        jsvalue v;
-    
-        // todo: use strlen?
-        int length = 0;
-        while (str[length] != '\0')
-            length++;
-          
-        v.length = length;
-        v.value.str = new uint16_t[length+1];
-        if (v.value.str != NULL) {
-            for (int i=0 ; i < length ; i++)
-                 v.value.str[i] = str[i];
-            v.value.str[length] = '\0';
-            v.type = JSVALUE_TYPE_STRING;
-        }
-
-        return v;
-    }
-
     EXPORT jsvalue CALLINGCONVENTION jsstring_new(JsEngine* engine, const uint16_t* value)
     {
 #ifdef DEBUG_TRACE_API
-        std::wcout << "jsengine_new_string" << std::endl;
+        std::wcout << "jsstring_new" << std::endl;
 #endif
         assert(engine != NULL);
         assert(value != NULL);
@@ -377,22 +362,6 @@ extern "C"
 
         return JsString::GetValue(engine->Isolate(), str, buffer);
     }
-
-    EXPORT jsvalue CALLINGCONVENTION jsvalue_alloc_array(const int32_t length)
-    {
-#ifdef DEBUG_TRACE_API
-		std::wcout << "jsvalue_alloc_array" << std::endl;
-#endif
-        jsvalue v;
-          
-        v.value.arr = new jsvalue[length];
-        if (v.value.arr != NULL) {
-            v.length = length;
-            v.type = JSVALUE_TYPE_ARRAY;
-        }
-
-        return v;
-    }        
                 
     EXPORT void CALLINGCONVENTION jsvalue_dispose(jsvalue value)
     {

@@ -69,6 +69,9 @@ namespace VroomJs
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern JsValue jscontext_set_variable(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
 
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+        public static extern JsValue jscontext_new_array(HandleRef context, int len, [In]JsValue[] elements);
+        
         #endregion
 
         #region jsobject
@@ -108,12 +111,6 @@ namespace VroomJs
         #endregion
 
         #region jsvalue
-
-        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern JsValue jsvalue_alloc_string([MarshalAs(UnmanagedType.LPWStr)] string str);
-
-        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern JsValue jsvalue_alloc_array(int length);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern void jsvalue_dispose(JsValue value);

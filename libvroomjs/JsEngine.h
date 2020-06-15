@@ -43,13 +43,13 @@ public:
 		}
 		return callbacks_.valueof(context, id);
 	}
-	inline jsvalue CallInvoke(int32_t context, int32_t id, jsvalue args) {
+	inline jsvalue CallInvoke(int32_t context, int32_t id, int32_t argCount, jsvalue* args) {
 		if (callbacks_.invoke == NULL) {
 			jsvalue v;
 			v.type == JSVALUE_TYPE_NULL;
 			return v;
 		}
-		return callbacks_.invoke(context, id, args);
+		return callbacks_.invoke(context, id, argCount, args);
 	}
 	inline jsvalue CallDeleteProperty(int32_t context, int32_t id, uint16_t* name) {
 		if (callbacks_.delete_property == NULL) {
@@ -70,16 +70,9 @@ public:
 		return value;
 	}
 
-	// Conversions. Note that all the conversion functions should be called
-	// with an HandleScope already on the stack or sill misarabily fail.
-	jsvalue ManagedFromV8(Local<Object> obj);
-
 	Persistent<Script>* CompileScript(const uint16_t* str, const uint16_t* resourceName, jsvalue* error);
 
-	// Converts JS function Arguments to an array of jsvalue to call managed code.
-	jsvalue ArrayFromArguments(const FunctionCallbackInfo<Value>& args);
-
-	// Dispose a Persistent<Object> that was pinned on the CLR side by JsObject.
+	// Dispose a Persistent<Object> that was held on the CLR side by JsObject.
 	void DisposeObject(Persistent<Object>* obj);
 
 	void Dispose();

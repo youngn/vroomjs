@@ -25,6 +25,8 @@ public:
 	JsValue SetPropertyValue(Persistent<Object>* obj, const uint32_t index, JsValue value);
 	JsValue InvokeFunction(Persistent<Function>* func, JsValue receiver, int argCount, JsValue* args);
 
+	JsValue CreateArray(int len, const jsvalue* elements);
+
 	void Dispose();
 
 	int32_t Id() { return id_; }

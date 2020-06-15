@@ -536,7 +536,9 @@ namespace VroomJs
             return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
-        internal JsValue KeepAliveInvoke(int slot, JsValue args)
+
+
+        internal JsValue KeepAliveInvoke(int slot, object[] args)
         {
             // TODO: This is pretty slow: use a cache of generated code to make it faster.
 #if DEBUG_TRACE_API
@@ -553,8 +555,7 @@ namespace VroomJs
 #if DEBUG_TRACE_API
 					Console.WriteLine("constructing " + constructorType.Name);
 #endif
-                    object[] constructorArgs = (object[])args.Extract(this);
-                    return JsValue.ForValue(Activator.CreateInstance(constructorType, constructorArgs), this);
+                    return JsValue.ForValue(Activator.CreateInstance(constructorType, args), this);
                 }
 
                 WeakDelegate func = obj as WeakDelegate;
@@ -567,8 +568,6 @@ namespace VroomJs
 #if DEBUG_TRACE_API
 				Console.WriteLine("invoking " + obj.Target + " method " + obj.MethodName);
 #endif
-                object[] a = (object[])args.Extract(this);
-
                 BindingFlags flags = BindingFlags.Public
                         | BindingFlags.InvokeMethod | BindingFlags.FlattenHierarchy;
 
@@ -587,14 +586,14 @@ namespace VroomJs
                 }
 
                 // need to convert methods from JsFunction's into delegates?
-                if (a.Any(z => z != null && z.GetType() == typeof(JsFunction)))
+                if (args.Any(z => z != null && z.GetType() == typeof(JsFunction)))
                 {
-                    CheckAndResolveJsFunctions(type, func.MethodName, flags, a);
+                    CheckAndResolveJsFunctions(type, func.MethodName, flags, args);
                 }
 
                 try
                 {
-                    object result = type.InvokeMember(func.MethodName, flags, null, func.Target, a);
+                    object result = type.InvokeMember(func.MethodName, flags, null, func.Target, args);
                     return JsValue.ForValue(result, this);
                 }
                 catch (TargetInvocationException e)
@@ -675,14 +674,15 @@ namespace VroomJs
                     return JsValue.ForValue(keys, this);
                 }
 
-                string[] values = obj.GetType().GetMembers(
+                var values = obj.GetType().GetMembers(
                     BindingFlags.Public |
                     BindingFlags.Instance).Where(m =>
                     {
                         var method = m as MethodBase;
                         return method == null || !method.IsSpecialName;
-                    }).Select(z => z.Name).ToArray();
-                return JsValue.ForValue(values, this);
+                    }).Select(z => JsValue.ForValue(z.Name, this)).ToArray();
+
+                return NativeApi.jscontext_new_array(_contextHandle, values.Length, values);
             }
             return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }

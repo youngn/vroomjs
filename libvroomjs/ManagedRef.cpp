@@ -111,20 +111,28 @@ Local<Value> ManagedRef::GetValueOf()
     return res;
 }
 
-Local<Value> ManagedRef::Invoke(const FunctionCallbackInfo<Value>& args)
+Local<Value> ManagedRef::Invoke(const FunctionCallbackInfo<Value>& info)
 {
 #ifdef DEBUG_TRACE_API
 	std::wcout << "INVOKING..........." << std::endl;
 #endif
-    Local<Value> res;
-    JsValue a = context_->Engine()->ArrayFromArguments(args);
-    JsValue r = context_->Engine()->CallInvoke(context_->Id(), id_, a);
-    if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
-        context_->Isolate()->ThrowException(r.Extract(context_));
-    else
-        res = r.Extract(context_);
 
-    return res;
+    auto len = info.Length();
+    auto args = new jsvalue[len];
+
+    for (auto i = 0; i < len; i++) {
+        args[i] = JsValue::ForValue(info[i], context_);
+    }
+
+    JsValue r = context_->Engine()->CallInvoke(context_->Id(), id_, len, args);
+    delete[] args;
+
+    if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
+        context_->Isolate()->ThrowException(r.Extract(context_));
+        return Local<Value>();
+    }
+
+    return r.Extract(context_);
 }
 
 Local<Array> ManagedRef::EnumerateProperties()
@@ -147,3 +155,4 @@ ManagedRef::~ManagedRef() {
     context_->Engine()->CallRemove(context_->Id(), id_);
     DECREMENT(js_mem_debug_managedref_count);
 }
+

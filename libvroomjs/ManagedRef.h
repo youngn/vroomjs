@@ -18,7 +18,7 @@ public:
     Local<Value> GetPropertyValue(Local<String> name);
     Local<Value> SetPropertyValue(Local<String> name, Local<Value> value);
     Local<Value> GetValueOf();
-    Local<Value> Invoke(const FunctionCallbackInfo<Value>& args);
+    Local<Value> Invoke(const FunctionCallbackInfo<Value>& info);
     Local<Boolean> DeleteProperty(Local<String> name);
     Local<Array> EnumerateProperties();
 

@@ -4,14 +4,14 @@
 #include "JsEngine.h"
 #include <thread>
 
-void ClrObjectManager::managed_destroy(const WeakCallbackInfo<ClrObjectManager::WeakCallbackArgs>& info)
+void ClrObjectManager::WeakHandleCallback(const WeakCallbackInfo<ClrObjectManager::WeakCallbackArgs>& info)
 {
 #ifdef DEBUG_TRACE_API
-    std::cout << "managed_destroy" << std::endl;
+    std::cout << "WeakHandleCallback" << std::endl;
 #endif
     auto args = info.GetParameter();
 
-    std::cout << "managed_destroy " << args->id << " " << std::this_thread::get_id() << std::endl;
+    std::cout << "WeakHandleCallback " << args->id << " " << std::this_thread::get_id() << std::endl;
 
     args->owner->RemoveEntry(args->id);
 }
@@ -36,7 +36,7 @@ Local<Object> ClrObjectManager::GetProxy(int id)
      
     auto args = new WeakCallbackArgs { this, id };
     auto handle = UniquePersistent<Object>(isolate, obj);
-    handle.SetWeak(args, ClrObjectManager::managed_destroy, v8::WeakCallbackType::kParameter);
+    handle.SetWeak(args, ClrObjectManager::WeakHandleCallback, v8::WeakCallbackType::kParameter);
 
     // The entry in proxyMap_ will own the UniquePersistent, ManagedRef and the WeakCallbackArgs,
     // and will be responsible for releasing them.

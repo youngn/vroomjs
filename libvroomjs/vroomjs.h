@@ -125,7 +125,7 @@ extern "C"
     typedef jsvalue (CALLINGCONVENTION *keepalive_get_property_value_f) (int context, int id, uint16_t* name);
     typedef jsvalue (CALLINGCONVENTION *keepalive_set_property_value_f) (int context, int id, uint16_t* name, jsvalue value);
     typedef jsvalue (CALLINGCONVENTION *keepalive_valueof_f) (int context, int id);
-	typedef jsvalue (CALLINGCONVENTION *keepalive_invoke_f) (int context, int id, jsvalue args);
+	typedef jsvalue (CALLINGCONVENTION *keepalive_invoke_f) (int context, int id, int argCount, jsvalue* args);
 	typedef jsvalue (CALLINGCONVENTION *keepalive_delete_property_f) (int context, int id, uint16_t* name);
 	typedef jsvalue (CALLINGCONVENTION *keepalive_enumerate_properties_f) (int context, int id);
 

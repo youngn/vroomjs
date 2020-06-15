@@ -71,16 +71,16 @@ private:
         std::unique_ptr<WeakCallbackArgs> callbackArgs;
     };
 
-    static void managed_destroy(const WeakCallbackInfo<WeakCallbackArgs>& info);
+    static void WeakHandleCallback(const WeakCallbackInfo<WeakCallbackArgs>& info);
     void RemoveEntry(int id);
 
     // Context that owns this object
     JsContext* context_;
 
-    // Map of (object ID -> Persistent Object handle)
+    // Map of (object ID -> Entry)
     // Note that UniquePersistent automatically calls Reset() when destructed,
     // so clean-up of this entire thing is automatic: Destruction of ClrObjectManager
-    // destructs proxyMap_, which in turn destructs each UniquePersistent handle,
+    // destructs proxyMap_, which in turn destructs each Entry, destructing the UniquePersistent handle,
     // thus removing the reference to the V8 Object.
     std::unordered_map<int, Entry> proxyMap_;
 };

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -114,14 +115,17 @@ namespace VroomJs
             return context.KeepAliveValueOf(slot);
         }
 
-        private JsValue KeepAliveInvoke(int contextId, int slot, JsValue args)
+        private JsValue KeepAliveInvoke(int contextId, int slot, int argCount, IntPtr args)
         {
-            JsContext context;
-            if (!_aliveContexts.TryGetValue(contextId, out context))
-            {
+            if (!_aliveContexts.TryGetValue(contextId, out JsContext context))
                 throw new Exception("fail");
-            }
-            return context.KeepAliveInvoke(slot, args);
+
+            var stepSize = Marshal.SizeOf<JsValue>();
+            var arguments = Enumerable.Range(0, argCount)
+                .Select(i => Marshal.PtrToStructure<JsValue>(new IntPtr(args.ToInt64() + (stepSize * i))).Extract(context))
+                .ToArray();
+
+            return context.KeepAliveInvoke(slot, arguments);
         }
 
         private JsValue KeepAliveSetPropertyValue(int contextId, int slot, string name, JsValue value)

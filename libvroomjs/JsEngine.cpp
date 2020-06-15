@@ -279,32 +279,7 @@ void JsEngine::DisposeObject(Persistent<Object>* obj)
     Locker locker(isolate_);
     Isolate::Scope isolate_scope(isolate_);
     
-	obj->Reset();
-}
-
-jsvalue JsEngine::ManagedFromV8(Local<Object> obj)
-{
-    jsvalue v;
-    
-	auto wrap = Local<External>::Cast(obj->GetInternalField(0));
-    auto ref = (ManagedRef*)wrap->Value();
-	v.type = JSVALUE_TYPE_MANAGED;
-    v.length = ref->Id();
-    v.value.str = 0;
-
-    return v;
-}
-    
-jsvalue JsEngine::ArrayFromArguments(const FunctionCallbackInfo<Value>& args)
-{
-    jsvalue v = jsvalue_alloc_array(args.Length());
-    auto thisArg = args.Holder();
-
-    for (int i=0 ; i < v.length ; i++) {
-        //v.value.arr[i] = convert_->AnyFromV8(args[i], thisArg);
-    }
-    
-    return v;
+    obj->Reset();
 }
 
 

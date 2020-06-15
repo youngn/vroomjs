@@ -353,3 +353,22 @@ JsValue JsContext::InvokeFunction(Persistent<Function>* func, JsValue receiver, 
         return JsValue::ForError(trycatch, this);
     }
 }
+
+JsValue JsContext::CreateArray(int len, const jsvalue* elements)
+{
+    assert(len >= 0);
+
+    Locker locker(isolate_);
+    HandleScope scope(isolate_);
+
+    auto arr = Array::New(isolate_, len);
+
+    if (elements) {
+        auto ctx = Local<Context>::New(isolate_, *context_);
+        for (int i = 0; i < len; i++) {
+            arr->Set(ctx, i, JsValue(elements[i]).Extract(this)).Check();
+        }
+    }
+
+    return JsValue::ForValue(arr, this);
+}

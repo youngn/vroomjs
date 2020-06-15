@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace VroomJs
 {
@@ -6,7 +7,7 @@ namespace VroomJs
     delegate JsValue KeepAliveGetPropertyValueDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name);
     delegate JsValue KeepAliveSetPropertyValueDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
     delegate JsValue KeepAliveValueOfDelegate(int context, int slot);
-    delegate JsValue KeepAliveInvokeDelegate(int context, int slot, JsValue args);
+    delegate JsValue KeepAliveInvokeDelegate(int context, int slot, int argCount, IntPtr args);
     delegate JsValue KeepAliveDeletePropertyDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name);
     delegate JsValue KeepAliveEnumeratePropertiesDelegate(int context, int slot);
 
