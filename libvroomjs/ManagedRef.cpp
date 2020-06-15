@@ -35,88 +35,121 @@ using namespace v8;
 
 long js_mem_debug_managedref_count;
 
-Local<Value> ManagedRef::GetPropertyValue(Local<String> name)
+void ManagedRef::managed_prop_get(Local<Name> name, const PropertyCallbackInfo<Value>& info)
 {
-    Local<Value> res;
+#ifdef DEBUG_TRACE_API
+    std::cout << "managed_prop_get" << std::endl;
+#endif
 
+    GetProxyInstance(info.Holder())->GetPropertyValue(name, info);
+}
+
+void ManagedRef::managed_prop_set(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value>& info)
+{
+#ifdef DEBUG_TRACE_API
+    std::cout << "managed_prop_set" << std::endl;
+#endif
+
+    GetProxyInstance(info.Holder())->SetPropertyValue(name, value, info);
+}
+
+void ManagedRef::managed_prop_delete(Local<Name> name, const PropertyCallbackInfo<Boolean>& info)
+{
+#ifdef DEBUG_TRACE_API
+    std::cout << "managed_prop_delete" << std::endl;
+#endif
+
+    GetProxyInstance(info.Holder())->DeleteProperty(name, info);
+}
+
+void ManagedRef::managed_prop_enumerate(const PropertyCallbackInfo<Array>& info)
+{
+#ifdef DEBUG_TRACE_API
+    std::cout << "managed_prop_enumerate" << std::endl;
+#endif
+
+    GetProxyInstance(info.Holder())->EnumerateProperties(info);
+}
+
+void ManagedRef::managed_call(const FunctionCallbackInfo<Value>& info)
+{
+#ifdef DEBUG_TRACE_API
+    std::cout << "managed_call" << std::endl;
+#endif
+
+    GetProxyInstance(info.Holder())->Invoke(info);
+}
+
+void ManagedRef::managed_valueof(const FunctionCallbackInfo<Value>& info)
+{
+#ifdef DEBUG_TRACE_API
+    std::cout << "managed_valueof" << std::endl;
+#endif
+
+    GetProxyInstance(info.Holder())->GetValueOf(info);
+}
+
+ManagedRef* ManagedRef::GetProxyInstance(const Local<Object>& obj)
+{
+    auto ext = Local<External>::Cast(obj->GetInternalField(0));
+    return (ManagedRef*)ext->Value();
+}
+
+void ManagedRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInfo<Value>& info)
+{
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-#ifdef DEBUG_TRACE_API
-    std::cout << "GetPropertyValue" << std::endl;
-#endif
-
-    JsValue r = context_->Engine()->CallGetPropertyValue(context_->Id(), id_, *s);
-    if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
+    auto r = context_->Engine()->CallGetPropertyValue(context_->Id(), id_, *s);
+    if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
         isolate->ThrowException(r.Extract(context_));
-    else
-        res = r.Extract(context_);
-
-    return res;
+        return;
+    }
+    info.GetReturnValue().Set(r.Extract(context_));
 }
 
-Local<Boolean> ManagedRef::DeleteProperty(Local<String> name)
+void ManagedRef::SetPropertyValue(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value>& info)
 {
-    Local<Value> res;
-
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-#ifdef DEBUG_TRACE_API
-		std::cout << "DeleteProperty" << std::endl;
-#endif
-    JsValue r = context_->Engine()->CallDeleteProperty(context_->Id(), id_, *s);
-	if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
+    auto r = context_->Engine()->CallSetPropertyValue(context_->Id(), id_, *s, JsValue::ForValue(value, context_));
+    if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
         isolate->ThrowException(r.Extract(context_));
-    else
-        res = r.Extract(context_);
-    
-	return res->ToBoolean(isolate);
+        return;
+    }
+
+    r.Extract(context_);
 }
 
-Local<Value> ManagedRef::SetPropertyValue(Local<String> name, Local<Value> value)
+void ManagedRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<Boolean>& info)
 {
-    Local<Value> res;
-
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-#ifdef DEBUG_TRACE_API
-		std::cout << "SetPropertyValue" << std::endl;
-#endif
-    
-    JsValue v = JsValue::ForValue(value, context_);
-    JsValue r = context_->Engine()->CallSetPropertyValue(context_->Id(), id_, *s, v);
-    if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
+    auto r = context_->Engine()->CallDeleteProperty(context_->Id(), id_, *s);
+    if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
         isolate->ThrowException(r.Extract(context_));
-    else
-        res = r.Extract(context_);
-    
-    return res;
+        return;
+    }
+
+    // todo: check docs if we really need to be returning a value here
+    info.GetReturnValue().Set(r.Extract(context_)->ToBoolean(isolate));
 }
 
-Local<Value> ManagedRef::GetValueOf()
+void ManagedRef::EnumerateProperties(const PropertyCallbackInfo<Array>& info)
 {
-#ifdef DEBUG_TRACE_API
-	std::wcout << "GETTING VALUE OF..........." << std::endl;
-#endif
-
-    Local<Value> res;
-    JsValue r = context_->Engine()->CallValueOf(context_->Id(), id_);
-    if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
+    auto r = context_->Engine()->CallEnumerateProperties(context_->Id(), id_);
+    if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
         context_->Isolate()->ThrowException(r.Extract(context_));
-    else
-        res = r.Extract(context_);
-    
-    return res;
+        return;
+    }
+
+    info.GetReturnValue().Set(Local<Array>::Cast(r.Extract(context_)));
 }
 
-Local<Value> ManagedRef::Invoke(const FunctionCallbackInfo<Value>& info)
+void ManagedRef::Invoke(const FunctionCallbackInfo<Value>& info)
 {
-#ifdef DEBUG_TRACE_API
-	std::wcout << "INVOKING..........." << std::endl;
-#endif
-
     auto len = info.Length();
     auto args = new jsvalue[len];
 
@@ -124,34 +157,32 @@ Local<Value> ManagedRef::Invoke(const FunctionCallbackInfo<Value>& info)
         args[i] = JsValue::ForValue(info[i], context_);
     }
 
-    JsValue r = context_->Engine()->CallInvoke(context_->Id(), id_, len, args);
+    auto r = context_->Engine()->CallInvoke(context_->Id(), id_, len, args);
     delete[] args;
 
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
         context_->Isolate()->ThrowException(r.Extract(context_));
-        return Local<Value>();
+        return;
     }
 
-    return r.Extract(context_);
+    info.GetReturnValue().Set(r.Extract(context_));
 }
 
-Local<Array> ManagedRef::EnumerateProperties()
+void ManagedRef::GetValueOf(const FunctionCallbackInfo<Value>& info)
 {
-    Local<Value> res;
-    
-#ifdef DEBUG_TRACE_API
-		std::cout << "EnumerateProperties" << std::endl;
-#endif
-    JsValue r = context_->Engine()->CallEnumerateProperties(context_->Id(), id_);
-	if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR)
-        context_->Isolate()->ThrowException(r.Extract(context_));
-    else
-        res = r.Extract(context_);
+    auto isolate = context_->Isolate();
 
-	return Local<Array>::Cast(res);
+    JsValue r = context_->Engine()->CallValueOf(context_->Id(), id_);
+    if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
+        isolate->ThrowException(r.Extract(context_));
+        return;
+    }
+
+    info.GetReturnValue().Set(r.Extract(context_));
 }
 
-ManagedRef::~ManagedRef() {
+ManagedRef::~ManagedRef()
+{
     context_->Engine()->CallRemove(context_->Id(), id_);
     DECREMENT(js_mem_debug_managedref_count);
 }

@@ -10,113 +10,8 @@
 
 long js_mem_debug_engine_count;
 
-extern "C" jsvalue CALLINGCONVENTION jsvalue_alloc_array(const int32_t length);
-
 static const int Mega = 1024 * 1024;
 
-
-static void managed_prop_get(Local<Name> name, const PropertyCallbackInfo<Value>& info)
-{
-#ifdef DEBUG_TRACE_API
-		std::cout << "managed_prop_get" << std::endl;
-#endif
-    auto isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate); // todo: is this needed, or is it already implied?
-
-    auto self = info.Holder();
-    auto wrap = Local<External>::Cast(self->GetInternalField(0));
-    auto ref = (ManagedRef*)wrap->Value();
-
-    auto nameStr = name->ToString(isolate->GetCurrentContext()).ToLocalChecked();
-    auto propValue = ref->GetPropertyValue(nameStr);
-    info.GetReturnValue().Set(propValue);
-}
-
-static void managed_prop_set(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value>& info)
-{
-#ifdef DEBUG_TRACE_API
-		std::cout << "managed_prop_set" << std::endl;
-#endif
-    auto isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate); // todo: is this needed, or is it already implied?
-
-    auto self = info.Holder();
-    auto wrap = Local<External>::Cast(self->GetInternalField(0));
-    auto ref = (ManagedRef*)wrap->Value();
-
-    // TODO: could this really ever be null?
-    if (ref == NULL)
-        return;
-
-    auto nameStr = name->ToString(isolate->GetCurrentContext()).ToLocalChecked();
-
-    // TODO: SetPropertyValue doesn't need to return anything
-    auto result = ref->SetPropertyValue(nameStr, value);
-}
-
-static void managed_prop_delete(Local<Name> name, const PropertyCallbackInfo<Boolean>& info)
-{
-#ifdef DEBUG_TRACE_API
-		std::cout << "managed_prop_delete" << std::endl;
-#endif
-    auto isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate); // todo: is this needed, or is it already implied?
-
-    auto self = info.Holder();
-    auto wrap = Local<External>::Cast(self->GetInternalField(0));
-    auto ref = (ManagedRef*)wrap->Value();
-
-    auto nameStr = name->ToString(isolate->GetCurrentContext()).ToLocalChecked();
-    auto retVal = ref->DeleteProperty(nameStr);
-
-    // todo: check docs if we really need to be returning a value here
-    info.GetReturnValue().Set(retVal);
-}
-
-static void managed_prop_enumerate(const PropertyCallbackInfo<Array>& info)
-{
-#ifdef DEBUG_TRACE_API
-		std::cout << "managed_prop_enumerate" << std::endl;
-#endif
-    auto isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate); // todo: is this needed, or is it already implied?
-
-    auto self = info.Holder();
-    auto wrap = Local<External>::Cast(self->GetInternalField(0));
-    auto ref = (ManagedRef*)wrap->Value();
-
-    info.GetReturnValue().Set(ref->EnumerateProperties());
-}
-
-static void managed_call(const FunctionCallbackInfo<Value>& args)
-{
-#ifdef DEBUG_TRACE_API
-		std::cout << "managed_call" << std::endl;
-#endif
-    auto isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate); // todo: is this needed, or is it already implied?
-
-    auto self = args.Holder();
-    auto wrap = Local<External>::Cast(self->GetInternalField(0));
-    auto ref = (ManagedRef*)wrap->Value();
-
-    args.GetReturnValue().Set(ref->Invoke(args));
-}
-
-static void managed_valueof(const FunctionCallbackInfo<Value>& args)
-{
-#ifdef DEBUG_TRACE_API
-		std::cout << "managed_valueof" << std::endl;
-#endif
-    auto isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate); // todo: is this needed, or is it already implied?
-
-    auto self = args.Holder();
-    auto wrap = Local<External>::Cast(self->GetInternalField(0));
-    auto ref = (ManagedRef*)wrap->Value();
-
-    args.GetReturnValue().Set(ref->GetValueOf());
-}
 
 JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks callbacks)
 {
@@ -151,17 +46,17 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks c
     obj_template->SetInternalFieldCount(1);
     obj_template->SetHandler(
         NamedPropertyHandlerConfiguration(
-            managed_prop_get,
-            managed_prop_set,
+            ManagedRef::managed_prop_get,
+            ManagedRef::managed_prop_set,
             nullptr,
-            managed_prop_delete,
-            managed_prop_enumerate
+            ManagedRef::managed_prop_delete,
+            ManagedRef::managed_prop_enumerate
         )
     );
-    obj_template->SetCallAsFunctionHandler(managed_call);
+    obj_template->SetCallAsFunctionHandler(ManagedRef::managed_call);
     managed_template_ = new Persistent<FunctionTemplate>(isolate_, fo);
 
-    auto fp = FunctionTemplate::New(isolate_, managed_valueof);
+    auto fp = FunctionTemplate::New(isolate_, ManagedRef::managed_valueof);
     valueof_function_template_ =
         new Persistent<FunctionTemplate>(isolate_, fp);
 
@@ -179,7 +74,7 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks c
     INCREMENT(js_mem_debug_engine_count);
 }
 
-Persistent<Script> *JsEngine::CompileScript(const uint16_t* str, const uint16_t *resourceName, jsvalue *error)
+Persistent<Script>* JsEngine::CompileScript(const uint16_t* str, const uint16_t* resourceName, jsvalue* error)
 {
     assert(str != nullptr);
 
@@ -214,27 +109,27 @@ Persistent<Script> *JsEngine::CompileScript(const uint16_t* str, const uint16_t 
 }
 
 
-void JsEngine::TerminateExecution() 
+void JsEngine::TerminateExecution()
 {
     isolate_->TerminateExecution();
 }
 
-void JsEngine::DumpHeapStats() 
+void JsEngine::DumpHeapStats()
 {
-	Locker locker(isolate_);
+    Locker locker(isolate_);
     Isolate::Scope isolate_scope(isolate_);
 
-	// gc first.
+    // gc first.
     // TODO: IdleNotification no longer exists?
-	//while(!V8::IdleNotification()) {};
-	
-	HeapStatistics stats;
-	isolate_->GetHeapStatistics(&stats);
-	std::wcout << "Heap size limit " << (stats.heap_size_limit() / Mega) << std::endl;
-	std::wcout << "Total heap size " << (stats.total_heap_size() / Mega) << std::endl;
-	std::wcout << "Heap size executable " << (stats.total_heap_size_executable() / Mega) << std::endl;
-	std::wcout << "Total physical size " << (stats.total_physical_size() / Mega) << std::endl;
-	std::wcout << "Used heap size " << (stats.used_heap_size() / Mega) << std::endl;
+    //while(!V8::IdleNotification()) {};
+
+    HeapStatistics stats;
+    isolate_->GetHeapStatistics(&stats);
+    std::wcout << "Heap size limit " << (stats.heap_size_limit() / Mega) << std::endl;
+    std::wcout << "Total heap size " << (stats.total_heap_size() / Mega) << std::endl;
+    std::wcout << "Heap size executable " << (stats.total_heap_size_executable() / Mega) << std::endl;
+    std::wcout << "Total physical size " << (stats.total_physical_size() / Mega) << std::endl;
+    std::wcout << "Used heap size " << (stats.used_heap_size() / Mega) << std::endl;
 }
 
 JsContext* JsEngine::NewContext(int32_t id)
@@ -244,31 +139,31 @@ JsContext* JsEngine::NewContext(int32_t id)
 
 void JsEngine::Dispose()
 {
-	if (isolate_ != NULL) {
-		isolate_->Enter();
+    if (isolate_ != NULL) {
+        isolate_->Enter();
 
-		managed_template_->Reset();
-		delete managed_template_;
-		managed_template_ = NULL;
-	
-		valueof_function_template_->Reset();
-		delete valueof_function_template_;
-		valueof_function_template_ = NULL;
+        managed_template_->Reset();
+        delete managed_template_;
+        managed_template_ = NULL;
 
-		global_context_->Reset();
-    	delete global_context_;
-		global_context_ = NULL;
+        valueof_function_template_->Reset();
+        delete valueof_function_template_;
+        valueof_function_template_ = NULL;
 
-		isolate_->Exit();
-		isolate_->Dispose();
+        global_context_->Reset();
+        delete global_context_;
+        global_context_ = NULL;
+
+        isolate_->Exit();
+        isolate_->Dispose();
         // Isolates can only be Dispose()'d, not deleted
-		isolate_ = NULL;
+        isolate_ = NULL;
 
         delete allocator_;
         allocator_ = NULL;
 
         memset(&callbacks_, 0, sizeof(jscallbacks));
-	}
+    }
 }
 
 void JsEngine::DisposeObject(Persistent<Object>* obj)
@@ -278,8 +173,10 @@ void JsEngine::DisposeObject(Persistent<Object>* obj)
     // todo: not sure we actually need this stuff just to Reset a Persistent handle
     Locker locker(isolate_);
     Isolate::Scope isolate_scope(isolate_);
-    
+
     obj->Reset();
 }
+
+
 
 
