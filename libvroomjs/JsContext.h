@@ -6,6 +6,7 @@ class JsEngine;
 class JsScript;
 class JsValue;
 class ClrObjectManager;
+class ClrObjectCallbacks;
 
 class JsContext {
 public:
@@ -39,6 +40,8 @@ public:
 	ClrObjectManager* ClrObjectMgr() {
 		return clrObjectManager_;
 	}
+
+	const ClrObjectCallbacks& ClrObjectCallbacks();
 
 	inline virtual ~JsContext() {
 		DECREMENT(js_mem_debug_context_count);

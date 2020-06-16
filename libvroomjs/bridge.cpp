@@ -79,14 +79,6 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsengine_new" << std::endl;
 #endif
-        assert(callbacks.remove != NULL);
-        assert(callbacks.get_property_value != NULL);
-        assert(callbacks.set_property_value != NULL);
-        assert(callbacks.valueof != NULL);
-        assert(callbacks.invoke != NULL);
-        assert(callbacks.delete_property != NULL);
-        assert(callbacks.enumerate_properties != NULL);
-
         return new JsEngine(max_young_space, max_old_space, callbacks);
 	}
 

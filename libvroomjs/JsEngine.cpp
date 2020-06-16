@@ -14,6 +14,7 @@ static const int Mega = 1024 * 1024;
 
 
 JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks callbacks)
+    :callbacks_(callbacks)
 {
     allocator_ = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 

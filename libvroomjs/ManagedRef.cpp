@@ -89,6 +89,7 @@ void ManagedRef::managed_valueof(const FunctionCallbackInfo<Value>& info)
     GetProxyInstance(info.Holder())->GetValueOf(info);
 }
 
+// todo: rename to reflect terminology (ManagedRef != Proxy, Proxy is the JS Object)
 ManagedRef* ManagedRef::GetProxyInstance(const Local<Object>& obj)
 {
     auto ext = Local<External>::Cast(obj->GetInternalField(0));
@@ -100,7 +101,7 @@ void ManagedRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInfo<V
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-    auto r = context_->Engine()->CallGetPropertyValue(context_->Id(), id_, *s);
+    auto r = context_->ClrObjectCallbacks().GetPropertyValue(context_->Id(), id_, *s);
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -113,7 +114,7 @@ void ManagedRef::SetPropertyValue(Local<Name> name, Local<Value> value, const Pr
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-    auto r = context_->Engine()->CallSetPropertyValue(context_->Id(), id_, *s, JsValue::ForValue(value, context_));
+    auto r = context_->ClrObjectCallbacks().SetPropertyValue(context_->Id(), id_, *s, JsValue::ForValue(value, context_));
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -127,7 +128,7 @@ void ManagedRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<Boo
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-    auto r = context_->Engine()->CallDeleteProperty(context_->Id(), id_, *s);
+    auto r = context_->ClrObjectCallbacks().DeleteProperty(context_->Id(), id_, *s);
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -139,7 +140,7 @@ void ManagedRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<Boo
 
 void ManagedRef::EnumerateProperties(const PropertyCallbackInfo<Array>& info)
 {
-    auto r = context_->Engine()->CallEnumerateProperties(context_->Id(), id_);
+    auto r = context_->ClrObjectCallbacks().EnumerateProperties(context_->Id(), id_);
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
         context_->Isolate()->ThrowException(r.Extract(context_));
         return;
@@ -157,7 +158,7 @@ void ManagedRef::Invoke(const FunctionCallbackInfo<Value>& info)
         args[i] = JsValue::ForValue(info[i], context_);
     }
 
-    auto r = context_->Engine()->CallInvoke(context_->Id(), id_, len, args);
+    auto r = context_->ClrObjectCallbacks().Invoke(context_->Id(), id_, len, args);
     delete[] args;
 
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
@@ -172,7 +173,7 @@ void ManagedRef::GetValueOf(const FunctionCallbackInfo<Value>& info)
 {
     auto isolate = context_->Isolate();
 
-    JsValue r = context_->Engine()->CallValueOf(context_->Id(), id_);
+    JsValue r = context_->ClrObjectCallbacks().ValueOf(context_->Id(), id_);
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -183,7 +184,7 @@ void ManagedRef::GetValueOf(const FunctionCallbackInfo<Value>& info)
 
 ManagedRef::~ManagedRef()
 {
-    context_->Engine()->CallRemove(context_->Id(), id_);
+    context_->ClrObjectCallbacks().Remove(context_->Id(), id_);
     DECREMENT(js_mem_debug_managedref_count);
 }
 
