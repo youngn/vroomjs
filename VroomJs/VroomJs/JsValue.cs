@@ -222,9 +222,6 @@ namespace VroomJs
                 case JsValueType.UnknownError:
                     return new JsInteropException("unknown error without reason"); // todo: improve this
 
-                case JsValueType.StringError: // todo: is still used?
-                    return new JsException(StringValue());
-
                 case JsValueType.ClrObject:
                     return ClrObjectValue(context);
 
@@ -273,7 +270,7 @@ namespace VroomJs
         }
         private string StringValue()
         {
-            Debug.Assert(Type == JsValueType.String || Type == JsValueType.StringError);
+            Debug.Assert(Type == JsValueType.String);
             return Marshal.PtrToStringUni(Ptr);
         }
         private object JsStringValue(JsContext context)

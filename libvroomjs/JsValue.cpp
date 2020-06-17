@@ -165,7 +165,6 @@ void JsValue::Dispose()
     switch (v.type) {
 
     case JSVALUE_TYPE_STRING:
-    case JSVALUE_TYPE_STRING_ERROR:
         delete[] v.value.str;
         break;
 

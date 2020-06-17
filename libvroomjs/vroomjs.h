@@ -46,7 +46,6 @@ using namespace v8;
 #define JSVALUE_TYPE_STRING          5
 #define JSVALUE_TYPE_DATE            6
 #define JSVALUE_TYPE_INDEX           7
-#define JSVALUE_TYPE_STRING_ERROR   11
 #define JSVALUE_TYPE_CLROBJECT      12
 #define JSVALUE_TYPE_CLRERROR       13
 #define JSVALUE_TYPE_JSOBJECT       14
