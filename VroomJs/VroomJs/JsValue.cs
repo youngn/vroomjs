@@ -100,19 +100,6 @@ namespace VroomJs
             if (type == typeof(JsFunction))
                 return ForJsFunction((JsFunction)obj);
 
-            // Arrays of anything that can be cast to object[] are recursively convertef after
-            // allocating an appropriate jsvalue on the unmanaged side.
-            //var array = obj as object[];
-            //if (array != null)
-            //{
-            //    JsValue v = NativeApi.jsvalue_alloc_array(array.Length);
-            //    if (v.Length != array.Length)
-            //        throw new JsInteropException("can't allocate memory on the unmanaged side");
-            //    for (int i = 0; i < array.Length; i++)
-            //        Marshal.StructureToPtr(ToJsValue(array[i]), new IntPtr(v.Ptr.ToInt64() + (16 * i)), false);
-            //    return v;
-            //}
-
             // Every object explicitly converted to a value becomes an entry of the
             // _keepalives list, to make sure the GC won't collect it while still in
             // use by the unmanaged Javascript engine.
@@ -231,17 +218,6 @@ namespace VroomJs
 
                 case JsValueType.Date:
                     return DateValue();
-
-                //case JsValueType.Array:
-                //    {
-                //        var r = new object[v.Length];
-                //        for (int i = 0; i < v.Length; i++)
-                //        {
-                //            var vi = (JsValue)Marshal.PtrToStructure(new IntPtr(v.Ptr.ToInt64() + (16 * i)), typeof(JsValue));
-                //            r[i] = FromJsValue(vi);
-                //        }
-                //        return r;
-                //    }
 
                 case JsValueType.UnknownError:
                     return new JsInteropException("unknown error without reason"); // todo: improve this

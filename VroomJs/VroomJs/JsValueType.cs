@@ -36,7 +36,6 @@ namespace VroomJs
         String = 5,
         Date = 6,
         Index = 7,
-        Array = 10,
 
         StringError = 11,
         ClrObject = 12,

@@ -125,15 +125,6 @@ Local<Value> JsValue::GetValue(JsContext* context)
         return Local<Function>::New(isolate, *pObj);
     }
 
-    // Arrays are converted to JS native arrays.
-    if (ValueType() == JSVALUE_TYPE_ARRAY) {
-        //auto arr = Array::New(isolate_, v.length);
-        //for(int i = 0; i < v.length; i++) {
-        //    arr->Set(isolate_->GetCurrentContext(), i, AnyToV8(v.value.arr[i], contextId));
-        //}
-        //return arr;        
-    }
-
     if (ValueType() == JSVALUE_TYPE_CLROBJECT || ValueType() == JSVALUE_TYPE_CLRERROR) {
         // This is an ID to a CLR object that lives inside the JsContext keep-alive
         // cache. We just wrap it and the pointer to the engine inside an External. A
@@ -182,24 +173,11 @@ void JsValue::Dispose()
     {
         assert(v.value.ptr != nullptr);
 
-        // todo: do we need all this stuff?
-        // todo: is using the "current" isolate ok? even if runs on finalizer thread? Or do we need to somehow maintain ref to own isolate?
-        //auto isolate = Isolate::GetCurrent();
-        //Locker locker(isolate);
-        //Isolate::Scope isolate_scope(isolate);
-
         auto obj = (Persistent<String>*)v.value.ptr;
         obj->Reset();
         delete obj;
         break;
     }
-
-    case JSVALUE_TYPE_ARRAY:
-        for (int i = 0; i < v.length; i++) {
-            ((JsValue*)&v.value.arr[i])->Dispose();
-        }
-        delete[] v.value.arr;
-        break;
 
     case JSVALUE_TYPE_ERROR:
         auto info = (JsErrorInfo*)v.value.ptr;
