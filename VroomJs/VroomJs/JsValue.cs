@@ -167,7 +167,7 @@ namespace VroomJs
         public static JsValue ForJsFunction(JsFunction value)
         {
             Debug.Assert(value != null);
-            return new JsValue { Type = JsValueType.Function, Ptr = value.Handle };
+            return new JsValue { Type = JsValueType.JsFunction, Ptr = value.Handle };
         }
         public static JsValue ForJsObject(JsObject value)
         {
@@ -237,7 +237,7 @@ namespace VroomJs
                 case JsValueType.JsArray:
                     return JsArrayValue(context);
 
-                case JsValueType.Function:
+                case JsValueType.JsFunction:
                     return JsFunctionValue(context);
 
                 case JsValueType.Error:
@@ -296,7 +296,7 @@ namespace VroomJs
         }
         private JsFunction JsFunctionValue(JsContext context)
         {
-            Debug.Assert(Type == JsValueType.Function);
+            Debug.Assert(Type == JsValueType.JsFunction);
             return new JsFunction(context, Ptr);
         }
         private JsObject JsObjectValue(JsContext context)

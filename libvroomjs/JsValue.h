@@ -54,7 +54,7 @@ public:
 	}
 	static JsValue ForJsFunction(Persistent<Function>* value) {
 		assert(value != nullptr);
-		return JsValue(JSVALUE_TYPE_FUNCTION, 0, (void*)value);
+		return JsValue(JSVALUE_TYPE_JSFUNCTION, 0, (void*)value);
 	}
 	static JsValue ForJsObject(Persistent<Object>* value) {
 		assert(value != nullptr);
@@ -104,7 +104,7 @@ public:
 		return (Persistent<Array>*)v.value.ptr;
 	}
 	Persistent<Function>* JsFunctionValue() const {
-		assert(v.type == JSVALUE_TYPE_FUNCTION);
+		assert(v.type == JSVALUE_TYPE_JSFUNCTION);
 		return (Persistent<Function>*)v.value.ptr;
 	}
 	Persistent<Object>* JsObjectValue() const {

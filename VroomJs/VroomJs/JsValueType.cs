@@ -41,7 +41,7 @@ namespace VroomJs
         ClrError = 13,
         JsObject = 14,
         Error = 16,
-        Function = 17,
+        JsFunction = 17,
         JsArray = 18,
         JsString = 19,
     }

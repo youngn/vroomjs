@@ -120,7 +120,7 @@ Local<Value> JsValue::GetValue(JsContext* context)
         auto pObj = JsArrayValue();
         return Local<Array>::New(isolate, *pObj);
     }
-    if (ValueType() == JSVALUE_TYPE_FUNCTION) {
+    if (ValueType() == JSVALUE_TYPE_JSFUNCTION) {
         auto pObj = JsFunctionValue();
         return Local<Function>::New(isolate, *pObj);
     }
