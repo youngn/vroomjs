@@ -4,7 +4,7 @@
 #include "JsValue.h"
 #include "JsContext.h"
 #include "JsErrorInfo.h"
-#include "ManagedRef.h"
+#include "ClrObjectRef.h"
 #include "ClrObjectManager.h"
 
 
@@ -59,7 +59,7 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
         // TODO: why is it that the proxy object is a function? It seems like we shouldn't need this 'if' here
         // (unless the object being proxied is a CLR delegate, in which case it could make sense)
         if (function->InternalFieldCount() > 0) {
-            auto ref = (ManagedRef*)Local<External>::Cast(function->GetInternalField(0))->Value();
+            auto ref = (ClrObjectRef*)Local<External>::Cast(function->GetInternalField(0))->Value();
             return ForManagedObject(ref->Id());
         }
         else {
@@ -70,7 +70,7 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
     if (value->IsObject()) {
         auto obj = Local<Object>::Cast(value);
         if (obj->InternalFieldCount() > 0) {
-            auto ref = (ManagedRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
+            auto ref = (ClrObjectRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
             return ForManagedObject(ref->Id());
         }
         else {
@@ -161,7 +161,7 @@ JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)
     // Is this a managed exception?
     Local<Object> obj;
     if (exception->ToObject(ctx).ToLocal(&obj) && obj->InternalFieldCount() == 1) {
-        auto ref = (ManagedRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
+        auto ref = (ClrObjectRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
         return JsValue::ForManagedError(ref->Id());
     }
 

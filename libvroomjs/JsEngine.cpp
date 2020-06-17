@@ -4,7 +4,7 @@
 
 #include "vroomjs.h"
 #include "JsEngine.h"
-#include "ManagedRef.h"
+#include "ClrObjectRef.h"
 #include "JsContext.h"
 
 
@@ -47,17 +47,17 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks c
     obj_template->SetInternalFieldCount(1);
     obj_template->SetHandler(
         NamedPropertyHandlerConfiguration(
-            ManagedRef::managed_prop_get,
-            ManagedRef::managed_prop_set,
+            ClrObjectRef::GetPropertyValueCallback,
+            ClrObjectRef::SetPropertyValueCallback,
             nullptr,
-            ManagedRef::managed_prop_delete,
-            ManagedRef::managed_prop_enumerate
+            ClrObjectRef::DeletePropertyCallback,
+            ClrObjectRef::EnumeratePropertiesCallback
         )
     );
-    obj_template->SetCallAsFunctionHandler(ManagedRef::managed_call);
+    obj_template->SetCallAsFunctionHandler(ClrObjectRef::InvokeCallback);
     managed_template_ = new Persistent<FunctionTemplate>(isolate_, fo);
 
-    auto fp = FunctionTemplate::New(isolate_, ManagedRef::managed_valueof);
+    auto fp = FunctionTemplate::New(isolate_, ClrObjectRef::ValueOfCallback);
     valueof_function_template_ =
         new Persistent<FunctionTemplate>(isolate_, fp);
 

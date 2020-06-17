@@ -1,5 +1,5 @@
 #include "ClrObjectManager.h"
-#include "ManagedRef.h"
+#include "ClrObjectRef.h"
 #include "JsContext.h"
 #include "JsEngine.h"
 #include <thread>
@@ -27,7 +27,7 @@ Local<Object> ClrObjectManager::GetProxy(int id)
         return Local<Object>::New(isolate, search->second.objectHandle);
     }
 
-    auto ref = new ManagedRef(context_, id);
+    auto ref = new ClrObjectRef(context_, id);
     auto t = context_->Engine()->Template();
     auto ctx = context_->Ctx();
 
@@ -38,9 +38,9 @@ Local<Object> ClrObjectManager::GetProxy(int id)
     auto handle = UniquePersistent<Object>(isolate, obj);
     handle.SetWeak(args, ClrObjectManager::WeakHandleCallback, v8::WeakCallbackType::kParameter);
 
-    // The entry in proxyMap_ will own the UniquePersistent, ManagedRef and the WeakCallbackArgs,
+    // The entry in proxyMap_ will own the UniquePersistent, ClrObjectRef and the WeakCallbackArgs,
     // and will be responsible for releasing them.
-    proxyMap_[id] = Entry(std::move(handle), std::unique_ptr<ManagedRef>(ref), std::unique_ptr<WeakCallbackArgs>(args));
+    proxyMap_[id] = Entry(std::move(handle), std::unique_ptr<ClrObjectRef>(ref), std::unique_ptr<WeakCallbackArgs>(args));
 
     return obj;
 }

@@ -26,7 +26,7 @@
 #include <iostream>
 
 #include "vroomjs.h"
-#include "ManagedRef.h"
+#include "ClrObjectRef.h"
 #include "JsValue.h"
 #include "JsContext.h"
 #include "JsEngine.h"
@@ -35,68 +35,67 @@ using namespace v8;
 
 long js_mem_debug_managedref_count;
 
-void ManagedRef::managed_prop_get(Local<Name> name, const PropertyCallbackInfo<Value>& info)
+void ClrObjectRef::GetPropertyValueCallback(Local<Name> name, const PropertyCallbackInfo<Value>& info)
 {
 #ifdef DEBUG_TRACE_API
-    std::cout << "managed_prop_get" << std::endl;
+    std::cout << "GetPropertyValueCallback" << std::endl;
 #endif
 
-    GetProxyInstance(info.Holder())->GetPropertyValue(name, info);
+    GetInstance(info.Holder())->GetPropertyValue(name, info);
 }
 
-void ManagedRef::managed_prop_set(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value>& info)
+void ClrObjectRef::SetPropertyValueCallback(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value>& info)
 {
 #ifdef DEBUG_TRACE_API
-    std::cout << "managed_prop_set" << std::endl;
+    std::cout << "SetPropertyValueCallback" << std::endl;
 #endif
 
-    GetProxyInstance(info.Holder())->SetPropertyValue(name, value, info);
+    GetInstance(info.Holder())->SetPropertyValue(name, value, info);
 }
 
-void ManagedRef::managed_prop_delete(Local<Name> name, const PropertyCallbackInfo<Boolean>& info)
+void ClrObjectRef::DeletePropertyCallback(Local<Name> name, const PropertyCallbackInfo<Boolean>& info)
 {
 #ifdef DEBUG_TRACE_API
-    std::cout << "managed_prop_delete" << std::endl;
+    std::cout << "DeletePropertyCallback" << std::endl;
 #endif
 
-    GetProxyInstance(info.Holder())->DeleteProperty(name, info);
+    GetInstance(info.Holder())->DeleteProperty(name, info);
 }
 
-void ManagedRef::managed_prop_enumerate(const PropertyCallbackInfo<Array>& info)
+void ClrObjectRef::EnumeratePropertiesCallback(const PropertyCallbackInfo<Array>& info)
 {
 #ifdef DEBUG_TRACE_API
-    std::cout << "managed_prop_enumerate" << std::endl;
+    std::cout << "EnumeratePropertiesCallback" << std::endl;
 #endif
 
-    GetProxyInstance(info.Holder())->EnumerateProperties(info);
+    GetInstance(info.Holder())->EnumerateProperties(info);
 }
 
-void ManagedRef::managed_call(const FunctionCallbackInfo<Value>& info)
+void ClrObjectRef::InvokeCallback(const FunctionCallbackInfo<Value>& info)
 {
 #ifdef DEBUG_TRACE_API
-    std::cout << "managed_call" << std::endl;
+    std::cout << "InvokeCallback" << std::endl;
 #endif
 
-    GetProxyInstance(info.Holder())->Invoke(info);
+    GetInstance(info.Holder())->Invoke(info);
 }
 
-void ManagedRef::managed_valueof(const FunctionCallbackInfo<Value>& info)
+void ClrObjectRef::ValueOfCallback(const FunctionCallbackInfo<Value>& info)
 {
 #ifdef DEBUG_TRACE_API
-    std::cout << "managed_valueof" << std::endl;
+    std::cout << "ValueOfCallback" << std::endl;
 #endif
 
-    GetProxyInstance(info.Holder())->GetValueOf(info);
+    GetInstance(info.Holder())->ValueOf(info);
 }
 
-// todo: rename to reflect terminology (ManagedRef != Proxy, Proxy is the JS Object)
-ManagedRef* ManagedRef::GetProxyInstance(const Local<Object>& obj)
+ClrObjectRef* ClrObjectRef::GetInstance(const Local<Object>& obj)
 {
     auto ext = Local<External>::Cast(obj->GetInternalField(0));
-    return (ManagedRef*)ext->Value();
+    return (ClrObjectRef*)ext->Value();
 }
 
-void ManagedRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInfo<Value>& info)
+void ClrObjectRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInfo<Value>& info)
 {
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
@@ -109,7 +108,7 @@ void ManagedRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInfo<V
     info.GetReturnValue().Set(r.Extract(context_));
 }
 
-void ManagedRef::SetPropertyValue(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value>& info)
+void ClrObjectRef::SetPropertyValue(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value>& info)
 {
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
@@ -124,7 +123,7 @@ void ManagedRef::SetPropertyValue(Local<Name> name, Local<Value> value, const Pr
     r.Extract(context_);
 }
 
-void ManagedRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<Boolean>& info)
+void ClrObjectRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<Boolean>& info)
 {
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
@@ -139,7 +138,7 @@ void ManagedRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<Boo
     info.GetReturnValue().Set(r.Extract(context_)->ToBoolean(isolate));
 }
 
-void ManagedRef::EnumerateProperties(const PropertyCallbackInfo<Array>& info)
+void ClrObjectRef::EnumerateProperties(const PropertyCallbackInfo<Array>& info)
 {
     auto r = context_->ClrObjectCallbacks().EnumerateProperties(context_->Id(), id_);
     if (r.ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
@@ -150,7 +149,7 @@ void ManagedRef::EnumerateProperties(const PropertyCallbackInfo<Array>& info)
     info.GetReturnValue().Set(Local<Array>::Cast(r.Extract(context_)));
 }
 
-void ManagedRef::Invoke(const FunctionCallbackInfo<Value>& info)
+void ClrObjectRef::Invoke(const FunctionCallbackInfo<Value>& info)
 {
     auto len = info.Length();
     auto args = new jsvalue[len];
@@ -170,7 +169,7 @@ void ManagedRef::Invoke(const FunctionCallbackInfo<Value>& info)
     info.GetReturnValue().Set(r.Extract(context_));
 }
 
-void ManagedRef::GetValueOf(const FunctionCallbackInfo<Value>& info)
+void ClrObjectRef::ValueOf(const FunctionCallbackInfo<Value>& info)
 {
     auto isolate = context_->Isolate();
 
@@ -183,7 +182,7 @@ void ManagedRef::GetValueOf(const FunctionCallbackInfo<Value>& info)
     info.GetReturnValue().Set(r.Extract(context_));
 }
 
-ManagedRef::~ManagedRef()
+ClrObjectRef::~ClrObjectRef()
 {
     context_->ClrObjectCallbacks().Remove(context_->Id(), id_);
     DECREMENT(js_mem_debug_managedref_count);

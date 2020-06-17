@@ -32,7 +32,7 @@
 #include "JsEngine.h"
 #include "JsValue.h"
 #include "JsScript.h"
-#include "ManagedRef.h"
+#include "ClrObjectRef.h"
 #include "ClrObjectManager.h"
 
 

@@ -265,7 +265,7 @@
     <ClCompile Include="JsScript.cpp" />
     <ClCompile Include="JsString.cpp" />
     <ClCompile Include="JsValue.cpp" />
-    <ClCompile Include="ManagedRef.cpp" />
+    <ClCompile Include="ClrObjectRef.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClrObjectCallbacks.h" />
@@ -276,7 +276,7 @@
     <ClInclude Include="JsScript.h" />
     <ClInclude Include="JsString.h" />
     <ClInclude Include="JsValue.h" />
-    <ClInclude Include="ManagedRef.h" />
+    <ClInclude Include="ClrObjectRef.h" />
     <ClInclude Include="vroomjs.h" />
   </ItemGroup>
   <ItemGroup>

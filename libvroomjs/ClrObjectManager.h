@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 class JsContext;
-class ManagedRef;
+class ClrObjectRef;
 
 class ClrObjectManager
 {
@@ -28,7 +28,7 @@ private:
     {
         Entry() {}
 
-        Entry(UniquePersistent<Object>&& objectHandle, std::unique_ptr<ManagedRef>&& managedRef, std::unique_ptr<WeakCallbackArgs>&& callbackArgs)
+        Entry(UniquePersistent<Object>&& objectHandle, std::unique_ptr<ClrObjectRef>&& managedRef, std::unique_ptr<WeakCallbackArgs>&& callbackArgs)
             : objectHandle(std::move(objectHandle)),
             managedRef(std::move(managedRef)),
             callbackArgs(std::move(callbackArgs))
@@ -62,9 +62,9 @@ private:
         // Reset()s upon destruction.
         UniquePersistent<Object> objectHandle;
 
-        // The ManagedRef is only stored here so that it is deterministically deleted
+        // The ClrObjectRef is only stored here so that it is deterministically deleted
         // regardless of whether the callback is ever invoked.
-        std::unique_ptr<ManagedRef> managedRef;
+        std::unique_ptr<ClrObjectRef> managedRef;
 
         // The WeakCallbackArgs is only stored here so that it is deterministically deleted
         // regardless of whether the callback is ever invoked.
