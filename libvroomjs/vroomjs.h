@@ -49,7 +49,6 @@ using namespace v8;
 #define JSVALUE_TYPE_CLROBJECT      12
 #define JSVALUE_TYPE_CLRERROR       13
 #define JSVALUE_TYPE_JSOBJECT       14
-#define JSVALUE_TYPE_DICT           15
 #define JSVALUE_TYPE_ERROR          16
 #define JSVALUE_TYPE_FUNCTION       17
 #define JSVALUE_TYPE_JSARRAY        18
