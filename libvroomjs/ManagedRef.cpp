@@ -120,6 +120,7 @@ void ManagedRef::SetPropertyValue(Local<Name> name, Local<Value> value, const Pr
         return;
     }
 
+    // Extract the value so that clean-up is performed
     r.Extract(context_);
 }
 

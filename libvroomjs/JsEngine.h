@@ -7,7 +7,8 @@ class JsContext;
 
 // JsEngine is a single isolated v8 interpreter and is the referenced as an IntPtr
 // by the JsEngine on the CLR side.
-class JsEngine {
+class JsEngine
+{
 public:
     JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks callbacks);
     void TerminateExecution();
