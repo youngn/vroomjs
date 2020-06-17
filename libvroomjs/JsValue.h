@@ -62,7 +62,7 @@ public:
 	}
 	static JsValue ForError(JsErrorInfo* value) {
 		assert(value != nullptr);
-		return JsValue(JSVALUE_TYPE_ERROR, 0, (void*)value);
+		return JsValue(JSVALUE_TYPE_JSERROR, 0, (void*)value);
 	}
 	static JsValue ForClrError(int32_t id) {
 		return JsValue(JSVALUE_TYPE_CLRERROR, 0, id);

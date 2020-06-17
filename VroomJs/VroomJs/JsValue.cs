@@ -26,7 +26,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -240,8 +239,8 @@ namespace VroomJs
                 case JsValueType.JsFunction:
                     return JsFunctionValue(context);
 
-                case JsValueType.Error:
-                    return ErrorValue(context);
+                case JsValueType.JsError:
+                    return JsErrorValue(context);
 
                 default:
                     throw new InvalidOperationException("unknown type code: " + Type);
@@ -310,9 +309,9 @@ namespace VroomJs
             return context.KeepAliveGet(I32);
         }
 
-        private JsException ErrorValue(JsContext context)
+        private JsException JsErrorValue(JsContext context)
         {
-            Debug.Assert(Type == JsValueType.Error);
+            Debug.Assert(Type == JsValueType.JsError);
 
             var info = Marshal.PtrToStructure<JsErrorInfo>(Ptr);
 
@@ -369,7 +368,7 @@ namespace VroomJs
             {
                 case JsValueType.String:
                 case JsValueType.JsString:
-                case JsValueType.Error:
+                case JsValueType.JsError:
                     NativeApi.jsvalue_dispose(this);
                     break;
             }

@@ -178,7 +178,7 @@ void JsValue::Dispose()
         break;
     }
 
-    case JSVALUE_TYPE_ERROR:
+    case JSVALUE_TYPE_JSERROR:
         auto info = (JsErrorInfo*)v.value.ptr;
         delete info;
         break;
