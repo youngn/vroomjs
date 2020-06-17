@@ -369,16 +369,16 @@ namespace VroomJs
                         }
                     }
 
-                    return JsValue.ForManagedError(KeepAliveAdd(
+                    return JsValue.ForClrError(KeepAliveAdd(
                         new InvalidOperationException(String.Format("property not found on {0}: {1} ", type, name))));
                 }
                 catch (Exception e)
                 {
-                    return JsValue.ForManagedError(KeepAliveAdd(e));
+                    return JsValue.ForClrError(KeepAliveAdd(e));
                 }
             }
 
-            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForClrError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
         internal bool TryGetMemberValue(Type type, object obj, string name, out JsValue value)
@@ -499,7 +499,7 @@ namespace VroomJs
                     }
 
                     // Else an error.
-                    return JsValue.ForManagedError(KeepAliveAdd(
+                    return JsValue.ForClrError(KeepAliveAdd(
                         new InvalidOperationException(String.Format("property not found on {0}: {1} ", type, name))));
                 }
                 catch (TargetInvocationException e)
@@ -507,16 +507,16 @@ namespace VroomJs
                     // Client code probably isn't interested in the exception part related to
                     // reflection, so we unwrap it and pass to V8 only the real exception thrown.
                     if (e.InnerException != null)
-                        return JsValue.ForManagedError(KeepAliveAdd(e.InnerException));
+                        return JsValue.ForClrError(KeepAliveAdd(e.InnerException));
                     throw;
                 }
                 catch (Exception e)
                 {
-                    return JsValue.ForManagedError(KeepAliveAdd(e));
+                    return JsValue.ForClrError(KeepAliveAdd(e));
                 }
             }
 
-            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForClrError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
         internal JsValue KeepAliveValueOf(int slot)
@@ -533,7 +533,7 @@ namespace VroomJs
                 }
                 return JsValue.ForValue(obj, this);
             }
-            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForClrError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
 
@@ -598,15 +598,15 @@ namespace VroomJs
                 }
                 catch (TargetInvocationException e)
                 {
-                    return JsValue.ForManagedError(KeepAliveAdd(e.InnerException));
+                    return JsValue.ForClrError(KeepAliveAdd(e.InnerException));
                 }
                 catch (Exception e)
                 {
-                    return JsValue.ForManagedError(KeepAliveAdd(e));
+                    return JsValue.ForClrError(KeepAliveAdd(e));
                 }
             }
 
-            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForClrError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
         private static void CheckAndResolveJsFunctions(Type type, string methodName, BindingFlags flags, object[] args)
@@ -651,7 +651,7 @@ namespace VroomJs
                 }
                 return JsValue.ForValue(false, this);
             }
-            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForClrError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
         internal JsValue KeepAliveEnumerateProperties(int slot)
@@ -684,7 +684,7 @@ namespace VroomJs
 
                 return NativeApi.jscontext_new_array(_contextHandle, values.Length, values);
             }
-            return JsValue.ForManagedError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+            return JsValue.ForClrError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
     }
 }

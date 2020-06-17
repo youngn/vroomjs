@@ -39,8 +39,8 @@ namespace VroomJs
         Array = 10,
 
         StringError = 11,
-        Managed = 12,
-        ManagedError = 13,
+        ClrObject = 12,
+        ClrError = 13,
         JsObject = 14,
         Dictionary = 15,
         Error = 16,

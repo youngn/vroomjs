@@ -25,7 +25,7 @@ public:
     JsContext* NewContext(int32_t id);
 
     Local<FunctionTemplate> Template() {
-        return Local<FunctionTemplate>::New(isolate_, *managed_template_);
+        return Local<FunctionTemplate>::New(isolate_, *clrObjectTemplate_);
     }
 
     const ClrObjectCallbacks& ClrObjectCallbacks() {
@@ -43,8 +43,8 @@ private:
     v8::Isolate* isolate_;
     ArrayBuffer::Allocator* allocator_;
 
-    Persistent<FunctionTemplate>* managed_template_;
-    Persistent<FunctionTemplate>* valueof_function_template_;
+    Persistent<FunctionTemplate>* clrObjectTemplate_;
+    Persistent<FunctionTemplate>* valueOfFunctionTemplate_;
 
     ::ClrObjectCallbacks callbacks_;
 };

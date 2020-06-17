@@ -41,7 +41,7 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks c
     Isolate::Scope isolate_scope(isolate_);
     HandleScope scope(isolate_);
 
-    // Setup the template we'll use for all managed object references.
+    // Setup the template we'll use for all CLR object references.
     auto fo = FunctionTemplate::New(isolate_);
     auto obj_template = fo->InstanceTemplate();
     obj_template->SetInternalFieldCount(1);
@@ -55,10 +55,10 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks c
         )
     );
     obj_template->SetCallAsFunctionHandler(ClrObjectRef::InvokeCallback);
-    managed_template_ = new Persistent<FunctionTemplate>(isolate_, fo);
+    clrObjectTemplate_ = new Persistent<FunctionTemplate>(isolate_, fo);
 
     auto fp = FunctionTemplate::New(isolate_, ClrObjectRef::ValueOfCallback);
-    valueof_function_template_ =
+    valueOfFunctionTemplate_ =
         new Persistent<FunctionTemplate>(isolate_, fp);
 
     global_context_ =
@@ -143,13 +143,13 @@ void JsEngine::Dispose()
     if (isolate_ != NULL) {
         isolate_->Enter();
 
-        managed_template_->Reset();
-        delete managed_template_;
-        managed_template_ = NULL;
+        clrObjectTemplate_->Reset();
+        delete clrObjectTemplate_;
+        clrObjectTemplate_ = NULL;
 
-        valueof_function_template_->Reset();
-        delete valueof_function_template_;
-        valueof_function_template_ = NULL;
+        valueOfFunctionTemplate_->Reset();
+        delete valueOfFunctionTemplate_;
+        valueOfFunctionTemplate_ = NULL;
 
         global_context_->Reset();
         delete global_context_;

@@ -265,7 +265,7 @@ namespace VroomJsTests
         }
 
         [Test]
-        public void Test_managed_object()
+        public void Test_clr_object()
         {
             using (var context = Engine.CreateContext())
             {

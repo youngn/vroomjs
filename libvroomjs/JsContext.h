@@ -13,7 +13,6 @@ class JsContext
 public:
     JsContext(int32_t id, JsEngine* engine);
 
-    // Called by bridge to execute JS from managed code.
     JsValue Execute(const uint16_t* str, const uint16_t* resourceName);
     JsValue Execute(JsScript* script);
 

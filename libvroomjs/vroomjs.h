@@ -48,8 +48,8 @@ using namespace v8;
 #define JSVALUE_TYPE_INDEX           7
 #define JSVALUE_TYPE_ARRAY          10
 #define JSVALUE_TYPE_STRING_ERROR   11
-#define JSVALUE_TYPE_MANAGED        12
-#define JSVALUE_TYPE_MANAGED_ERROR  13
+#define JSVALUE_TYPE_CLROBJECT      12
+#define JSVALUE_TYPE_CLRERROR       13
 #define JSVALUE_TYPE_JSOBJECT       14
 #define JSVALUE_TYPE_DICT           15
 #define JSVALUE_TYPE_ERROR          16
@@ -78,7 +78,7 @@ extern int32_t js_object_marshal_type;
 
 extern long js_mem_debug_engine_count;
 extern long js_mem_debug_context_count;
-extern long js_mem_debug_managedref_count;
+extern long js_mem_debug_clrobjectref_count;
 extern long js_mem_debug_script_count;
 
 extern "C" 
@@ -118,7 +118,7 @@ extern "C"
 
 extern "C" 
 {
-    // We don't have a keepalive_add_f because that is managed on the managed side.
+    // We don't have a keepalive_add_f because that is managed on the CLR side.
     // Its definition would be "int (*keepalive_add_f) (ClrObjectRef obj)".
     
     typedef void (CALLINGCONVENTION *keepalive_remove_f) (int32_t context, int32_t id);

@@ -115,10 +115,8 @@ namespace VroomJs
 
             // Every object explicitly converted to a value becomes an entry of the
             // _keepalives list, to make sure the GC won't collect it while still in
-            // use by the unmanaged Javascript engine. We don't try to track duplicates
-            // because adding the same object more than one time acts more or less as
-            // reference counting.
-            return ForManagedObject(context.KeepAliveAdd(obj));
+            // use by the unmanaged Javascript engine.
+            return ForClrObject(context.KeepAliveAdd(obj));
         }
 
         public object Extract(JsContext context)
@@ -189,13 +187,13 @@ namespace VroomJs
             Debug.Assert(value != null);
             return new JsValue { Type = JsValueType.JsObject, Ptr = value.Handle };
         }
-        public static JsValue ForManagedError(int id)
+        public static JsValue ForClrError(int id)
         {
-            return new JsValue { Type = JsValueType.ManagedError, I32 = id };
+            return new JsValue { Type = JsValueType.ClrError, I32 = id };
         }
-        public static JsValue ForManagedObject(int id)
+        public static JsValue ForClrObject(int id)
         {
-            return new JsValue { Type = JsValueType.Managed, I32 = id };
+            return new JsValue { Type = JsValueType.ClrObject, I32 = id };
         }
 
         #endregion
@@ -251,12 +249,12 @@ namespace VroomJs
                 case JsValueType.StringError: // todo: is still used?
                     return new JsException(StringValue());
 
-                case JsValueType.Managed:
-                    return ManagedValue(context);
+                case JsValueType.ClrObject:
+                    return ClrObjectValue(context);
 
-                case JsValueType.ManagedError:
+                case JsValueType.ClrError:
                     // todo: do we really want to wrapping in JsException? maybe better to just rethrow raw?
-                    var inner = ManagedValue(context) as Exception;
+                    var inner = ClrObjectValue(context) as Exception;
                     var msg = inner?.Message ?? "Unknown error"; // todo: make this better
                     return new JsException(msg, inner);
 
@@ -333,9 +331,9 @@ namespace VroomJs
             Debug.Assert(Type == JsValueType.JsObject);
             return new JsObject(context, Ptr);
         }
-        private object ManagedValue(JsContext context)
+        private object ClrObjectValue(JsContext context)
         {
-            Debug.Assert(Type == JsValueType.Managed);
+            Debug.Assert(Type == JsValueType.ClrObject);
             return context.KeepAliveGet(I32);
         }
 
@@ -399,9 +397,6 @@ namespace VroomJs
                 case JsValueType.String:
                 case JsValueType.JsString:
                 case JsValueType.Error:
-                // todo: do these types need disposal?
-                //case JsValueType.Managed:
-                //case JsValueType.ManagedError:
                     NativeApi.jsvalue_dispose(this);
                     break;
             }

@@ -28,10 +28,12 @@ private:
     {
         Entry() {}
 
-        Entry(UniquePersistent<Object>&& objectHandle, std::unique_ptr<ClrObjectRef>&& managedRef, std::unique_ptr<WeakCallbackArgs>&& callbackArgs)
-            : objectHandle(std::move(objectHandle)),
-            managedRef(std::move(managedRef)),
-            callbackArgs(std::move(callbackArgs))
+        Entry(UniquePersistent<Object>&& objectHandle,
+            std::unique_ptr<ClrObjectRef>&& clrObjectRef,
+            std::unique_ptr<WeakCallbackArgs>&& weakCallbackArgs) :
+            objectHandle(std::move(objectHandle)),
+            clrObjectRef(std::move(clrObjectRef)),
+            weakCallbackArgs(std::move(weakCallbackArgs))
         {
         }
 
@@ -42,8 +44,8 @@ private:
         // only moving
         Entry(Entry&& that) noexcept
             : objectHandle(std::move(that.objectHandle)),
-            managedRef(std::move(that.managedRef)),
-            callbackArgs(std::move(that.callbackArgs))
+            clrObjectRef(std::move(that.clrObjectRef)),
+            weakCallbackArgs(std::move(that.weakCallbackArgs))
         {
         }
 
@@ -52,8 +54,8 @@ private:
             if (this != &that)
             {
                 objectHandle = std::move(that.objectHandle);
-                managedRef = std::move(that.managedRef);
-                callbackArgs = std::move(that.callbackArgs);
+                clrObjectRef = std::move(that.clrObjectRef);
+                weakCallbackArgs = std::move(that.weakCallbackArgs);
             }
             return *this;
         }
@@ -64,11 +66,11 @@ private:
 
         // The ClrObjectRef is only stored here so that it is deterministically deleted
         // regardless of whether the callback is ever invoked.
-        std::unique_ptr<ClrObjectRef> managedRef;
+        std::unique_ptr<ClrObjectRef> clrObjectRef;
 
         // The WeakCallbackArgs is only stored here so that it is deterministically deleted
         // regardless of whether the callback is ever invoked.
-        std::unique_ptr<WeakCallbackArgs> callbackArgs;
+        std::unique_ptr<WeakCallbackArgs> weakCallbackArgs;
     };
 
     static void WeakHandleCallback(const WeakCallbackInfo<WeakCallbackArgs>& info);

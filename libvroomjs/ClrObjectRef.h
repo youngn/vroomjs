@@ -11,7 +11,7 @@ public:
         context_(context),
         id_(id)
     {
-        INCREMENT(js_mem_debug_managedref_count);
+        INCREMENT(js_mem_debug_clrobjectref_count);
     }
 
     ~ClrObjectRef();

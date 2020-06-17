@@ -60,7 +60,7 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
         // (unless the object being proxied is a CLR delegate, in which case it could make sense)
         if (function->InternalFieldCount() > 0) {
             auto ref = (ClrObjectRef*)Local<External>::Cast(function->GetInternalField(0))->Value();
-            return ForManagedObject(ref->Id());
+            return ForClrObject(ref->Id());
         }
         else {
             return ForJsFunction(new Persistent<Function>(isolate, function));
@@ -71,7 +71,7 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
         auto obj = Local<Object>::Cast(value);
         if (obj->InternalFieldCount() > 0) {
             auto ref = (ClrObjectRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
-            return ForManagedObject(ref->Id());
+            return ForClrObject(ref->Id());
         }
         else {
             return ForJsObject(new Persistent<Object>(isolate, obj));
@@ -134,12 +134,12 @@ Local<Value> JsValue::GetValue(JsContext* context)
         //return arr;        
     }
 
-    if (ValueType() == JSVALUE_TYPE_MANAGED || ValueType() == JSVALUE_TYPE_MANAGED_ERROR) {
-        // This is an ID to a managed object that lives inside the JsContext keep-alive
+    if (ValueType() == JSVALUE_TYPE_CLROBJECT || ValueType() == JSVALUE_TYPE_CLRERROR) {
+        // This is an ID to a CLR object that lives inside the JsContext keep-alive
         // cache. We just wrap it and the pointer to the engine inside an External. A
-        // managed error is still a CLR object so it is wrapped exactly as a normal
-        // managed object.
-        return context->ClrObjectMgr()->GetProxy(ManagedObjectIdValue());
+        // CLR error is still a CLR object so it is wrapped exactly as a normal
+        // CLR object.
+        return context->ClrObjectMgr()->GetProxy(ClrObjectIdValue());
     }
 
     // todo: throw?
@@ -158,11 +158,11 @@ JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)
     auto exception = trycatch.Exception();
     assert(!exception.IsEmpty());
 
-    // Is this a managed exception?
+    // Is this a CLR exception?
     Local<Object> obj;
     if (exception->ToObject(ctx).ToLocal(&obj) && obj->InternalFieldCount() == 1) {
         auto ref = (ClrObjectRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
-        return JsValue::ForManagedError(ref->Id());
+        return JsValue::ForClrError(ref->Id());
     }
 
     auto errorInfo = JsErrorInfo::Capture(trycatch, context);
