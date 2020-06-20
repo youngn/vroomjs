@@ -42,8 +42,7 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks c
     HandleScope scope(isolate_);
 
     // Setup the template we'll use for all CLR object references.
-    auto fo = FunctionTemplate::New(isolate_);
-    auto obj_template = fo->InstanceTemplate();
+    auto obj_template = ObjectTemplate::New(isolate_);
     obj_template->SetInternalFieldCount(1);
     obj_template->SetHandler(
         NamedPropertyHandlerConfiguration(
@@ -65,7 +64,7 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks c
     obj_template->Set(isolate_, "valueOf", FunctionTemplate::New(isolate_, ClrObjectRef::ValueOfCallback));
     obj_template->Set(isolate_, "toString", FunctionTemplate::New(isolate_, ClrObjectRef::ToStringCallback));
 
-    clrObjectTemplate_ = new Persistent<FunctionTemplate>(isolate_, fo);
+    clrObjectTemplate_ = new Persistent<ObjectTemplate>(isolate_, obj_template);
 
     global_context_ = new Persistent<Context>(isolate_, Context::New(isolate_));
 

@@ -31,7 +31,7 @@ Local<Object> ClrObjectManager::GetProxy(int id)
     auto t = context_->Engine()->Template();
     auto ctx = context_->Ctx();
 
-    auto obj = t->InstanceTemplate()->NewInstance(ctx).ToLocalChecked();
+    auto obj = t->NewInstance(ctx).ToLocalChecked();
     obj->SetInternalField(0, External::New(isolate, ref));
      
     auto args = new WeakCallbackArgs { this, id };
