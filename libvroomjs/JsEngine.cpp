@@ -55,21 +55,19 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks c
         )
     );
     obj_template->SetCallAsFunctionHandler(ClrObjectRef::InvokeCallback);
+
+    // TODO: the "valueOf" callback was originally set on the prototype i.e. :
+    // fo->PrototypeTemplate()->Set(isolate_, "valueOf", FunctionTemplate::New(isolate_, ClrObjectRef::ValueOfCallback));
+    // Is there some advantage to doing that? AFAICT, this achieves the same result.
+    // Note that interceptors get priority over accessors, so these methods can be provided by the GetPropertyValue callback
+    // if desired. The reason for having dedicated callbacks is to guarantee a sane implementation of these
+    // methods exists on all objects, in case the GetPropertyValue callback chooses to ignore these properties.
+    obj_template->Set(isolate_, "valueOf", FunctionTemplate::New(isolate_, ClrObjectRef::ValueOfCallback));
+    obj_template->Set(isolate_, "toString", FunctionTemplate::New(isolate_, ClrObjectRef::ToStringCallback));
+
     clrObjectTemplate_ = new Persistent<FunctionTemplate>(isolate_, fo);
 
-    auto fp = FunctionTemplate::New(isolate_, ClrObjectRef::ValueOfCallback);
-    valueOfFunctionTemplate_ =
-        new Persistent<FunctionTemplate>(isolate_, fp);
-
-    global_context_ =
-        new Persistent<Context>(isolate_, Context::New(isolate_));
-
-    auto ctx = Local<Context>::New(isolate_, *global_context_);
-    Context::Scope contextScope(ctx);
-
-    fo->PrototypeTemplate()->Set(isolate_, "valueOf", fp);
-
-    callbacks_ = callbacks;
+    global_context_ = new Persistent<Context>(isolate_, Context::New(isolate_));
 
     // Do this last, in case anything above fails
     INCREMENT(js_mem_debug_engine_count);
@@ -146,10 +144,6 @@ void JsEngine::Dispose()
         clrObjectTemplate_->Reset();
         delete clrObjectTemplate_;
         clrObjectTemplate_ = NULL;
-
-        valueOfFunctionTemplate_->Reset();
-        delete valueOfFunctionTemplate_;
-        valueOfFunctionTemplate_ = NULL;
 
         global_context_->Reset();
         delete global_context_;

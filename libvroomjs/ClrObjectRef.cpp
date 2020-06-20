@@ -89,6 +89,15 @@ void ClrObjectRef::ValueOfCallback(const FunctionCallbackInfo<Value>& info)
     GetInstance(info.Holder())->ValueOf(info);
 }
 
+void ClrObjectRef::ToStringCallback(const FunctionCallbackInfo<Value>& info)
+{
+#ifdef DEBUG_TRACE_API
+    std::cout << "ToStringCallback" << std::endl;
+#endif
+
+    GetInstance(info.Holder())->ToString(info);
+}
+
 ClrObjectRef* ClrObjectRef::GetInstance(const Local<Object>& obj)
 {
     auto ext = Local<External>::Cast(obj->GetInternalField(0));
@@ -174,6 +183,19 @@ void ClrObjectRef::ValueOf(const FunctionCallbackInfo<Value>& info)
     auto isolate = context_->Isolate();
 
     JsValue r = context_->ClrObjectCallbacks().ValueOf(context_->Id(), id_);
+    if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
+        isolate->ThrowException(r.Extract(context_));
+        return;
+    }
+
+    info.GetReturnValue().Set(r.Extract(context_));
+}
+
+void ClrObjectRef::ToString(const FunctionCallbackInfo<Value>& info)
+{
+    auto isolate = context_->Isolate();
+
+    JsValue r = context_->ClrObjectCallbacks().ToString(context_->Id(), id_);
     if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;

@@ -42,10 +42,7 @@ public:
 private:
     v8::Isolate* isolate_;
     ArrayBuffer::Allocator* allocator_;
-
     Persistent<FunctionTemplate>* clrObjectTemplate_;
-    Persistent<FunctionTemplate>* valueOfFunctionTemplate_;
-
     ::ClrObjectCallbacks callbacks_;
 };
 

@@ -118,23 +118,25 @@ extern "C"
     // We don't have a keepalive_add_f because that is managed on the CLR side.
     // Its definition would be "int (*keepalive_add_f) (ClrObjectRef obj)".
     
-    typedef void (CALLINGCONVENTION *keepalive_remove_f) (int32_t context, int32_t id);
-    typedef jsvalue (CALLINGCONVENTION *keepalive_get_property_value_f) (int32_t context, int32_t id, uint16_t* name);
-    typedef jsvalue (CALLINGCONVENTION *keepalive_set_property_value_f) (int32_t context, int32_t id, uint16_t* name, jsvalue value);
-    typedef jsvalue (CALLINGCONVENTION *keepalive_valueof_f) (int32_t context, int32_t id);
-	typedef jsvalue (CALLINGCONVENTION *keepalive_invoke_f) (int32_t context, int32_t id, int32_t argCount, jsvalue* args);
-	typedef jsvalue (CALLINGCONVENTION *keepalive_delete_property_f) (int32_t context, int32_t id, uint16_t* name);
-	typedef jsvalue (CALLINGCONVENTION *keepalive_enumerate_properties_f) (int32_t context, int32_t id);
+    typedef void (CALLINGCONVENTION* keepalive_remove_f) (int32_t context, int32_t id);
+    typedef jsvalue (CALLINGCONVENTION* keepalive_get_property_value_f) (int32_t context, int32_t id, uint16_t* name);
+    typedef jsvalue (CALLINGCONVENTION* keepalive_set_property_value_f) (int32_t context, int32_t id, uint16_t* name, jsvalue value);
+    typedef jsvalue (CALLINGCONVENTION* keepalive_delete_property_f) (int32_t context, int32_t id, uint16_t* name);
+    typedef jsvalue (CALLINGCONVENTION* keepalive_enumerate_properties_f) (int32_t context, int32_t id);
+    typedef jsvalue (CALLINGCONVENTION* keepalive_invoke_f) (int32_t context, int32_t id, int32_t argCount, jsvalue* args);
+    typedef jsvalue (CALLINGCONVENTION* keepalive_valueof_f) (int32_t context, int32_t id);
+    typedef jsvalue (CALLINGCONVENTION* keepalive_tostring_f) (int32_t context, int32_t id);
 
 	struct jscallbacks
 	{
 		keepalive_remove_f remove;
 		keepalive_get_property_value_f get_property_value;
 		keepalive_set_property_value_f set_property_value;
-		keepalive_valueof_f valueof;
-		keepalive_invoke_f invoke;
-		keepalive_delete_property_f delete_property;
-		keepalive_enumerate_properties_f enumerate_properties;
+        keepalive_delete_property_f delete_property;
+        keepalive_enumerate_properties_f enumerate_properties;
+        keepalive_invoke_f invoke;
+        keepalive_valueof_f valueof;
+        keepalive_tostring_f tostring;
 	};
 }
 

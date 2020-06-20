@@ -305,7 +305,7 @@ namespace VroomJs
         }
         private object ClrObjectValue(JsContext context)
         {
-            Debug.Assert(Type == JsValueType.ClrObject);
+            Debug.Assert(Type == JsValueType.ClrObject || Type == JsValueType.ClrError);
             return context.KeepAliveGet(I32);
         }
 

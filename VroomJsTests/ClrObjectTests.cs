@@ -21,6 +21,16 @@ namespace VroomJsTests
             {
                 return a + (b+c).ToString();
             }
+
+            public int valueOf()
+            {
+                return 123;
+            }
+
+            public string ToString()
+            {
+                return "f123";
+            }
         }
 
 
@@ -35,6 +45,19 @@ namespace VroomJsTests
                 context.Execute("x.Alpha = 'cba'");
                 var v = context.Execute("x.Alpha");
                 Assert.AreEqual("cba", v);
+            }
+        }
+
+        [Test]
+        public void Test_delete_named_property()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                var foo = new Foo() { Alpha = "abc" };
+                context.SetVariable("x", foo);
+                Assert.IsFalse((bool)context.Execute("delete x.Alpha;"));
+                var v = context.Execute("x.Alpha");
+                Assert.AreEqual("abc", v);
             }
         }
 
@@ -58,9 +81,36 @@ namespace VroomJsTests
                 var foo = new Foo();
                 context.SetVariable("x", foo);
                 var arr = context.Execute("Object.keys(x)") as JsArray;
-                //Assert.AreEqual(3, arr.GetLength());
                 foreach (var item in arr)
                     Console.WriteLine(item);
+                Assert.AreEqual(4, arr.GetLength());
+            }
+        }
+
+        [Test]
+        public void Test_valueOf_callback()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                var foo = new Foo();
+                context.SetVariable("x", foo);
+                var result = context.Execute("x.valueOf()");
+                Assert.AreEqual(123, result);
+            }
+        }
+
+        // TODO: right now this effectively delegates to the .NET ToString()
+        // method, but maybe we don't want it to? May need to set it up as a
+        // special method on the template, with a dedicated callback.
+        [Test]
+        public void Test_toString_callback()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                var foo = new Foo();
+                context.SetVariable("x", foo);
+                var result = context.Execute("x.toString()");
+                Assert.AreEqual("f123", result);
             }
         }
     }

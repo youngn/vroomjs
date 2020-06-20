@@ -42,11 +42,11 @@ namespace VroomJs
                 KeepAliveRemove,
                 KeepAliveGetPropertyValue,
                 KeepAliveSetPropertyValue,
-                KeepAliveValueOf,
-                KeepAliveInvoke,
                 KeepAliveDeleteProperty,
-                KeepAliveEnumerateProperties
-            );
+                KeepAliveEnumerateProperties,
+                KeepAliveInvoke,
+                KeepAliveValueOf,
+                KeepAliveToString);
 
             _engineHandle = new HandleRef(this, NativeApi.jsengine_new(
                 _callbacks,
@@ -113,6 +113,16 @@ namespace VroomJs
                 throw new Exception("fail");
             }
             return context.KeepAliveValueOf(slot);
+        }
+
+        private JsValue KeepAliveToString(int contextId, int slot)
+        {
+            JsContext context;
+            if (!_aliveContexts.TryGetValue(contextId, out context))
+            {
+                throw new Exception("fail");
+            }
+            return context.KeepAliveToString(slot);
         }
 
         private JsValue KeepAliveInvoke(int contextId, int slot, int argCount, IntPtr args)

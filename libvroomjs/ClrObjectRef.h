@@ -24,6 +24,7 @@ public:
     static void EnumeratePropertiesCallback(const PropertyCallbackInfo<Array>& info);
     static void InvokeCallback(const FunctionCallbackInfo<Value>& info);
     static void ValueOfCallback(const FunctionCallbackInfo<Value>& info);
+    static void ToStringCallback(const FunctionCallbackInfo<Value>& info);
 
 private:
     static ClrObjectRef* GetInstance(const Local<Object>& obj);
@@ -34,6 +35,7 @@ private:
     void EnumerateProperties(const PropertyCallbackInfo<Array>& info);
     void Invoke(const FunctionCallbackInfo<Value>& info);
     void ValueOf(const FunctionCallbackInfo<Value>& info);
+    void ToString(const FunctionCallbackInfo<Value>& info);
 
     JsContext* context_;
     int32_t id_;

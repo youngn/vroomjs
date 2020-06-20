@@ -461,7 +461,11 @@ namespace VroomJs
 #endif
             // we need to fall back to the prototype verison we set up because v8 won't call an object as a function, it needs
             // to be from a proper FunctionTemplate.
-            if (!string.IsNullOrEmpty(name) && name.Equals("valueOf", StringComparison.InvariantCultureIgnoreCase))
+            if (!string.IsNullOrEmpty(name) && name.Equals("valueOf"))
+            {
+                return JsValue.ForEmpty();
+            }
+            if (!string.IsNullOrEmpty(name) && name.Equals("toString"))
             {
                 return JsValue.ForEmpty();
             }
@@ -536,6 +540,22 @@ namespace VroomJs
             return JsValue.ForClrError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
         }
 
+        internal JsValue KeepAliveToString(int slot)
+        {
+            var obj = KeepAliveGet(slot);
+            if (obj != null)
+            {
+                Type type = obj.GetType();
+                MethodInfo mi = type.GetMethod("toString") ?? type.GetMethod("ToString");
+                if (mi != null)
+                {
+                    object result = mi.Invoke(obj, new object[0]);
+                    return JsValue.ForValue(result, this);
+                }
+                return JsValue.ForValue(obj, this);
+            }
+            return JsValue.ForClrError(KeepAliveAdd(new IndexOutOfRangeException("invalid keepalive slot: " + slot)));
+        }
 
 
         internal JsValue KeepAliveInvoke(int slot, object[] args)
