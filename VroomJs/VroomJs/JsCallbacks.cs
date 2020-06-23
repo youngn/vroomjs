@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace VroomJs
@@ -16,7 +17,7 @@ namespace VroomJs
     struct JsCallbacks
     {
         public JsCallbacks(
-            KeepaliveRemoveDelegate remove = null,
+            KeepaliveRemoveDelegate remove,
             KeepAliveGetPropertyValueDelegate getPropertyValue = null,
             KeepAliveSetPropertyValueDelegate setPropertyValue = null,
             KeepAliveDeletePropertyDelegate deleteProperty = null,
@@ -25,6 +26,8 @@ namespace VroomJs
             KeepAliveValueOfDelegate valueOf = null,
             KeepAliveToStringDelegate toString = null)
         {
+            Debug.Assert(remove != null);
+
             Remove = remove;
             GetPropertyValue = getPropertyValue;
             SetPropertyValue = setPropertyValue;

@@ -55,6 +55,7 @@
     <Compile Include="VroomJs\JsValueType.cs" />
     <Compile Include="VroomJs\JsInteropException.cs" />
     <Compile Include="VroomJs\NativeApi.cs" />
+    <Compile Include="VroomJs\ObjectTemplate.cs" />
     <Compile Include="VroomJs\WeakDelegate.cs" />
     <Compile Include="VroomJs\JsEngineStats.cs" />
     <Compile Include="VroomJs\IKeepAliveStore.cs" />

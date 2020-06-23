@@ -42,6 +42,7 @@ namespace VroomJs
         [FieldOffset(8)] public JsValueType Type; // marshaled as integer.
 
         [FieldOffset(12)] private int Length; // Length of array or string
+        [FieldOffset(12)] private int TemplateId;
 
         public static JsValue ForValue(object obj, JsContext context)
         {
@@ -102,7 +103,7 @@ namespace VroomJs
             // Every object explicitly converted to a value becomes an entry of the
             // _keepalives list, to make sure the GC won't collect it while still in
             // use by the unmanaged Javascript engine.
-            return ForClrObject(context.KeepAliveAdd(obj));
+            return ForClrObject(context.KeepAliveAdd(obj), 0 /* TODO: select appropriate template ID */);
         }
 
         public object Extract(JsContext context)
@@ -175,11 +176,11 @@ namespace VroomJs
         }
         public static JsValue ForClrError(int id)
         {
-            return new JsValue { Type = JsValueType.ClrError, I32 = id };
+            return new JsValue { Type = JsValueType.ClrError, I32 = id, TemplateId = 0 /* TODO: select error template ID */ };
         }
-        public static JsValue ForClrObject(int id)
+        public static JsValue ForClrObject(int id, int templateId)
         {
-            return new JsValue { Type = JsValueType.ClrObject, I32 = id };
+            return new JsValue { Type = JsValueType.ClrObject, I32 = id, TemplateId = templateId };
         }
 
         #endregion

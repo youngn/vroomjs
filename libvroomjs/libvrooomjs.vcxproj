@@ -259,6 +259,7 @@
   <ItemGroup>
     <ClCompile Include="bridge.cpp" />
     <ClCompile Include="ClrObjectManager.cpp" />
+    <ClCompile Include="ClrObjectTemplate.cpp" />
     <ClCompile Include="JsContext.cpp" />
     <ClCompile Include="JsEngine.cpp" />
     <ClCompile Include="JsErrorInfo.cpp" />
@@ -270,6 +271,7 @@
   <ItemGroup>
     <ClInclude Include="ClrObjectCallbacks.h" />
     <ClInclude Include="ClrObjectManager.h" />
+    <ClInclude Include="ClrObjectTemplate.h" />
     <ClInclude Include="JsContext.h" />
     <ClInclude Include="JsEngine.h" />
     <ClInclude Include="JsErrorInfo.h" />

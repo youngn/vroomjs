@@ -72,14 +72,13 @@ extern "C"
     }
 
 	EXPORT JsEngine* CALLINGCONVENTION jsengine_new(
-        jscallbacks callbacks,
 		int32_t max_young_space,
         int32_t max_old_space) 
 	{
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsengine_new" << std::endl;
 #endif
-        return new JsEngine(max_young_space, max_old_space, callbacks);
+        return new JsEngine(max_young_space, max_old_space);
 	}
 
 	EXPORT void CALLINGCONVENTION jsengine_terminate_execution(JsEngine* engine) {
@@ -116,6 +115,15 @@ extern "C"
         assert(engine != NULL);
         engine->Dispose();
         delete engine;
+    }
+
+    EXPORT int CALLINGCONVENTION jsengine_add_template(JsEngine* engine, jscallbacks callbacks)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jsengine_add_template" << std::endl;
+#endif
+        assert(engine != NULL);
+        return engine->AddTemplate(callbacks);
     }
 
     EXPORT JsContext* CALLINGCONVENTION jscontext_new(int32_t id, JsEngine *engine)

@@ -97,7 +97,11 @@ extern "C"
         } value;
         
         int32_t         type;
-        int32_t         length;
+        union
+        {
+            int32_t     length;     // length of str
+            int32_t     templateId; // template ID for CLR object/error
+        };
 	};
 	
 	EXPORT void CALLINGCONVENTION jsvalue_dispose(jsvalue value);

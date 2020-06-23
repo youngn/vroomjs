@@ -14,7 +14,7 @@ public:
     {
     }
 
-    Local<Object> GetProxy(int id);
+    Local<Object> GetProxy(int id, int templateId);
 
 private:
 

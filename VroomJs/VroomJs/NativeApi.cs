@@ -24,7 +24,6 @@ namespace VroomJs
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern IntPtr jsengine_new(
-            JsCallbacks callbacks,
             int maxYoungSpace,
             int maxOldSpace
         );
@@ -40,6 +39,9 @@ namespace VroomJs
 
         [DllImport(DllName)]
         public static extern void jsengine_dispose_object(HandleRef engine, IntPtr obj);
+
+        [DllImport(DllName)]
+        public static extern int jsengine_add_template(HandleRef engine, JsCallbacks callbacks);
 
         #endregion
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using VroomJs.VroomJs;
 
 namespace VroomJs
 {
@@ -26,7 +27,7 @@ namespace VroomJs
         }
 
         // Make sure the delegates we pass to the C++ engine won't fly away during a GC.
-        private readonly JsCallbacks _callbacks;
+        private readonly List<ObjectTemplate> _objectTemplates = new List<ObjectTemplate>();
 
         private readonly HandleRef _engineHandle;
         private readonly Dictionary<int, JsContext> _aliveContexts = new Dictionary<int, JsContext>();
@@ -38,7 +39,11 @@ namespace VroomJs
 
         public JsEngine(int maxYoungSpace = -1, int maxOldSpace = -1)
         {
-            _callbacks = new JsCallbacks(
+            _engineHandle = new HandleRef(this, NativeApi.jsengine_new(
+                maxYoungSpace,
+                maxOldSpace));
+
+            _objectTemplates.Add(AddObjectTemplate(
                 KeepAliveRemove,
                 KeepAliveGetPropertyValue,
                 KeepAliveSetPropertyValue,
@@ -46,12 +51,32 @@ namespace VroomJs
                 KeepAliveEnumerateProperties,
                 KeepAliveInvoke,
                 KeepAliveValueOf,
-                KeepAliveToString);
+                KeepAliveToString)
+            );
+        }
 
-            _engineHandle = new HandleRef(this, NativeApi.jsengine_new(
-                _callbacks,
-                maxYoungSpace,
-                maxOldSpace));
+        private ObjectTemplate AddObjectTemplate( //todo: make public
+            KeepaliveRemoveDelegate remove,
+            KeepAliveGetPropertyValueDelegate getPropertyValue = null,
+            KeepAliveSetPropertyValueDelegate setPropertyValue = null,
+            KeepAliveDeletePropertyDelegate deleteProperty = null,
+            KeepAliveEnumeratePropertiesDelegate enumerateProperties = null,
+            KeepAliveInvokeDelegate invoke = null,
+            KeepAliveValueOfDelegate valueOf = null,
+            KeepAliveToStringDelegate toString = null)
+        {
+            var callbacks = new JsCallbacks(
+                remove,
+                getPropertyValue,
+                setPropertyValue,
+                deleteProperty,
+                enumerateProperties,
+                invoke,
+                valueOf,
+                toString);
+
+            var id = NativeApi.jsengine_add_template(_engineHandle, callbacks);
+            return new ObjectTemplate(id, this, callbacks);
         }
 
         public JsContext CreateContext()

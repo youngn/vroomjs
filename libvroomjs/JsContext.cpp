@@ -80,10 +80,6 @@ void JsContext::Dispose()
     isolate_ = nullptr;
 }
 
-const ClrObjectCallbacks& JsContext::ClrObjectCallbacks() {
-    return engine_->ClrObjectCallbacks();
-}
-
 JsValue JsContext::Execute(const uint16_t* str, const uint16_t* resourceName = NULL)
 {
     assert(str != nullptr);

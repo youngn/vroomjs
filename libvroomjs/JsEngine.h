@@ -1,16 +1,18 @@
 #pragma once
 
+#include <vector>
+#include <cassert>
 #include "vroomjs.h"
-#include "ClrObjectCallbacks.h"
 
 class JsContext;
+class ClrObjectTemplate;
 
 // JsEngine is a single isolated v8 interpreter and is the referenced as an IntPtr
 // by the JsEngine on the CLR side.
 class JsEngine
 {
 public:
-    JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks callbacks);
+    JsEngine(int32_t max_young_space, int32_t max_old_space);
     void TerminateExecution();
 
     Persistent<Script>* CompileScript(const uint16_t* str, const uint16_t* resourceName, jsvalue* error);
@@ -24,25 +26,25 @@ public:
     Isolate* Isolate() { return isolate_; }
     JsContext* NewContext(int32_t id);
 
-    Local<ObjectTemplate> Template() {
-        return Local<ObjectTemplate>::New(isolate_, *clrObjectTemplate_);
-    }
+    int AddTemplate(jscallbacks callbacks);
 
-    const ClrObjectCallbacks& ClrObjectCallbacks() {
-        return callbacks_;
+    const ClrObjectTemplate* Template(int i) {
+        assert(i >= 0 && i < templates_.size());
+        return templates_.at(i);
     }
 
     virtual ~JsEngine() {
         DECREMENT(js_mem_debug_engine_count);
     }
 
-
     Persistent<Context>* global_context_;
 
 private:
     v8::Isolate* isolate_;
     ArrayBuffer::Allocator* allocator_;
-    Persistent<ObjectTemplate>* clrObjectTemplate_;
-    ::ClrObjectCallbacks callbacks_;
+
+    // We use an array of pointers here to guarantee that each ClrObjectTemplate
+    // has a stable memory location so that we can maintain long-lived references to it.
+    std::vector<ClrObjectTemplate*> templates_;
 };
 

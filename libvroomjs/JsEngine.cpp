@@ -4,7 +4,7 @@
 
 #include "vroomjs.h"
 #include "JsEngine.h"
-#include "ClrObjectRef.h"
+#include "ClrObjectTemplate.h"
 #include "JsContext.h"
 
 
@@ -13,8 +13,7 @@ long js_mem_debug_engine_count;
 static const int Mega = 1024 * 1024;
 
 
-JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks callbacks)
-    :callbacks_(callbacks)
+JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space)
 {
     allocator_ = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 
@@ -40,31 +39,6 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space, jscallbacks c
     Locker locker(isolate_);
     Isolate::Scope isolate_scope(isolate_);
     HandleScope scope(isolate_);
-
-    // Setup the template we'll use for all CLR object references.
-    auto obj_template = ObjectTemplate::New(isolate_);
-    obj_template->SetInternalFieldCount(1);
-    obj_template->SetHandler(
-        NamedPropertyHandlerConfiguration(
-            ClrObjectRef::GetPropertyValueCallback,
-            ClrObjectRef::SetPropertyValueCallback,
-            nullptr,
-            ClrObjectRef::DeletePropertyCallback,
-            ClrObjectRef::EnumeratePropertiesCallback
-        )
-    );
-    obj_template->SetCallAsFunctionHandler(ClrObjectRef::InvokeCallback);
-
-    // TODO: the "valueOf" callback was originally set on the prototype i.e. :
-    // fo->PrototypeTemplate()->Set(isolate_, "valueOf", FunctionTemplate::New(isolate_, ClrObjectRef::ValueOfCallback));
-    // Is there some advantage to doing that? AFAICT, this achieves the same result.
-    // Note that interceptors get priority over accessors, so these methods can be provided by the GetPropertyValue callback
-    // if desired. The reason for having dedicated callbacks is to guarantee a sane implementation of these
-    // methods exists on all objects, in case the GetPropertyValue callback chooses to ignore these properties.
-    obj_template->Set(isolate_, "valueOf", FunctionTemplate::New(isolate_, ClrObjectRef::ValueOfCallback));
-    obj_template->Set(isolate_, "toString", FunctionTemplate::New(isolate_, ClrObjectRef::ToStringCallback));
-
-    clrObjectTemplate_ = new Persistent<ObjectTemplate>(isolate_, obj_template);
 
     global_context_ = new Persistent<Context>(isolate_, Context::New(isolate_));
 
@@ -135,28 +109,33 @@ JsContext* JsEngine::NewContext(int32_t id)
     return new JsContext(id, this);
 }
 
+int JsEngine::AddTemplate(jscallbacks callbacks)
+{
+    templates_.push_back(new ClrObjectTemplate(isolate_, callbacks));
+    return templates_.size() - 1; // template id
+}
+
 void JsEngine::Dispose()
 {
     if (isolate_ != NULL) {
         isolate_->Enter();
-
-        clrObjectTemplate_->Reset();
-        delete clrObjectTemplate_;
-        clrObjectTemplate_ = NULL;
 
         global_context_->Reset();
         delete global_context_;
         global_context_ = NULL;
 
         isolate_->Exit();
+
+        // Templates must be deleted before the isolate is disposed.
+        for (int i = 0; i < templates_.size(); i++)
+            delete templates_[i];
+
         isolate_->Dispose();
         // Isolates can only be Dispose()'d, not deleted
         isolate_ = NULL;
 
         delete allocator_;
         allocator_ = NULL;
-
-        memset(&callbacks_, 0, sizeof(jscallbacks));
     }
 }
 

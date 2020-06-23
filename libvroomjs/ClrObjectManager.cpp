@@ -2,6 +2,8 @@
 #include "ClrObjectRef.h"
 #include "JsContext.h"
 #include "JsEngine.h"
+#include "ClrObjectTemplate.h"
+
 #include <thread>
 
 void ClrObjectManager::WeakHandleCallback(const WeakCallbackInfo<ClrObjectManager::WeakCallbackArgs>& info)
@@ -16,7 +18,7 @@ void ClrObjectManager::WeakHandleCallback(const WeakCallbackInfo<ClrObjectManage
     args->owner->RemoveEntry(args->id);
 }
 
-Local<Object> ClrObjectManager::GetProxy(int id)
+Local<Object> ClrObjectManager::GetProxy(int id, int templateId)
 {
     std::cout << "GetProxy " << id << " " << std::this_thread::get_id() << std::endl;
 
@@ -27,12 +29,10 @@ Local<Object> ClrObjectManager::GetProxy(int id)
         return Local<Object>::New(isolate, search->second.objectHandle);
     }
 
-    auto ref = new ClrObjectRef(context_, id);
-    auto t = context_->Engine()->Template();
-    auto ctx = context_->Ctx();
+    auto objectTemplate = context_->Engine()->Template(templateId);
 
-    auto obj = t->NewInstance(ctx).ToLocalChecked();
-    obj->SetInternalField(0, External::New(isolate, ref));
+    auto ref = new ClrObjectRef(context_, id, objectTemplate->Callbacks());
+    auto obj = objectTemplate->NewInstance(context_->Ctx(), ref);
      
     auto args = new WeakCallbackArgs { this, id };
     auto handle = UniquePersistent<Object>(isolate, obj);

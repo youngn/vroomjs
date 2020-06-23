@@ -119,6 +119,10 @@ public:
 		assert(v.type == JSVALUE_TYPE_CLROBJECT || v.type == JSVALUE_TYPE_CLRERROR);
 		return v.value.i32;
 	}
+	int32_t ClrObjectTemplateIdValue() const {
+		assert(v.type == JSVALUE_TYPE_CLROBJECT || v.type == JSVALUE_TYPE_CLRERROR);
+		return v.templateId;
+	}
 
 	JsValue(const jsvalue& value) {
 		v = value;

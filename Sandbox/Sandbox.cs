@@ -69,28 +69,30 @@ namespace Sandbox
 
 			JsEngine.Initialize();
 
-			//using (JsEngine engine = new JsEngine())
-			//{
-			//	//Stopwatch watch = new Stopwatch();
-			////	watch.Start();
-			//	//JsScript script = engine.CompileScript("3+3");
-			//	using (JsContext ctx = engine.CreateContext()) {
-			//		ctx.SetVariable("x", "bob");
-			//		var result = ctx.Execute("x");
-			//		Console.WriteLine(result);
-			//	}
-			//}
-			using (JsEngine engine = new JsEngine())
-			using (JsContext ctx = engine.CreateContext())
-			{
-				for(var i = 0; i < 100000; i++)
-				{
-					ctx.SetVariable("x", new object());
-				}
-				Console.WriteLine("Waiting for key...");
-				Console.Read();
-			}
-			JsEngine.Shutdown();
+            //using (JsEngine engine = new JsEngine())
+            //{
+            //    //Stopwatch watch = new Stopwatch();
+            //    //	watch.Start();
+            //    //JsScript script = engine.CompileScript("3+3");
+            //    using (JsContext ctx = engine.CreateContext())
+            //    {
+            //        ctx.SetVariable("x", "bob");
+            //        ctx.SetVariable("y", new debugtest());
+            //        var result = ctx.Execute("x");
+            //        Console.WriteLine(result);
+            //    }
+            //}
+            using (JsEngine engine = new JsEngine())
+            using (JsContext ctx = engine.CreateContext())
+            {
+                for (var i = 0; i < 100000; i++)
+                {
+                    ctx.SetVariable("x", new object());
+                }
+                Console.WriteLine("Waiting for key...");
+                Console.Read();
+            }
+            JsEngine.Shutdown();
 			return;
 
 			debugtest dbg = new debugtest();

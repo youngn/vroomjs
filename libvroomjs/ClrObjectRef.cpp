@@ -29,87 +29,18 @@
 #include "ClrObjectRef.h"
 #include "JsValue.h"
 #include "JsContext.h"
-#include "JsEngine.h"
+#include "ClrObjectCallbacks.h"
 
 using namespace v8;
 
 long js_mem_debug_clrobjectref_count;
-
-void ClrObjectRef::GetPropertyValueCallback(Local<Name> name, const PropertyCallbackInfo<Value>& info)
-{
-#ifdef DEBUG_TRACE_API
-    std::cout << "GetPropertyValueCallback" << std::endl;
-#endif
-
-    GetInstance(info.Holder())->GetPropertyValue(name, info);
-}
-
-void ClrObjectRef::SetPropertyValueCallback(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value>& info)
-{
-#ifdef DEBUG_TRACE_API
-    std::cout << "SetPropertyValueCallback" << std::endl;
-#endif
-
-    GetInstance(info.Holder())->SetPropertyValue(name, value, info);
-}
-
-void ClrObjectRef::DeletePropertyCallback(Local<Name> name, const PropertyCallbackInfo<Boolean>& info)
-{
-#ifdef DEBUG_TRACE_API
-    std::cout << "DeletePropertyCallback" << std::endl;
-#endif
-
-    GetInstance(info.Holder())->DeleteProperty(name, info);
-}
-
-void ClrObjectRef::EnumeratePropertiesCallback(const PropertyCallbackInfo<Array>& info)
-{
-#ifdef DEBUG_TRACE_API
-    std::cout << "EnumeratePropertiesCallback" << std::endl;
-#endif
-
-    GetInstance(info.Holder())->EnumerateProperties(info);
-}
-
-void ClrObjectRef::InvokeCallback(const FunctionCallbackInfo<Value>& info)
-{
-#ifdef DEBUG_TRACE_API
-    std::cout << "InvokeCallback" << std::endl;
-#endif
-
-    GetInstance(info.Holder())->Invoke(info);
-}
-
-void ClrObjectRef::ValueOfCallback(const FunctionCallbackInfo<Value>& info)
-{
-#ifdef DEBUG_TRACE_API
-    std::cout << "ValueOfCallback" << std::endl;
-#endif
-
-    GetInstance(info.Holder())->ValueOf(info);
-}
-
-void ClrObjectRef::ToStringCallback(const FunctionCallbackInfo<Value>& info)
-{
-#ifdef DEBUG_TRACE_API
-    std::cout << "ToStringCallback" << std::endl;
-#endif
-
-    GetInstance(info.Holder())->ToString(info);
-}
-
-ClrObjectRef* ClrObjectRef::GetInstance(const Local<Object>& obj)
-{
-    auto ext = Local<External>::Cast(obj->GetInternalField(0));
-    return (ClrObjectRef*)ext->Value();
-}
 
 void ClrObjectRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInfo<Value>& info)
 {
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-    auto r = context_->ClrObjectCallbacks().GetPropertyValue(context_->Id(), id_, *s);
+    auto r = callbacks_.GetPropertyValue(context_->Id(), id_, *s);
     if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -122,7 +53,7 @@ void ClrObjectRef::SetPropertyValue(Local<Name> name, Local<Value> value, const 
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-    auto r = context_->ClrObjectCallbacks().SetPropertyValue(context_->Id(), id_, *s, JsValue::ForValue(value, context_));
+    auto r = callbacks_.SetPropertyValue(context_->Id(), id_, *s, JsValue::ForValue(value, context_));
     if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -137,7 +68,7 @@ void ClrObjectRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<B
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-    auto r = context_->ClrObjectCallbacks().DeleteProperty(context_->Id(), id_, *s);
+    auto r = callbacks_.DeleteProperty(context_->Id(), id_, *s);
     if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -149,7 +80,7 @@ void ClrObjectRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<B
 
 void ClrObjectRef::EnumerateProperties(const PropertyCallbackInfo<Array>& info)
 {
-    auto r = context_->ClrObjectCallbacks().EnumerateProperties(context_->Id(), id_);
+    auto r = callbacks_.EnumerateProperties(context_->Id(), id_);
     if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
         context_->Isolate()->ThrowException(r.Extract(context_));
         return;
@@ -167,7 +98,7 @@ void ClrObjectRef::Invoke(const FunctionCallbackInfo<Value>& info)
         args[i] = JsValue::ForValue(info[i], context_);
     }
 
-    auto r = context_->ClrObjectCallbacks().Invoke(context_->Id(), id_, len, args);
+    auto r = callbacks_.Invoke(context_->Id(), id_, len, args);
     delete[] args;
 
     if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
@@ -182,7 +113,7 @@ void ClrObjectRef::ValueOf(const FunctionCallbackInfo<Value>& info)
 {
     auto isolate = context_->Isolate();
 
-    JsValue r = context_->ClrObjectCallbacks().ValueOf(context_->Id(), id_);
+    JsValue r = callbacks_.ValueOf(context_->Id(), id_);
     if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -195,7 +126,7 @@ void ClrObjectRef::ToString(const FunctionCallbackInfo<Value>& info)
 {
     auto isolate = context_->Isolate();
 
-    JsValue r = context_->ClrObjectCallbacks().ToString(context_->Id(), id_);
+    JsValue r = callbacks_.ToString(context_->Id(), id_);
     if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -206,7 +137,7 @@ void ClrObjectRef::ToString(const FunctionCallbackInfo<Value>& info)
 
 ClrObjectRef::~ClrObjectRef()
 {
-    context_->ClrObjectCallbacks().Remove(context_->Id(), id_);
+    callbacks_.Remove(context_->Id(), id_);
     DECREMENT(js_mem_debug_clrobjectref_count);
 }
 
