@@ -267,26 +267,33 @@ namespace VroomJsTests
         [Test]
         public void Test_clr_object()
         {
-            using (var context = Engine.CreateContext())
+            // Use custom engine for this test as it requires ClrObjectHandler
+            // to be registered.
+            using (var engine = new JsEngine())
             {
-                var foo = new Foo();
-                context.SetVariable("x", foo);
+                engine.RegisterHostObjectTemplate(new ClrObjectHandler());
 
-                // Ensure round-trippable
-                var fooReturned = context.GetVariable("x");
-                Assert.AreSame(foo, fooReturned);
+                using (var context = engine.CreateContext())
+                {
+                    var foo = new Foo();
+                    context.SetVariable("x", foo);
 
-                // Ensure object identity is maintained on script side
-                context.SetVariable("y", foo);
-                Assert.IsTrue((bool)context.Execute("y === x"));
+                    // Ensure round-trippable
+                    var fooReturned = context.GetVariable("x");
+                    Assert.AreSame(foo, fooReturned);
 
-                var foo2 = new Foo();
-                context.SetVariable("y", foo2);
-                var foo2Returned = context.GetVariable("y");
-                Assert.AreSame(foo2, foo2Returned);
-                Assert.AreNotSame(foo, foo2Returned);
+                    // Ensure object identity is maintained on script side
+                    context.SetVariable("y", foo);
+                    Assert.IsTrue((bool)context.Execute("y === x"));
 
-                Assert.IsFalse((bool)context.Execute("y === x"));
+                    var foo2 = new Foo();
+                    context.SetVariable("y", foo2);
+                    var foo2Returned = context.GetVariable("y");
+                    Assert.AreSame(foo2, foo2Returned);
+                    Assert.AreNotSame(foo, foo2Returned);
+
+                    Assert.IsFalse((bool)context.Execute("y === x"));
+                }
             }
         }
     }

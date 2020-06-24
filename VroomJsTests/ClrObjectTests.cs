@@ -33,6 +33,12 @@ namespace VroomJsTests
             }
         }
 
+        [OneTimeSetUp]
+        public void FixtureSetup()
+        {
+            Engine.RegisterHostObjectTemplate(new ClrObjectHandler());
+        }
+
 
         [Test]
         public void Test_get_set_named_property()

@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using VroomJs.VroomJs;
 
 namespace VroomJs
 {
-    public class JsEngine : IDisposable
+    public partial class JsEngine : IDisposable
     {
         public static void Initialize()
         {
@@ -26,8 +26,8 @@ namespace VroomJs
             NativeApi.js_dump_allocated_items();
         }
 
-        // Make sure the delegates we pass to the C++ engine won't fly away during a GC.
-        private readonly List<ObjectTemplate> _objectTemplates = new List<ObjectTemplate>();
+        private readonly List<HostObjectTemplateRegistration> _templateRegistrations
+            = new List<HostObjectTemplateRegistration>();
 
         private readonly HandleRef _engineHandle;
         private readonly Dictionary<int, JsContext> _aliveContexts = new Dictionary<int, JsContext>();
@@ -42,41 +42,25 @@ namespace VroomJs
             _engineHandle = new HandleRef(this, NativeApi.jsengine_new(
                 maxYoungSpace,
                 maxOldSpace));
-
-            _objectTemplates.Add(AddObjectTemplate(
-                KeepAliveRemove,
-                KeepAliveGetPropertyValue,
-                KeepAliveSetPropertyValue,
-                KeepAliveDeleteProperty,
-                KeepAliveEnumerateProperties,
-                KeepAliveInvoke,
-                KeepAliveValueOf,
-                KeepAliveToString)
-            );
         }
 
-        private ObjectTemplate AddObjectTemplate( //todo: make public
-            KeepaliveRemoveDelegate remove,
-            KeepAliveGetPropertyValueDelegate getPropertyValue = null,
-            KeepAliveSetPropertyValueDelegate setPropertyValue = null,
-            KeepAliveDeletePropertyDelegate deleteProperty = null,
-            KeepAliveEnumeratePropertiesDelegate enumerateProperties = null,
-            KeepAliveInvokeDelegate invoke = null,
-            KeepAliveValueOfDelegate valueOf = null,
-            KeepAliveToStringDelegate toString = null)
+        public void RegisterHostObjectTemplate(HostObjectTemplate template, Predicate<object> selector = null)
         {
-            var callbacks = new JsCallbacks(
-                remove,
-                getPropertyValue,
-                setPropertyValue,
-                deleteProperty,
-                enumerateProperties,
-                invoke,
-                valueOf,
-                toString);
+            _templateRegistrations.Add(new HostObjectTemplateRegistration(this, template, selector));
+        }
 
-            var id = NativeApi.jsengine_add_template(_engineHandle, callbacks);
-            return new ObjectTemplate(id, this, callbacks);
+        public void RegisterHostObjectTemplate(IHostObjectHandler handler, Predicate<object> selector = null)
+        {
+            RegisterHostObjectTemplate(new HostObjectTemplate(
+                handler.Remove,
+                handler.GetPropertyValue,
+                handler.SetPropertyValue,
+                handler.DeleteProperty,
+                handler.EnumerateProperties,
+                handler.Call,
+                handler.ValueOf,
+                handler.ToString
+            ), selector);
         }
 
         public JsContext CreateContext()
@@ -130,108 +114,18 @@ namespace VroomJs
                 NativeApi.jsengine_dispose_object(_engineHandle, ptr);
         }
 
-        private JsValue KeepAliveValueOf(int contextId, int slot)
+        internal JsContext GetContext(int id)
         {
-            JsContext context;
-            if (!_aliveContexts.TryGetValue(contextId, out context))
-            {
-                throw new Exception("fail");
-            }
-            return context.KeepAliveValueOf(slot);
+            if (!_aliveContexts.TryGetValue(id, out JsContext context))
+                throw new InvalidOperationException($"Invalid context ID: {id}");
+
+            return context;
         }
 
-        private JsValue KeepAliveToString(int contextId, int slot)
+        internal int SelectTemplate(object obj)
         {
-            JsContext context;
-            if (!_aliveContexts.TryGetValue(contextId, out context))
-            {
-                throw new Exception("fail");
-            }
-            return context.KeepAliveToString(slot);
-        }
-
-        private JsValue KeepAliveInvoke(int contextId, int slot, int argCount, IntPtr args)
-        {
-            if (!_aliveContexts.TryGetValue(contextId, out JsContext context))
-                throw new Exception("fail");
-
-            var stepSize = Marshal.SizeOf<JsValue>();
-            var arguments = Enumerable.Range(0, argCount)
-                .Select(i => Marshal.PtrToStructure<JsValue>(new IntPtr(args.ToInt64() + (stepSize * i))).Extract(context))
-                .ToArray();
-
-            return context.KeepAliveInvoke(slot, arguments);
-        }
-
-        private JsValue KeepAliveSetPropertyValue(int contextId, int slot, string name, JsValue value)
-        {
-#if DEBUG_TRACE_API
-			Console.WriteLine("set prop " + contextId + " " + slot);
-#endif
-            JsContext context;
-            if (!_aliveContexts.TryGetValue(contextId, out context))
-            {
-                throw new Exception("fail");
-            }
-            return context.KeepAliveSetPropertyValue(slot, name, value);
-        }
-
-        private JsValue KeepAliveGetPropertyValue(int contextId, int slot, string name)
-        {
-#if DEBUG_TRACE_API
-			Console.WriteLine("get prop " + contextId + " " + slot);
-#endif
-            JsContext context;
-            if (!_aliveContexts.TryGetValue(contextId, out context))
-            {
-                throw new Exception("fail");
-            }
-
-            JsValue value = context.KeepAliveGetPropertyValue(slot, name);
-            return value;
-        }
-
-        private JsValue KeepAliveDeleteProperty(int contextId, int slot, string name)
-        {
-#if DEBUG_TRACE_API
-			Console.WriteLine("delete prop " + contextId + " " + slot);
-#endif
-            JsContext context;
-            if (!_aliveContexts.TryGetValue(contextId, out context))
-            {
-                throw new Exception("fail");
-            }
-
-            JsValue value = context.KeepAliveDeleteProperty(slot, name);
-            return value;
-        }
-
-        private JsValue KeepAliveEnumerateProperties(int contextId, int slot)
-        {
-#if DEBUG_TRACE_API
-			Console.WriteLine("enumerate props " + contextId + " " + slot);
-#endif
-            JsContext context;
-            if (!_aliveContexts.TryGetValue(contextId, out context))
-            {
-                throw new Exception("fail");
-            }
-
-            JsValue value = context.KeepAliveEnumerateProperties(slot);
-            return value;
-        }
-
-        private void KeepAliveRemove(int contextId, int slot)
-        {
-#if DEBUG_TRACE_API
-			Console.WriteLine("Keep alive remove for " + contextId + " " + slot);
-#endif
-            JsContext context;
-            if (!_aliveContexts.TryGetValue(contextId, out context))
-            {
-                return;
-            }
-            context.KeepAliveRemove(slot);
+            var template = _templateRegistrations.FirstOrDefault(r => r.IsApplicableTo(obj));
+            return template != null ? template.Id : -1;
         }
 
         private void ContextDisposed(int id)

@@ -100,10 +100,13 @@ namespace VroomJs
             if (type == typeof(JsFunction))
                 return ForJsFunction((JsFunction)obj);
 
-            // Every object explicitly converted to a value becomes an entry of the
-            // _keepalives list, to make sure the GC won't collect it while still in
-            // use by the unmanaged Javascript engine.
-            return ForClrObject(context.KeepAliveAdd(obj), 0 /* TODO: select appropriate template ID */);
+            var templateId = context.Engine.SelectTemplate(obj);
+            if(templateId >= 0)
+            {
+                return ForClrObject(context.AddHostObject(obj), templateId);
+            }
+
+            throw new JsInteropException($"Object of type {type} cannot be marshaled to JavaScript.");
         }
 
         public object Extract(JsContext context)
@@ -307,7 +310,7 @@ namespace VroomJs
         private object ClrObjectValue(JsContext context)
         {
             Debug.Assert(Type == JsValueType.ClrObject || Type == JsValueType.ClrError);
-            return context.KeepAliveGet(I32);
+            return context.GetHostObject(I32);
         }
 
         private JsException JsErrorValue(JsContext context)

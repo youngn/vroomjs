@@ -35,6 +35,12 @@ using namespace v8;
 
 long js_mem_debug_clrobjectref_count;
 
+ClrObjectRef::~ClrObjectRef()
+{
+    callbacks_.Remove(context_->Id(), id_);
+    DECREMENT(js_mem_debug_clrobjectref_count);
+}
+
 void ClrObjectRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInfo<Value>& info)
 {
     auto isolate = context_->Isolate();
@@ -45,6 +51,7 @@ void ClrObjectRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInfo
         isolate->ThrowException(r.Extract(context_));
         return;
     }
+
     info.GetReturnValue().Set(r.Extract(context_));
 }
 
@@ -74,7 +81,7 @@ void ClrObjectRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<B
         return;
     }
 
-    // todo: check docs if we really need to be returning a value here
+    // expect a boolean return value - true if deleted, false otherwise
     info.GetReturnValue().Set(r.Extract(context_)->ToBoolean(isolate));
 }
 
@@ -86,6 +93,7 @@ void ClrObjectRef::EnumerateProperties(const PropertyCallbackInfo<Array>& info)
         return;
     }
 
+    // expect an array return value
     info.GetReturnValue().Set(Local<Array>::Cast(r.Extract(context_)));
 }
 
@@ -133,11 +141,5 @@ void ClrObjectRef::ToString(const FunctionCallbackInfo<Value>& info)
     }
 
     info.GetReturnValue().Set(r.Extract(context_));
-}
-
-ClrObjectRef::~ClrObjectRef()
-{
-    callbacks_.Remove(context_->Id(), id_);
-    DECREMENT(js_mem_debug_clrobjectref_count);
 }
 

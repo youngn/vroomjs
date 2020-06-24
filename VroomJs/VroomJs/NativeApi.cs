@@ -41,7 +41,7 @@ namespace VroomJs
         public static extern void jsengine_dispose_object(HandleRef engine, IntPtr obj);
 
         [DllImport(DllName)]
-        public static extern int jsengine_add_template(HandleRef engine, JsCallbacks callbacks);
+        public static extern int jsengine_add_template(HandleRef engine, NativeHostObjectCallbacks callbacks);
 
         #endregion
 

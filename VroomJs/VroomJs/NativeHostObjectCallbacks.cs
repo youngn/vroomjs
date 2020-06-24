@@ -4,19 +4,19 @@ using System.Runtime.InteropServices;
 
 namespace VroomJs
 {
-    delegate void KeepaliveRemoveDelegate(int context, int slot);
-    delegate JsValue KeepAliveGetPropertyValueDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name);
-    delegate JsValue KeepAliveSetPropertyValueDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
-    delegate JsValue KeepAliveDeletePropertyDelegate(int context, int slot, [MarshalAs(UnmanagedType.LPWStr)] string name);
-    delegate JsValue KeepAliveEnumeratePropertiesDelegate(int context, int slot);
-    delegate JsValue KeepAliveInvokeDelegate(int context, int slot, int argCount, IntPtr args);
-    delegate JsValue KeepAliveValueOfDelegate(int context, int slot);
-    delegate JsValue KeepAliveToStringDelegate(int context, int slot);
+    delegate void KeepaliveRemoveDelegate(int contextId, int objectId);
+    delegate JsValue KeepAliveGetPropertyValueDelegate(int contextId, int objectId, [MarshalAs(UnmanagedType.LPWStr)] string name);
+    delegate JsValue KeepAliveSetPropertyValueDelegate(int contextId, int objectId, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
+    delegate JsValue KeepAliveDeletePropertyDelegate(int contextId, int objectId, [MarshalAs(UnmanagedType.LPWStr)] string name);
+    delegate JsValue KeepAliveEnumeratePropertiesDelegate(int contextId, int objectId);
+    delegate JsValue KeepAliveInvokeDelegate(int contextId, int objectId, int argCount, IntPtr args);
+    delegate JsValue KeepAliveValueOfDelegate(int contextId, int objectId);
+    delegate JsValue KeepAliveToStringDelegate(int contextId, int objectId);
 
     [StructLayout(LayoutKind.Sequential)]
-    struct JsCallbacks
+    struct NativeHostObjectCallbacks
     {
-        public JsCallbacks(
+        public NativeHostObjectCallbacks(
             KeepaliveRemoveDelegate remove,
             KeepAliveGetPropertyValueDelegate getPropertyValue = null,
             KeepAliveSetPropertyValueDelegate setPropertyValue = null,
