@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using VroomJs.VroomJs;
 
 namespace VroomJs
 {
@@ -48,6 +49,9 @@ namespace VroomJs
         {
             if (obj == null)
                 return ForNull();
+
+            if (obj == JsUndefined.Value)
+                return ForEmpty();
 
             var type = obj.GetType();
 
@@ -192,12 +196,10 @@ namespace VroomJs
 
         private object GetValue(JsContext context)
         {
-#if DEBUG_TRACE_API
-			Console.WriteLine("Converting Js value to .net");
-#endif
             switch (Type)
             {
                 case JsValueType.Empty:
+                    // todo: return JsUndefined.Value here instead?
                 case JsValueType.Null:
                     return null;
 

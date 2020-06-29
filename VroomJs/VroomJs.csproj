@@ -38,6 +38,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="VroomJs\JsUndefined.cs" />
     <Compile Include="VroomJs\MissingPropertyHandling.cs" />
     <Compile Include="VroomJs\ClrMethodTemplate.cs" />
     <Compile Include="VroomJs\ClrObjectTemplate.cs" />

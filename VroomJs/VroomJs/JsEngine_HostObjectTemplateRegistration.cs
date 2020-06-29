@@ -72,6 +72,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
+                    // todo: allow convert to JS error
                     return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
@@ -93,6 +94,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
+                    // todo: allow convert to JS error
                     return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
@@ -110,6 +112,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
+                    // todo: allow convert to JS error
                     return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
@@ -128,6 +131,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
+                    // todo: allow convert to JS error
                     return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
@@ -150,6 +154,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
+                    // todo: allow convert to JS error
                     return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
@@ -167,6 +172,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
+                    // todo: allow convert to JS error
                     return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
@@ -184,6 +190,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
+                    // todo: allow convert to JS error
                     return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }

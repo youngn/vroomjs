@@ -15,9 +15,9 @@ namespace VroomJs
 
         public HostObjectTemplate(
             RemoveDelegate remove = null,
-            TryGetPropertyValueDelegate getProperty = null,
-            TrySetPropertyValueDelegate setProperty = null,
-            TryDeletePropertyDelegate deleteProperty = null,
+            TryGetPropertyValueDelegate tryGetProperty = null,
+            TrySetPropertyValueDelegate trySetProperty = null,
+            TryDeletePropertyDelegate tryDeleteProperty = null,
             EnumeratePropertiesDelegate enumerateProperties = null,
             InvokeDelegate invoke = null,
             ValueOfDelegate valueOf = null,
@@ -25,9 +25,9 @@ namespace VroomJs
         )
         {
             RemoveHandler = remove;
-            TryGetPropertyValueHandler = getProperty;
-            TrySetPropertyValueHandler = setProperty;
-            TryDeletePropertyHandler = deleteProperty;
+            TryGetPropertyValueHandler = tryGetProperty;
+            TrySetPropertyValueHandler = trySetProperty;
+            TryDeletePropertyHandler = tryDeleteProperty;
             EnumeratePropertiesHandler = enumerateProperties;
             InvokeHandler = invoke;
             ValueOfHandler = valueOf;
