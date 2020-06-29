@@ -26,9 +26,9 @@ namespace VroomJs
                 // (This is the entire motivation for using a set of delegates as opposed to defining an interface.)
                 _nativeCallbacks = new NativeHostObjectCallbacks(
                     Remove, // always set, because JsContext must be notified
-                    template.GetPropertyValueHandler != null ? GetPropertyValue : (KeepAliveGetPropertyValueDelegate)null,
-                    template.SetPropertyValueHandler != null ? SetPropertyValue : (KeepAliveSetPropertyValueDelegate)null,
-                    template.DeletePropertyHandler != null ? DeleteProperty : (KeepAliveDeletePropertyDelegate)null,
+                    template.TryGetPropertyValueHandler != null ? GetPropertyValue : (KeepAliveGetPropertyValueDelegate)null,
+                    template.TrySetPropertyValueHandler != null ? SetPropertyValue : (KeepAliveSetPropertyValueDelegate)null,
+                    template.TryDeletePropertyHandler != null ? DeleteProperty : (KeepAliveDeletePropertyDelegate)null,
                     template.EnumeratePropertiesHandler != null ? EnumerateProperties : (KeepAliveEnumeratePropertiesDelegate)null,
                     template.InvokeHandler != null ? Invoke : (KeepAliveInvokeDelegate)null,
                     template.ValueOfHandler != null ? ValueOf : (KeepAliveValueOfDelegate)null,
@@ -65,9 +65,10 @@ namespace VroomJs
 
                 try
                 {
-                    var result = _template.GetPropertyValueHandler(context, obj, name);
+                    if (_template.TryGetPropertyValueHandler(context, obj, name, out object value))
+                        return JsValue.ForValue(value, context);
 
-                    return JsValue.ForValue(result, context);
+                    return JsValue.ForEmpty(); // not handled
                 }
                 catch (Exception e)
                 {
@@ -81,11 +82,14 @@ namespace VroomJs
                 var obj = context.GetHostObject(objectId);
                 try
                 {
-                    _template.SetPropertyValueHandler(context, obj, name, value.Extract(context));
+                    if(_template.TrySetPropertyValueHandler(context, obj, name, value.Extract(context)))
+                    {
+                        // The actual value that we set here isn't important, it just has to be
+                        // something other than Empty in order to indicate that we've handled it.
+                        return JsValue.ForNull();
+                    }
 
-                    // The actual value that we set here isn't important, it just has to be
-                    // something other than Empty in order to indicate that we've handled it.
-                    return JsValue.ForNull();
+                    return JsValue.ForEmpty(); // not handled
                 }
                 catch (Exception e)
                 {
@@ -99,9 +103,10 @@ namespace VroomJs
                 var obj = context.GetHostObject(objectId);
                 try
                 {
-                    var result = _template.DeletePropertyHandler(context, obj, name);
+                    if(_template.TryDeletePropertyHandler(context, obj, name, out bool deleted))
+                        return JsValue.ForBoolean(deleted);
 
-                    return JsValue.ForBoolean(result);
+                    return JsValue.ForEmpty(); // not handled
                 }
                 catch (Exception e)
                 {

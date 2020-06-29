@@ -9,14 +9,18 @@ namespace VroomJs
     {
         public ClrObjectTemplate()
         {
-            GetPropertyValueHandler = GetPropertyValue;
-            SetPropertyValueHandler = SetPropertyValue;
-            DeletePropertyHandler = DeleteProperty;
+            TryGetPropertyValueHandler = TryGetPropertyValue;
+            TrySetPropertyValueHandler = TrySetPropertyValue;
+            TryDeletePropertyHandler = TryDeleteProperty;
             EnumeratePropertiesHandler = EnumerateProperties;
             ToStringHandler = ToString;
         }
 
-        private object GetPropertyValue(JsContext context, object obj, string name)
+        public MissingPropertyHandling MissingPropertyHandling { get; set; }
+
+        public bool UseNetToString { get; set; }
+
+        private bool TryGetPropertyValue(JsContext context, object obj, string name, out object value)
         {
             // we need to fall back to the prototype verison we set up because v8 won't call an object as a function, it needs
             // to be from a proper FunctionTemplate.
@@ -24,10 +28,13 @@ namespace VroomJs
             //{
             //    return JsValue.ForEmpty();
             //}
-            //if (!string.IsNullOrEmpty(name) && name.Equals("toString"))
-            //{
-            //    return JsValue.ForEmpty();
-            //}
+
+            // Do not handle the "toString" prop - let it fall through so that the ToStringHandler gets called.
+            if (!string.IsNullOrEmpty(name) && name.Equals("toString"))
+            {
+                value = null;
+                return false;
+            }
 
             // TODO: This is pretty slow: use a cache of generated code to make it faster.
             Type type;
@@ -44,19 +51,21 @@ namespace VroomJs
                 if (!string.IsNullOrEmpty(name))
                 {
                     var upperCamelCase = char.ToUpper(name[0]) + name.Substring(1);
-                    object value;
                     if (TryGetMemberValue(type, obj, upperCamelCase, out value))
                     {
-                        return value;
+                        return true;
                     }
                     if (TryGetMemberValue(type, obj, name, out value))
                     {
-                        return value;
+                        return true;
                     }
                 }
 
-                // Else an error.
-                throw new InvalidOperationException(string.Format("property not found on {0}: {1} ", type, name));
+                if(MissingPropertyHandling == MissingPropertyHandling.Throw)
+                    throw new InvalidOperationException(string.Format("property not found on {0}: {1} ", type, name));
+
+                value = null;
+                return false; //not handled
             }
             catch (TargetInvocationException e)
             {
@@ -68,8 +77,13 @@ namespace VroomJs
             }
         }
 
-        private void SetPropertyValue(JsContext context, object obj, string name, object value)
+        private bool TrySetPropertyValue(JsContext context, object obj, string name, object value)
         {
+            // Do not handle the "toString" prop - let it fall through, to be consistent with
+            // TryGetPropertyValue behaviour.
+            if (!string.IsNullOrEmpty(name) && name.Equals("toString"))
+                return false;
+
             // TODO: This is pretty slow: use a cache of generated code to make it faster.
             Type type;
             if (obj is Type)
@@ -88,15 +102,18 @@ namespace VroomJs
                     var upperCamelCase = char.ToUpper(name[0]) + name.Substring(1);
                     if (TrySetMemberValue(type, obj, upperCamelCase, value))
                     {
-                        return;
+                        return true;
                     }
                     if (TrySetMemberValue(type, obj, name, value))
                     {
-                        return;
+                        return true;
                     }
                 }
 
-                throw new InvalidOperationException(string.Format("property not found on {0}: {1} ", type, name));
+                if (MissingPropertyHandling == MissingPropertyHandling.Throw)
+                    throw new InvalidOperationException(string.Format("property not found on {0}: {1} ", type, name));
+
+                return false; //not handled
             }
             catch (TargetInvocationException e)
             {
@@ -108,10 +125,44 @@ namespace VroomJs
             }
         }
 
-        private bool DeleteProperty(JsContext context, object obj, string name)
+        private bool TryDeleteProperty(JsContext context, object obj, string name, out bool deleted)
         {
-            // Members cannot be deleted
-            return false;
+            // Do not handle the "toString" prop - let it fall through, to be consistent with
+            // TryGetPropertyValue behaviour.
+            if (!string.IsNullOrEmpty(name) && name.Equals("toString"))
+            {
+                deleted = false;
+                return false;
+            }
+
+            Type type;
+            if (obj is Type)
+            {
+                type = (Type)obj;
+            }
+            else
+            {
+                type = obj.GetType();
+            }
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                var upperCamelCase = char.ToUpper(name[0]) + name.Substring(1);
+                if (TryGetMemberValue(type, obj, upperCamelCase, out _)
+                    || TryGetMemberValue(type, obj, name, out _))
+                {
+                    // Members cannot be deleted
+                    deleted = false;
+                    return false;
+                }
+            }
+
+            // The member does not exist.
+            if (MissingPropertyHandling == MissingPropertyHandling.Throw)
+                throw new InvalidOperationException(string.Format("property not found on {0}: {1} ", type, name));
+
+            deleted = false;
+            return false; //not handled
         }
 
         private IEnumerable<string> EnumerateProperties(JsContext context, object obj)
@@ -139,14 +190,10 @@ namespace VroomJs
 
         private string ToString(JsContext context, object obj)
         {
-            Type type = obj.GetType();
-            MethodInfo mi = type.GetMethod("toString") ?? type.GetMethod("ToString");
-            if (mi != null)
-            {
-                object result = mi.Invoke(obj, new object[0]);
-                return result.ToString();
-            }
-            return obj.ToString();
+            if (UseNetToString)
+                return obj.ToString();
+
+            return $"[object {obj.GetType()}]";
         }
 
         private bool TryGetMemberValue(Type type, object obj, string name, out object value)

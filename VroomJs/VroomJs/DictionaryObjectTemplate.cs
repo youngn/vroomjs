@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace VroomJs
 {
@@ -10,104 +9,61 @@ namespace VroomJs
     {
         public DictionaryObjectTemplate()
         {
-            GetPropertyValueHandler = GetPropertyValue;
-            SetPropertyValueHandler = SetPropertyValue;
-            DeletePropertyHandler = DeleteProperty;
+            TryGetPropertyValueHandler = TryGetPropertyValue;
+            TrySetPropertyValueHandler = TrySetPropertyValue;
+            TryDeletePropertyHandler = TryDeleteProperty;
             EnumeratePropertiesHandler = EnumerateProperties;
         }
 
-        private object GetPropertyValue(JsContext context, object obj, string name)
+        public MissingPropertyHandling MissingPropertyHandling { get; set; }
+
+        private bool TryGetPropertyValue(JsContext context, object obj, string name, out object value)
         {
-            // we need to fall back to the prototype verison we set up because v8 won't call an object as a function, it needs
-            // to be from a proper FunctionTemplate.
-            //if (!string.IsNullOrEmpty(name) && name.Equals("valueOf"))
-            //{
-            //    return JsValue.ForEmpty();
-            //}
-            //if (!string.IsNullOrEmpty(name) && name.Equals("toString"))
-            //{
-            //    return JsValue.ForEmpty();
-            //}
-
-            try
+            // todo: can 'name' be null?
+            var upperCamelCase = char.ToUpper(name[0]) + name.Substring(1);
+            if (TryGetMemberValue(obj, upperCamelCase, out value))
             {
-                if (!string.IsNullOrEmpty(name))
-                {
-                    var upperCamelCase = char.ToUpper(name[0]) + name.Substring(1);
-                    object value;
-                    if (TryGetMemberValue(obj, upperCamelCase, out value))
-                    {
-                        return value;
-                    }
-                    if (TryGetMemberValue(obj, name, out value))
-                    {
-                        return value;
-                    }
-                }
+                return true;
+            }
+            if (TryGetMemberValue(obj, name, out value))
+            {
+                return true;
+            }
 
-                // Else an error.
+            if (MissingPropertyHandling == MissingPropertyHandling.Throw)
                 throw new InvalidOperationException(string.Format("key not found in dictionary: {0} ", name));
-            }
-            catch (TargetInvocationException e)
-            {
-                // Client code probably isn't interested in the exception part related to
-                // reflection, so we unwrap it and pass to V8 only the real exception thrown.
-                if (e.InnerException != null)
-                    throw e.InnerException;
-                throw;
-            }
+
+            value = null;
+            return false; // not handled
         }
 
-        private void SetPropertyValue(JsContext context, object obj, string name, object value)
+        private bool TrySetPropertyValue(JsContext context, object obj, string name, object value)
         {
-            try
-            {
-                if (!string.IsNullOrEmpty(name))
-                {
-                    var upperCamelCase = char.ToUpper(name[0]) + name.Substring(1);
-                    if (TrySetMemberValue(obj, upperCamelCase, value))
-                    {
-                        return;
-                    }
-                    if (TrySetMemberValue(obj, name, value))
-                    {
-                        return;
-                    }
-                }
-
-                throw new InvalidOperationException(string.Format("key not found in dictionary: {0} ", name));
-            }
-            catch (TargetInvocationException e)
-            {
-                // Client code probably isn't interested in the exception part related to
-                // reflection, so we unwrap it and pass to V8 only the real exception thrown.
-                if (e.InnerException != null)
-                    throw e.InnerException;
-                throw;
-            }
+            // todo: can 'name' be null?
+            SetMemberValue(obj, name, value);
+            return true;
         }
 
-        private bool DeleteProperty(JsContext context, object obj, string name)
+        private bool TryDeleteProperty(JsContext context, object obj, string name, out bool deleted)
         {
             // TODO: This is pretty slow: use a cache of generated code to make it faster.
-            if (typeof(IDictionary).IsAssignableFrom(obj.GetType()))
+            if (obj is IDictionary dictionary)
             {
-                IDictionary dictionary = (IDictionary)obj;
                 if (dictionary.Contains(name))
                 {
                     dictionary.Remove(name);
+                    deleted = true;
                     return true;
                 }
             }
-            return false;
+
+            throw new InvalidOperationException("Object is not a dictionary.");
         }
 
         private IEnumerable<string> EnumerateProperties(JsContext context, object obj)
         {
-            // TODO: This is pretty slow: use a cache of generated code to make it faster.
-            if (typeof(IDictionary).IsAssignableFrom(obj.GetType()))
+            if (obj is IDictionary dictionary)
             {
-                IDictionary dictionary = (IDictionary)obj;
                 return dictionary.Keys.Cast<string>();
             }
 
@@ -116,9 +72,8 @@ namespace VroomJs
 
         private bool TryGetMemberValue(object obj, string name, out object value)
         {
-            if (obj is IDictionary)
+            if (obj is IDictionary dictionary)
             {
-                IDictionary dictionary = (IDictionary)obj;
                 if (dictionary.Contains(name))
                 {
                     value = dictionary[name];
@@ -134,16 +89,14 @@ namespace VroomJs
             return false;
         }
 
-        private bool TrySetMemberValue(object obj, string name, object value)
+        private void SetMemberValue(object obj, string name, object value)
         {
-            if (obj is IDictionary)
+            if (obj is IDictionary dictionary)
             {
-                IDictionary dictionary = (IDictionary)obj;
                 dictionary[name] = value;
-                return true;
             }
 
-            return false;
+            throw new InvalidOperationException("Object is not a dictionary.");
         }
     }
 }

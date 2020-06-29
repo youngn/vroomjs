@@ -47,6 +47,10 @@ void ClrObjectRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInfo
     String::Value s(isolate, name);
 
     auto r = callbacks_.GetPropertyValue(context_->Id(), id_, *s);
+    if (r.ValueType() == JSVALUE_TYPE_EMPTY) {
+        // empty signifies not handled
+        return;
+    }
     if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -61,6 +65,10 @@ void ClrObjectRef::SetPropertyValue(Local<Name> name, Local<Value> value, const 
     String::Value s(isolate, name);
 
     auto r = callbacks_.SetPropertyValue(context_->Id(), id_, *s, JsValue::ForValue(value, context_));
+    if (r.ValueType() == JSVALUE_TYPE_EMPTY) {
+        // empty signifies not handled
+        return;
+    }
     if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -68,8 +76,8 @@ void ClrObjectRef::SetPropertyValue(Local<Name> name, Local<Value> value, const 
 
     // Set the return value to indicate that the request was handled, 
     // otherwise V8 will set the property on the underlying object.
-    // (Note: doesn't seem to matter *what* value is set here, as the value
-    // itself is ignored. We just need to set *a* value.)
+    // (Note: doesn't seem to matter what value is set here, as the value
+    // itself appears to be ignored. We just need to set a value.)
     info.GetReturnValue().Set(r.Extract(context_));
 }
 
@@ -79,6 +87,10 @@ void ClrObjectRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<B
     String::Value s(isolate, name);
 
     auto r = callbacks_.DeleteProperty(context_->Id(), id_, *s);
+    if (r.ValueType() == JSVALUE_TYPE_EMPTY) {
+        // empty signifies not handled
+        return;
+    }
     if (r.ValueType() == JSVALUE_TYPE_CLRERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
