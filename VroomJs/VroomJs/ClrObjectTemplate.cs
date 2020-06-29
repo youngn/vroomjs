@@ -1,29 +1,33 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace VroomJs
 {
-    public class ClrObjectHandler : IHostObjectHandler
+    public class ClrObjectTemplate : HostObjectTemplate
     {
-        public void Remove(JsContext context, object obj)
+        public ClrObjectTemplate()
         {
+            GetPropertyValueHandler = GetPropertyValue;
+            SetPropertyValueHandler = SetPropertyValue;
+            DeletePropertyHandler = DeleteProperty;
+            EnumeratePropertiesHandler = EnumerateProperties;
+            ToStringHandler = ToString;
         }
 
-        public object GetPropertyValue(JsContext context, object obj, string name)
+        private object GetPropertyValue(JsContext context, object obj, string name)
         {
             // we need to fall back to the prototype verison we set up because v8 won't call an object as a function, it needs
             // to be from a proper FunctionTemplate.
-            if (!string.IsNullOrEmpty(name) && name.Equals("valueOf"))
-            {
-                return JsValue.ForEmpty();
-            }
-            if (!string.IsNullOrEmpty(name) && name.Equals("toString"))
-            {
-                return JsValue.ForEmpty();
-            }
+            //if (!string.IsNullOrEmpty(name) && name.Equals("valueOf"))
+            //{
+            //    return JsValue.ForEmpty();
+            //}
+            //if (!string.IsNullOrEmpty(name) && name.Equals("toString"))
+            //{
+            //    return JsValue.ForEmpty();
+            //}
 
             // TODO: This is pretty slow: use a cache of generated code to make it faster.
             Type type;
@@ -64,7 +68,7 @@ namespace VroomJs
             }
         }
 
-        public void SetPropertyValue(JsContext context, object obj, string name, object value)
+        private void SetPropertyValue(JsContext context, object obj, string name, object value)
         {
             // TODO: This is pretty slow: use a cache of generated code to make it faster.
             Type type;
@@ -104,30 +108,14 @@ namespace VroomJs
             }
         }
 
-        public bool DeleteProperty(JsContext context, object obj, string name)
+        private bool DeleteProperty(JsContext context, object obj, string name)
         {
-            // TODO: This is pretty slow: use a cache of generated code to make it faster.
-            if (typeof(IDictionary).IsAssignableFrom(obj.GetType()))
-            {
-                IDictionary dictionary = (IDictionary)obj;
-                if (dictionary.Contains(name))
-                {
-                    dictionary.Remove(name);
-                    return true;
-                }
-            }
+            // Members cannot be deleted
             return false;
         }
 
-        public IEnumerable<string> EnumerateProperties(JsContext context, object obj)
+        private IEnumerable<string> EnumerateProperties(JsContext context, object obj)
         {
-            // TODO: This is pretty slow: use a cache of generated code to make it faster.
-            if (typeof(IDictionary).IsAssignableFrom(obj.GetType()))
-            {
-                IDictionary dictionary = (IDictionary)obj;
-                return dictionary.Keys.Cast<string>();
-            }
-
             return obj.GetType().GetMembers(
                 BindingFlags.Public |
                 BindingFlags.Instance).Where(m =>
@@ -137,74 +125,19 @@ namespace VroomJs
                 }).Select(z => z.Name);
         }
 
-        public object Call(JsContext context, object obj, object[] args)
-        {
-            // TODO: This is pretty slow: use a cache of generated code to make it faster.
+        //private object ValueOf(JsContext context, object obj)
+        //{
+        //    Type type = obj.GetType();
+        //    MethodInfo mi = type.GetMethod("valueOf") ?? type.GetMethod("ValueOf");
+        //    if (mi != null)
+        //    {
+        //        object result = mi.Invoke(obj, new object[0]);
+        //        return result;
+        //    }
+        //    return obj;
+        //}
 
-            Type constructorType = obj as Type;
-            if (constructorType != null)
-            {
-                return Activator.CreateInstance(constructorType, args);
-            }
-
-            WeakDelegate func = obj as WeakDelegate;
-            if (func == null)
-            {
-                throw new Exception("not a function.");
-            }
-
-            Type type = func.Target != null ? func.Target.GetType() : func.Type;
-            BindingFlags flags = BindingFlags.Public
-                    | BindingFlags.InvokeMethod | BindingFlags.FlattenHierarchy;
-
-            if (func.Target != null)
-            {
-                flags |= BindingFlags.Instance;
-            }
-            else
-            {
-                flags |= BindingFlags.Static;
-            }
-
-            if (obj is BoundWeakDelegate)
-            {
-                flags |= BindingFlags.NonPublic;
-            }
-
-            // need to convert methods from JsFunction's into delegates?
-            if (args.Any(z => z != null && z.GetType() == typeof(JsFunction)))
-            {
-                CheckAndResolveJsFunctions(type, func.MethodName, flags, args);
-            }
-
-            try
-            {
-                object result = type.InvokeMember(func.MethodName, flags, null, func.Target, args);
-                return result;
-            }
-            catch (TargetInvocationException e)
-            {
-                // Client code probably isn't interested in the exception part related to
-                // reflection, so we unwrap it and pass to V8 only the real exception thrown.
-                if (e.InnerException != null)
-                    throw e.InnerException;
-                throw;
-            }
-        }
-
-        public object ValueOf(JsContext context, object obj)
-        {
-            Type type = obj.GetType();
-            MethodInfo mi = type.GetMethod("valueOf") ?? type.GetMethod("ValueOf");
-            if (mi != null)
-            {
-                object result = mi.Invoke(obj, new object[0]);
-                return result;
-            }
-            return obj;
-        }
-
-        public string ToString(JsContext context, object obj)
+        private string ToString(JsContext context, object obj)
         {
             Type type = obj.GetType();
             MethodInfo mi = type.GetMethod("toString") ?? type.GetMethod("ToString");
@@ -216,23 +149,8 @@ namespace VroomJs
             return obj.ToString();
         }
 
-        internal bool TryGetMemberValue(Type type, object obj, string name, out object value)
+        private bool TryGetMemberValue(Type type, object obj, string name, out object value)
         {
-            // dictionaries.
-            if (typeof(IDictionary).IsAssignableFrom(type))
-            {
-                IDictionary dictionary = (IDictionary)obj;
-                if (dictionary.Contains(name))
-                {
-                    value = dictionary[name];
-                }
-                else
-                {
-                    value = null;
-                }
-                return true;
-            }
-
             BindingFlags flags;
             if (type == obj)
             {
@@ -283,16 +201,8 @@ namespace VroomJs
             return false;
         }
 
-        internal bool TrySetMemberValue(Type type, object obj, string name, object value)
+        private bool TrySetMemberValue(Type type, object obj, string name, object value)
         {
-            // dictionaries.
-            if (typeof(IDictionary).IsAssignableFrom(type))
-            {
-                IDictionary dictionary = (IDictionary)obj;
-                dictionary[name] = value;
-                return true;
-            }
-
             BindingFlags flags;
             if (type == obj)
             {
@@ -311,25 +221,6 @@ namespace VroomJs
             }
 
             return false;
-        }
-
-        private static void CheckAndResolveJsFunctions(Type type, string methodName, BindingFlags flags, object[] args)
-        {
-            MethodInfo mi = type.GetMethod(methodName, flags);
-            ParameterInfo[] paramTypes = mi.GetParameters();
-
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (i >= paramTypes.Length)
-                {
-                    continue;
-                }
-                if (args[i] != null && args[i].GetType() == typeof(JsFunction))
-                {
-                    JsFunction function = (JsFunction)args[i];
-                    args[i] = function.MakeDelegate(paramTypes[i].ParameterType);
-                }
-            }
         }
     }
 }

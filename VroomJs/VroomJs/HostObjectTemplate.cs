@@ -24,23 +24,23 @@ namespace VroomJs
             ToStringDelegate toString = null
         )
         {
-            Remove = remove;
-            GetPropertyValue = getProperty;
-            SetPropertyValue = setProperty;
-            DeleteProperty = deleteProperty;
-            EnumerateProperties = enumerateProperties;
-            Invoke = invoke;
-            ValueOf = valueOf;
-            ToString = toString;
+            RemoveHandler = remove;
+            GetPropertyValueHandler = getProperty;
+            SetPropertyValueHandler = setProperty;
+            DeletePropertyHandler = deleteProperty;
+            EnumeratePropertiesHandler = enumerateProperties;
+            InvokeHandler = invoke;
+            ValueOfHandler = valueOf;
+            ToStringHandler = toString;
         }
 
-        public readonly RemoveDelegate Remove;
-        public readonly GetPropertyValueDelegate GetPropertyValue;
-        public readonly SetPropertyValueDelegate SetPropertyValue;
-        public readonly DeletePropertyDelegate DeleteProperty;
-        public readonly EnumeratePropertiesDelegate EnumerateProperties;
-        public readonly InvokeDelegate Invoke;
-        public readonly ValueOfDelegate ValueOf;
-        public new readonly ToStringDelegate ToString;
+        public RemoveDelegate RemoveHandler;
+        public GetPropertyValueDelegate GetPropertyValueHandler;
+        public SetPropertyValueDelegate SetPropertyValueHandler;
+        public DeletePropertyDelegate DeletePropertyHandler;
+        public EnumeratePropertiesDelegate EnumeratePropertiesHandler;
+        public InvokeDelegate InvokeHandler;
+        public ValueOfDelegate ValueOfHandler;
+        public ToStringDelegate ToStringHandler;
     }
 }

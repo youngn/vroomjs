@@ -22,16 +22,18 @@ namespace VroomJs
                 _selector = selector;
                 _template = template;
 
-                // todo: use discretion about which callbacks to supply
+                // Only supply the native callback if the template has a handler defined.
+                // (This is the entire motivation for using a set of delegates as opposed to defining an interface.)
                 _nativeCallbacks = new NativeHostObjectCallbacks(
-                                Remove,
-                                GetPropertyValue,
-                                SetPropertyValue,
-                                DeleteProperty,
-                                EnumerateProperties,
-                                Invoke,
-                                ValueOf,
-                                ToString);
+                    Remove, // always set, because JsContext must be notified
+                    template.GetPropertyValueHandler != null ? GetPropertyValue : (KeepAliveGetPropertyValueDelegate)null,
+                    template.SetPropertyValueHandler != null ? SetPropertyValue : (KeepAliveSetPropertyValueDelegate)null,
+                    template.DeletePropertyHandler != null ? DeleteProperty : (KeepAliveDeletePropertyDelegate)null,
+                    template.EnumeratePropertiesHandler != null ? EnumerateProperties : (KeepAliveEnumeratePropertiesDelegate)null,
+                    template.InvokeHandler != null ? Invoke : (KeepAliveInvokeDelegate)null,
+                    template.ValueOfHandler != null ? ValueOf : (KeepAliveValueOfDelegate)null,
+                    template.ToStringHandler != null ? ToString : (KeepAliveToStringDelegate)null
+                );
 
                 Id = NativeApi.jsengine_add_template(engine.Handle, _nativeCallbacks);
             }
@@ -47,10 +49,10 @@ namespace VroomJs
             {
                 var context = _engine.GetContext(contextId);
 
-                if (_template.Remove != null)
+                if (_template.RemoveHandler != null)
                 {
                     var obj = context.GetHostObject(objectId);
-                    _template.Remove(context, obj);
+                    _template.RemoveHandler(context, obj);
                 }
 
                 context.RemoveHostObject(objectId);
@@ -63,7 +65,7 @@ namespace VroomJs
 
                 try
                 {
-                    var result = _template.GetPropertyValue(context, obj, name);
+                    var result = _template.GetPropertyValueHandler(context, obj, name);
 
                     return JsValue.ForValue(result, context);
                 }
@@ -79,7 +81,7 @@ namespace VroomJs
                 var obj = context.GetHostObject(objectId);
                 try
                 {
-                    _template.SetPropertyValue(context, obj, name, value.Extract(context));
+                    _template.SetPropertyValueHandler(context, obj, name, value.Extract(context));
 
                     // The actual value that we set here isn't important, it just has to be
                     // something other than Empty in order to indicate that we've handled it.
@@ -97,7 +99,7 @@ namespace VroomJs
                 var obj = context.GetHostObject(objectId);
                 try
                 {
-                    var result = _template.DeleteProperty(context, obj, name);
+                    var result = _template.DeletePropertyHandler(context, obj, name);
 
                     return JsValue.ForBoolean(result);
                 }
@@ -113,7 +115,7 @@ namespace VroomJs
                 var obj = context.GetHostObject(objectId);
                 try
                 {
-                    var result = _template.EnumerateProperties(context, obj);
+                    var result = _template.EnumeratePropertiesHandler(context, obj);
 
                     // todo: clean this up
                     var values = result.Select(z => JsValue.ForValue(z, context)).ToArray();
@@ -137,7 +139,7 @@ namespace VroomJs
 
                 try
                 {
-                    var result = _template.Invoke(context, obj, arguments);
+                    var result = _template.InvokeHandler(context, obj, arguments);
 
                     return JsValue.ForValue(result, context);
                 }
@@ -154,7 +156,7 @@ namespace VroomJs
 
                 try
                 {
-                    var result = _template.ValueOf(context, obj);
+                    var result = _template.ValueOfHandler(context, obj);
 
                     return JsValue.ForValue(result, context);
                 }
@@ -171,7 +173,7 @@ namespace VroomJs
 
                 try
                 {
-                    var result = _template.ToString(context, obj);
+                    var result = _template.ToStringHandler(context, obj);
 
                     return JsValue.ForValue(result, context);
                 }

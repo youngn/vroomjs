@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using VroomJs.VroomJs;
 
 namespace VroomJs
 {
@@ -49,18 +50,10 @@ namespace VroomJs
             _templateRegistrations.Add(new HostObjectTemplateRegistration(this, template, selector));
         }
 
-        public void RegisterHostObjectTemplate(IHostObjectHandler handler, Predicate<object> selector = null)
+        public void ConfigureClrTemplates()
         {
-            RegisterHostObjectTemplate(new HostObjectTemplate(
-                handler.Remove,
-                handler.GetPropertyValue,
-                handler.SetPropertyValue,
-                handler.DeleteProperty,
-                handler.EnumerateProperties,
-                handler.Call,
-                handler.ValueOf,
-                handler.ToString
-            ), selector);
+            RegisterHostObjectTemplate(new ClrMethodTemplate(), obj => obj is WeakDelegate);
+            RegisterHostObjectTemplate(new ClrObjectTemplate());
         }
 
         public JsContext CreateContext()
