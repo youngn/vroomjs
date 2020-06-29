@@ -81,7 +81,9 @@ namespace VroomJs
                 {
                     _template.SetPropertyValue(context, obj, name, value.Extract(context));
 
-                    return JsValue.ForEmpty();
+                    // The actual value that we set here isn't important, it just has to be
+                    // something other than Empty in order to indicate that we've handled it.
+                    return JsValue.ForNull();
                 }
                 catch (Exception e)
                 {

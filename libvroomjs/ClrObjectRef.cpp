@@ -66,8 +66,11 @@ void ClrObjectRef::SetPropertyValue(Local<Name> name, Local<Value> value, const 
         return;
     }
 
-    // Extract the value so that clean-up is performed
-    r.Extract(context_);
+    // Set the return value to indicate that the request was handled, 
+    // otherwise V8 will set the property on the underlying object.
+    // (Note: doesn't seem to matter *what* value is set here, as the value
+    // itself is ignored. We just need to set *a* value.)
+    info.GetReturnValue().Set(r.Extract(context_));
 }
 
 void ClrObjectRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<Boolean>& info)
