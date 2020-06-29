@@ -103,7 +103,7 @@ namespace VroomJs
             var templateId = context.Engine.SelectTemplate(obj);
             if(templateId >= 0)
             {
-                return ForClrObject(context.AddHostObject(obj), templateId);
+                return ForHostObject(context.AddHostObject(obj), templateId);
             }
 
             throw new JsInteropException($"Object of type {type} cannot be marshaled to JavaScript.");
@@ -177,13 +177,13 @@ namespace VroomJs
             Debug.Assert(value != null);
             return new JsValue { Type = JsValueType.JsObject, Ptr = value.Handle };
         }
-        public static JsValue ForClrError(int id)
+        public static JsValue ForHostError(int id)
         {
-            return new JsValue { Type = JsValueType.ClrError, I32 = id, TemplateId = 0 /* TODO: select error template ID */ };
+            return new JsValue { Type = JsValueType.HostError, I32 = id, TemplateId = 0 /* TODO: select error template ID */ };
         }
-        public static JsValue ForClrObject(int id, int templateId)
+        public static JsValue ForHostObject(int id, int templateId)
         {
-            return new JsValue { Type = JsValueType.ClrObject, I32 = id, TemplateId = templateId };
+            return new JsValue { Type = JsValueType.HostObject, I32 = id, TemplateId = templateId };
         }
 
         #endregion
@@ -225,12 +225,12 @@ namespace VroomJs
                 case JsValueType.UnknownError:
                     return new JsInteropException("unknown error without reason"); // todo: improve this
 
-                case JsValueType.ClrObject:
-                    return ClrObjectValue(context);
+                case JsValueType.HostObject:
+                    return HostObjectValue(context);
 
-                case JsValueType.ClrError:
+                case JsValueType.HostError:
                     // todo: do we really want to wrapping in JsException? maybe better to just rethrow raw?
-                    var inner = ClrObjectValue(context) as Exception;
+                    var inner = HostObjectValue(context) as Exception;
                     var msg = inner?.Message ?? "Unknown error"; // todo: make this better
                     return new JsException(msg, inner);
 
@@ -307,9 +307,9 @@ namespace VroomJs
             Debug.Assert(Type == JsValueType.JsObject);
             return new JsObject(context, Ptr);
         }
-        private object ClrObjectValue(JsContext context)
+        private object HostObjectValue(JsContext context)
         {
-            Debug.Assert(Type == JsValueType.ClrObject || Type == JsValueType.ClrError);
+            Debug.Assert(Type == JsValueType.HostObject || Type == JsValueType.HostError);
             return context.GetHostObject(I32);
         }
 

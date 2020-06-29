@@ -4,12 +4,12 @@
 #include <unordered_map>
 
 class JsContext;
-class ClrObjectRef;
+class HostObjectRef;
 
-class ClrObjectManager
+class HostObjectManager
 {
 public:
-    ClrObjectManager(JsContext* context)
+    HostObjectManager(JsContext* context)
         :context_(context)
     {
     }
@@ -20,7 +20,7 @@ private:
 
     struct WeakCallbackArgs
     {
-        ClrObjectManager* owner;
+        HostObjectManager* owner;
         int id;
     };
 
@@ -29,10 +29,10 @@ private:
         Entry() {}
 
         Entry(UniquePersistent<Object>&& objectHandle,
-            std::unique_ptr<ClrObjectRef>&& clrObjectRef,
+            std::unique_ptr<HostObjectRef>&& hostObjectRef,
             std::unique_ptr<WeakCallbackArgs>&& weakCallbackArgs) :
             objectHandle(std::move(objectHandle)),
-            clrObjectRef(std::move(clrObjectRef)),
+            hostObjectRef(std::move(hostObjectRef)),
             weakCallbackArgs(std::move(weakCallbackArgs))
         {
         }
@@ -44,7 +44,7 @@ private:
         // only moving
         Entry(Entry&& that) noexcept
             : objectHandle(std::move(that.objectHandle)),
-            clrObjectRef(std::move(that.clrObjectRef)),
+            hostObjectRef(std::move(that.hostObjectRef)),
             weakCallbackArgs(std::move(that.weakCallbackArgs))
         {
         }
@@ -54,7 +54,7 @@ private:
             if (this != &that)
             {
                 objectHandle = std::move(that.objectHandle);
-                clrObjectRef = std::move(that.clrObjectRef);
+                hostObjectRef = std::move(that.hostObjectRef);
                 weakCallbackArgs = std::move(that.weakCallbackArgs);
             }
             return *this;
@@ -64,9 +64,9 @@ private:
         // Reset()s upon destruction.
         UniquePersistent<Object> objectHandle;
 
-        // The ClrObjectRef is only stored here so that it is deterministically deleted
+        // The HostObjectRef is only stored here so that it is deterministically deleted
         // regardless of whether the callback is ever invoked.
-        std::unique_ptr<ClrObjectRef> clrObjectRef;
+        std::unique_ptr<HostObjectRef> hostObjectRef;
 
         // The WeakCallbackArgs is only stored here so that it is deterministically deleted
         // regardless of whether the callback is ever invoked.
@@ -81,7 +81,7 @@ private:
 
     // Map of (object ID -> Entry)
     // Note that UniquePersistent automatically calls Reset() when destructed,
-    // so clean-up of this entire thing is automatic: Destruction of ClrObjectManager
+    // so clean-up of this entire thing is automatic: Destruction of HostObjectManager
     // destructs proxyMap_, which in turn destructs each Entry, destructing the UniquePersistent handle,
     // thus removing the reference to the V8 Object.
     std::unordered_map<int, Entry> proxyMap_;

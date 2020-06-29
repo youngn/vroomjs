@@ -104,7 +104,7 @@ extern "C"
 		std::wcout << "Total allocated Js engines " << js_mem_debug_engine_count << std::endl;
 		std::wcout << "Total allocated Js contexts " << js_mem_debug_context_count << std::endl;
 		std::wcout << "Total allocated Js scripts " << js_mem_debug_script_count << std::endl;
-		std::wcout << "Total allocated CLR Object Refs " << js_mem_debug_clrobjectref_count << std::endl;
+		std::wcout << "Total allocated Host Object Refs " << js_mem_debug_hostobjectref_count << std::endl;
 	}
 
 	EXPORT void CALLINGCONVENTION jsengine_dispose(JsEngine* engine)

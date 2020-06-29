@@ -5,7 +5,7 @@
 class JsEngine;
 class JsScript;
 class JsValue;
-class ClrObjectManager;
+class HostObjectManager;
 
 class JsContext
 {
@@ -36,8 +36,8 @@ public:
         return Local<Context>::New(isolate_, *context_);
     }
 
-    ClrObjectManager* ClrObjectMgr() {
-        return clrObjectManager_;
+    HostObjectManager* HostObjectMgr() {
+        return hostObjectManager_;
     }
 
     ~JsContext() {
@@ -49,6 +49,6 @@ private:
     JsEngine* engine_;
     v8::Isolate* isolate_;
     Persistent<Context>* context_;
-    ClrObjectManager* clrObjectManager_;
+    ::HostObjectManager* hostObjectManager_;
 };
 

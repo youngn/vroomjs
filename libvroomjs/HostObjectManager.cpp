@@ -1,12 +1,12 @@
-#include "ClrObjectManager.h"
-#include "ClrObjectRef.h"
+#include "HostObjectManager.h"
+#include "HostObjectRef.h"
+#include "HostObjectTemplate.h"
 #include "JsContext.h"
 #include "JsEngine.h"
-#include "ClrObjectTemplate.h"
 
 #include <thread>
 
-void ClrObjectManager::WeakHandleCallback(const WeakCallbackInfo<ClrObjectManager::WeakCallbackArgs>& info)
+void HostObjectManager::WeakHandleCallback(const WeakCallbackInfo<HostObjectManager::WeakCallbackArgs>& info)
 {
 #ifdef DEBUG_TRACE_API
     std::cout << "WeakHandleCallback" << std::endl;
@@ -18,7 +18,7 @@ void ClrObjectManager::WeakHandleCallback(const WeakCallbackInfo<ClrObjectManage
     args->owner->RemoveEntry(args->id);
 }
 
-Local<Object> ClrObjectManager::GetProxy(int id, int templateId)
+Local<Object> HostObjectManager::GetProxy(int id, int templateId)
 {
     std::cout << "GetProxy " << id << " " << std::this_thread::get_id() << std::endl;
 
@@ -31,21 +31,21 @@ Local<Object> ClrObjectManager::GetProxy(int id, int templateId)
 
     auto objectTemplate = context_->Engine()->Template(templateId);
 
-    auto ref = new ClrObjectRef(context_, id, objectTemplate->Callbacks());
+    auto ref = new HostObjectRef(context_, id, objectTemplate->Callbacks());
     auto obj = objectTemplate->NewInstance(context_->Ctx(), ref);
      
     auto args = new WeakCallbackArgs { this, id };
     auto handle = UniquePersistent<Object>(isolate, obj);
-    handle.SetWeak(args, ClrObjectManager::WeakHandleCallback, v8::WeakCallbackType::kParameter);
+    handle.SetWeak(args, HostObjectManager::WeakHandleCallback, v8::WeakCallbackType::kParameter);
 
-    // The entry in proxyMap_ will own the UniquePersistent, ClrObjectRef and the WeakCallbackArgs,
+    // The entry in proxyMap_ will own the UniquePersistent, HostObjectRef and the WeakCallbackArgs,
     // and will be responsible for releasing them.
-    proxyMap_[id] = Entry(std::move(handle), std::unique_ptr<ClrObjectRef>(ref), std::unique_ptr<WeakCallbackArgs>(args));
+    proxyMap_[id] = Entry(std::move(handle), std::unique_ptr<HostObjectRef>(ref), std::unique_ptr<WeakCallbackArgs>(args));
 
     return obj;
 }
 
-void ClrObjectManager::RemoveEntry(int id)
+void HostObjectManager::RemoveEntry(int id)
 {
     proxyMap_.erase(id);
 }

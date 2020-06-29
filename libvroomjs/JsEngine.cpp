@@ -4,8 +4,8 @@
 
 #include "vroomjs.h"
 #include "JsEngine.h"
-#include "ClrObjectTemplate.h"
 #include "JsContext.h"
+#include "HostObjectTemplate.h"
 
 
 long js_mem_debug_engine_count;
@@ -111,7 +111,7 @@ JsContext* JsEngine::NewContext(int32_t id)
 
 int JsEngine::AddTemplate(jscallbacks callbacks)
 {
-    templates_.push_back(new ClrObjectTemplate(isolate_, callbacks));
+    templates_.push_back(new HostObjectTemplate(isolate_, callbacks));
     return templates_.size() - 1; // template id
 }
 

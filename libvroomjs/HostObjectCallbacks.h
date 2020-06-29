@@ -4,13 +4,13 @@
 #include "vroomjs.h"
 #include "JsValue.h"
 
-class ClrObjectCallbacks
+class HostObjectCallbacks
 {
 public:
-    ClrObjectCallbacks(jscallbacks callbacks)
+    HostObjectCallbacks(jscallbacks callbacks)
         :callbacks(callbacks)
     {
-        // The 'remove' callback is not optional, because we need to inform the CLR side
+        // The 'remove' callback is not optional, because we need to inform the host side
         // when a V8 object is GC'd.
         assert(callbacks.remove != nullptr);
     }

@@ -72,7 +72,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
-                    return JsValue.ForClrError(context.AddHostObject(e));
+                    return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
 
@@ -93,7 +93,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
-                    return JsValue.ForClrError(context.AddHostObject(e));
+                    return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
 
@@ -110,7 +110,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
-                    return JsValue.ForClrError(context.AddHostObject(e));
+                    return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
 
@@ -128,7 +128,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
-                    return JsValue.ForClrError(context.AddHostObject(e));
+                    return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
 
@@ -150,7 +150,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
-                    return JsValue.ForClrError(context.AddHostObject(e));
+                    return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
 
@@ -167,7 +167,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
-                    return JsValue.ForClrError(context.AddHostObject(e));
+                    return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
 
@@ -184,7 +184,7 @@ namespace VroomJs
                 }
                 catch (Exception e)
                 {
-                    return JsValue.ForClrError(context.AddHostObject(e));
+                    return JsValue.ForHostError(context.AddHostObject(e));
                 }
             }
         }

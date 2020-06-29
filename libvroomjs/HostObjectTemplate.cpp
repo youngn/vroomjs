@@ -1,15 +1,15 @@
-#include "ClrObjectTemplate.h"
-#include "ClrObjectRef.h"
+#include "HostObjectTemplate.h"
+#include "HostObjectRef.h"
 
-ClrObjectTemplate::ClrObjectTemplate(Isolate* isolate, jscallbacks callbacks)
+HostObjectTemplate::HostObjectTemplate(Isolate* isolate, jscallbacks callbacks)
     :callbacks_(callbacks), isolate_(isolate)
 {
     Locker locker(isolate);
     HandleScope scope(isolate);
 
-    // Setup the template we'll use for all CLR object references.
+    // Setup the template we'll use for all host object references.
     auto t = ObjectTemplate::New(isolate);
-    t->SetInternalFieldCount(1); // stores ptr to ClrObjectRef
+    t->SetInternalFieldCount(1); // stores ptr to HostObjectRef
     t->SetHandler(
         NamedPropertyHandlerConfiguration(
             callbacks.get_property_value != nullptr ? GetPropertyValueCallback : nullptr,
@@ -25,7 +25,7 @@ ClrObjectTemplate::ClrObjectTemplate(Isolate* isolate, jscallbacks callbacks)
     }
 
     // TODO: the "valueOf" callback was originally set on the prototype i.e. :
-    // fo->PrototypeTemplate()->Set(isolate_, "valueOf", FunctionTemplate::New(isolate_, ClrObjectRef::ValueOfCallback));
+    // fo->PrototypeTemplate()->Set(isolate_, "valueOf", FunctionTemplate::New(isolate_, HostObjectRef::ValueOfCallback));
     // Is there some advantage to doing that? AFAICT, this achieves the same result.
     // Note that interceptors get priority over accessors, so these methods can be provided by the GetPropertyValue callback
     // if desired. The reason for having dedicated callbacks is to guarantee a sane implementation of these
@@ -40,7 +40,7 @@ ClrObjectTemplate::ClrObjectTemplate(Isolate* isolate, jscallbacks callbacks)
     template_ = UniquePersistent<ObjectTemplate>(isolate, t);
 }
 
-Local<Object> ClrObjectTemplate::NewInstance(Local<Context> ctx, ClrObjectRef* ref) const
+Local<Object> HostObjectTemplate::NewInstance(Local<Context> ctx, HostObjectRef* ref) const
 {
     auto t = Local<ObjectTemplate>::New(isolate_, template_);
     auto obj = t->NewInstance(ctx).ToLocalChecked();
@@ -48,73 +48,73 @@ Local<Object> ClrObjectTemplate::NewInstance(Local<Context> ctx, ClrObjectRef* r
     return obj;
 }
 
-ClrObjectRef* ClrObjectTemplate::GetClrObjectRef(Local<Object> obj)
+HostObjectRef* HostObjectTemplate::GetHostObjectRef(Local<Object> obj)
 {
     auto ext = Local<External>::Cast(obj->GetInternalField(0));
-    return (ClrObjectRef*)ext->Value();
+    return (HostObjectRef*)ext->Value();
 }
 
-void ClrObjectTemplate::GetPropertyValueCallback(Local<Name> name, const PropertyCallbackInfo<Value>& info)
+void HostObjectTemplate::GetPropertyValueCallback(Local<Name> name, const PropertyCallbackInfo<Value>& info)
 {
 #ifdef DEBUG_TRACE_API
     std::cout << "GetPropertyValueCallback" << std::endl;
 #endif
 
-    GetClrObjectRef(info.Holder())->GetPropertyValue(name, info);
+    GetHostObjectRef(info.Holder())->GetPropertyValue(name, info);
 }
 
-void ClrObjectTemplate::SetPropertyValueCallback(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value>& info)
+void HostObjectTemplate::SetPropertyValueCallback(Local<Name> name, Local<Value> value, const PropertyCallbackInfo<Value>& info)
 {
 #ifdef DEBUG_TRACE_API
     std::cout << "SetPropertyValueCallback" << std::endl;
 #endif
 
-    GetClrObjectRef(info.Holder())->SetPropertyValue(name, value, info);
+    GetHostObjectRef(info.Holder())->SetPropertyValue(name, value, info);
 }
 
-void ClrObjectTemplate::DeletePropertyCallback(Local<Name> name, const PropertyCallbackInfo<Boolean>& info)
+void HostObjectTemplate::DeletePropertyCallback(Local<Name> name, const PropertyCallbackInfo<Boolean>& info)
 {
 #ifdef DEBUG_TRACE_API
     std::cout << "DeletePropertyCallback" << std::endl;
 #endif
 
-    GetClrObjectRef(info.Holder())->DeleteProperty(name, info);
+    GetHostObjectRef(info.Holder())->DeleteProperty(name, info);
 }
 
-void ClrObjectTemplate::EnumeratePropertiesCallback(const PropertyCallbackInfo<Array>& info)
+void HostObjectTemplate::EnumeratePropertiesCallback(const PropertyCallbackInfo<Array>& info)
 {
 #ifdef DEBUG_TRACE_API
     std::cout << "EnumeratePropertiesCallback" << std::endl;
 #endif
 
-    GetClrObjectRef(info.Holder())->EnumerateProperties(info);
+    GetHostObjectRef(info.Holder())->EnumerateProperties(info);
 }
 
-void ClrObjectTemplate::InvokeCallback(const FunctionCallbackInfo<Value>& info)
+void HostObjectTemplate::InvokeCallback(const FunctionCallbackInfo<Value>& info)
 {
 #ifdef DEBUG_TRACE_API
     std::cout << "InvokeCallback" << std::endl;
 #endif
 
-    GetClrObjectRef(info.Holder())->Invoke(info);
+    GetHostObjectRef(info.Holder())->Invoke(info);
 }
 
-void ClrObjectTemplate::ValueOfCallback(const FunctionCallbackInfo<Value>& info)
+void HostObjectTemplate::ValueOfCallback(const FunctionCallbackInfo<Value>& info)
 {
 #ifdef DEBUG_TRACE_API
     std::cout << "ValueOfCallback" << std::endl;
 #endif
 
-    GetClrObjectRef(info.Holder())->ValueOf(info);
+    GetHostObjectRef(info.Holder())->ValueOf(info);
 }
 
-void ClrObjectTemplate::ToStringCallback(const FunctionCallbackInfo<Value>& info)
+void HostObjectTemplate::ToStringCallback(const FunctionCallbackInfo<Value>& info)
 {
 #ifdef DEBUG_TRACE_API
     std::cout << "ToStringCallback" << std::endl;
 #endif
 
-    GetClrObjectRef(info.Holder())->ToString(info);
+    GetHostObjectRef(info.Holder())->ToString(info);
 }
 
 

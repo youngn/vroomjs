@@ -46,8 +46,8 @@ using namespace v8;
 #define JSVALUE_TYPE_STRING          5
 #define JSVALUE_TYPE_DATE            6
 #define JSVALUE_TYPE_INDEX           7
-#define JSVALUE_TYPE_CLROBJECT      12
-#define JSVALUE_TYPE_CLRERROR       13
+#define JSVALUE_TYPE_HOSTOBJECT     12
+#define JSVALUE_TYPE_HOSTERROR      13
 #define JSVALUE_TYPE_JSOBJECT       14
 #define JSVALUE_TYPE_JSERROR        16
 #define JSVALUE_TYPE_JSFUNCTION     17
@@ -75,7 +75,7 @@ extern int32_t js_object_marshal_type;
 
 extern long js_mem_debug_engine_count;
 extern long js_mem_debug_context_count;
-extern long js_mem_debug_clrobjectref_count;
+extern long js_mem_debug_hostobjectref_count;
 extern long js_mem_debug_script_count;
 
 extern "C" 
@@ -100,7 +100,7 @@ extern "C"
         union
         {
             int32_t     length;     // length of str
-            int32_t     templateId; // template ID for CLR object/error
+            int32_t     templateId; // template ID for host object/error
         };
 	};
 	
@@ -120,7 +120,7 @@ extern "C"
 extern "C" 
 {
     // We don't have a keepalive_add_f because that is managed on the CLR side.
-    // Its definition would be "int (*keepalive_add_f) (ClrObjectRef obj)".
+    // Its definition would be "int (*keepalive_add_f) (HostObjectRef obj)".
     
     typedef void (CALLINGCONVENTION* keepalive_remove_f) (int32_t context, int32_t id);
     typedef jsvalue (CALLINGCONVENTION* keepalive_get_property_value_f) (int32_t context, int32_t id, uint16_t* name);

@@ -3,20 +3,20 @@
 #include "vroomjs.h"
 
 class JsContext;
-class ClrObjectCallbacks;
+class HostObjectCallbacks;
 
-class ClrObjectRef
+class HostObjectRef
 {
 public:
-    ClrObjectRef(JsContext* context, int32_t id, const ClrObjectCallbacks& callbacks) :
+    HostObjectRef(JsContext* context, int32_t id, const HostObjectCallbacks& callbacks) :
         context_(context),
         id_(id),
         callbacks_(callbacks)
     {
-        INCREMENT(js_mem_debug_clrobjectref_count);
+        INCREMENT(js_mem_debug_hostobjectref_count);
     }
 
-    ~ClrObjectRef();
+    ~HostObjectRef();
 
     int32_t Id() { return id_; }
 
@@ -31,5 +31,5 @@ public:
 private:
     JsContext* context_;
     int32_t id_;
-    const ClrObjectCallbacks& callbacks_;
+    const HostObjectCallbacks& callbacks_;
 };

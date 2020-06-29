@@ -5,7 +5,7 @@
 #include "vroomjs.h"
 
 class JsContext;
-class ClrObjectTemplate;
+class HostObjectTemplate;
 
 // JsEngine is a single isolated v8 interpreter and is the referenced as an IntPtr
 // by the JsEngine on the CLR side.
@@ -28,7 +28,7 @@ public:
 
     int AddTemplate(jscallbacks callbacks);
 
-    const ClrObjectTemplate* Template(int i) {
+    const HostObjectTemplate* Template(int i) {
         assert(i >= 0 && i < templates_.size());
         return templates_.at(i);
     }
@@ -43,8 +43,8 @@ private:
     v8::Isolate* isolate_;
     ArrayBuffer::Allocator* allocator_;
 
-    // We use an array of pointers here to guarantee that each ClrObjectTemplate
+    // We use an array of pointers here to guarantee that each HostObjectTemplate
     // has a stable memory location so that we can maintain long-lived references to it.
-    std::vector<ClrObjectTemplate*> templates_;
+    std::vector<HostObjectTemplate*> templates_;
 };
 

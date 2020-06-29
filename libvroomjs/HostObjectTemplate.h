@@ -1,18 +1,18 @@
 #pragma once
 
 #include "vroomjs.h"
-#include "ClrObjectCallbacks.h"
+#include "HostObjectCallbacks.h"
 
-class ClrObjectRef;
+class HostObjectRef;
 
-class ClrObjectTemplate
+class HostObjectTemplate
 {
 public:
-    ClrObjectTemplate(Isolate* isolate, jscallbacks callbacks);
+    HostObjectTemplate(Isolate* isolate, jscallbacks callbacks);
 
-    Local<Object> NewInstance(Local<Context> ctx, ClrObjectRef* ref) const;
+    Local<Object> NewInstance(Local<Context> ctx, HostObjectRef* ref) const;
 
-    const ClrObjectCallbacks& Callbacks() const {
+    const HostObjectCallbacks& Callbacks() const {
         return callbacks_;
     }
 
@@ -25,10 +25,10 @@ private:
     static void ValueOfCallback(const FunctionCallbackInfo<Value>& info);
     static void ToStringCallback(const FunctionCallbackInfo<Value>& info);
 
-    static ClrObjectRef* GetClrObjectRef(Local<Object> obj);
+    static HostObjectRef* GetHostObjectRef(Local<Object> obj);
 
     Isolate* isolate_;
-    ClrObjectCallbacks callbacks_;
+    HostObjectCallbacks callbacks_;
     UniquePersistent<ObjectTemplate> template_;
 };
 

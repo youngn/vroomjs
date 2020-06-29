@@ -4,8 +4,8 @@
 #include "JsValue.h"
 #include "JsContext.h"
 #include "JsErrorInfo.h"
-#include "ClrObjectRef.h"
-#include "ClrObjectManager.h"
+#include "HostObjectRef.h"
+#include "HostObjectManager.h"
 
 
 JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
@@ -59,8 +59,8 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
         // TODO: why is it that the proxy object is a function? It seems like we shouldn't need this 'if' here
         // (unless the object being proxied is a CLR delegate, in which case it could make sense)
         if (function->InternalFieldCount() > 0) {
-            auto ref = (ClrObjectRef*)Local<External>::Cast(function->GetInternalField(0))->Value();
-            return ForClrObject(ref->Id());
+            auto ref = (HostObjectRef*)Local<External>::Cast(function->GetInternalField(0))->Value();
+            return ForHostObject(ref->Id());
         }
         else {
             return ForJsFunction(new Persistent<Function>(isolate, function));
@@ -70,8 +70,8 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
     if (value->IsObject()) {
         auto obj = Local<Object>::Cast(value);
         if (obj->InternalFieldCount() > 0) {
-            auto ref = (ClrObjectRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
-            return ForClrObject(ref->Id());
+            auto ref = (HostObjectRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
+            return ForHostObject(ref->Id());
         }
         else {
             return ForJsObject(new Persistent<Object>(isolate, obj));
@@ -125,12 +125,12 @@ Local<Value> JsValue::GetValue(JsContext* context)
         return Local<Function>::New(isolate, *pObj);
     }
 
-    if (ValueType() == JSVALUE_TYPE_CLROBJECT || ValueType() == JSVALUE_TYPE_CLRERROR) {
-        // This is an ID to a CLR object that lives inside the JsContext keep-alive
+    if (ValueType() == JSVALUE_TYPE_HOSTOBJECT || ValueType() == JSVALUE_TYPE_HOSTERROR) {
+        // This is an ID to a Host object that lives inside the JsContext keep-alive
         // cache. We just wrap it and the pointer to the engine inside an External. A
-        // CLR error is still a CLR object so it is wrapped exactly as a normal
-        // CLR object.
-        return context->ClrObjectMgr()->GetProxy(ClrObjectIdValue(), ClrObjectTemplateIdValue());
+        // Host error is still a Host object so it is wrapped exactly as a normal
+        // Host object.
+        return context->HostObjectMgr()->GetProxy(HostObjectIdValue(), HostObjectTemplateIdValue());
     }
 
     // todo: throw?
@@ -149,11 +149,11 @@ JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)
     auto exception = trycatch.Exception();
     assert(!exception.IsEmpty());
 
-    // Is this a CLR exception?
+    // Is this a host exception?
     Local<Object> obj;
     if (exception->ToObject(ctx).ToLocal(&obj) && obj->InternalFieldCount() == 1) {
-        auto ref = (ClrObjectRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
-        return JsValue::ForClrError(ref->Id());
+        auto ref = (HostObjectRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
+        return JsValue::ForHostError(ref->Id());
     }
 
     auto errorInfo = JsErrorInfo::Capture(trycatch, context);

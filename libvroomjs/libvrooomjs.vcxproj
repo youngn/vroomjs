@@ -258,27 +258,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bridge.cpp" />
-    <ClCompile Include="ClrObjectManager.cpp" />
-    <ClCompile Include="ClrObjectTemplate.cpp" />
+    <ClCompile Include="HostObjectManager.cpp" />
+    <ClCompile Include="HostObjectTemplate.cpp" />
     <ClCompile Include="JsContext.cpp" />
     <ClCompile Include="JsEngine.cpp" />
     <ClCompile Include="JsErrorInfo.cpp" />
     <ClCompile Include="JsScript.cpp" />
     <ClCompile Include="JsString.cpp" />
     <ClCompile Include="JsValue.cpp" />
-    <ClCompile Include="ClrObjectRef.cpp" />
+    <ClCompile Include="HostObjectRef.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClrObjectCallbacks.h" />
-    <ClInclude Include="ClrObjectManager.h" />
-    <ClInclude Include="ClrObjectTemplate.h" />
+    <ClInclude Include="HostObjectCallbacks.h" />
+    <ClInclude Include="HostObjectManager.h" />
+    <ClInclude Include="HostObjectTemplate.h" />
     <ClInclude Include="JsContext.h" />
     <ClInclude Include="JsEngine.h" />
     <ClInclude Include="JsErrorInfo.h" />
     <ClInclude Include="JsScript.h" />
     <ClInclude Include="JsString.h" />
     <ClInclude Include="JsValue.h" />
-    <ClInclude Include="ClrObjectRef.h" />
+    <ClInclude Include="HostObjectRef.h" />
     <ClInclude Include="vroomjs.h" />
   </ItemGroup>
   <ItemGroup>

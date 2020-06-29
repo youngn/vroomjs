@@ -64,11 +64,11 @@ public:
 		assert(value != nullptr);
 		return JsValue(JSVALUE_TYPE_JSERROR, 0, (void*)value);
 	}
-	static JsValue ForClrError(int32_t id) {
-		return JsValue(JSVALUE_TYPE_CLRERROR, 0, id);
+	static JsValue ForHostError(int32_t id) {
+		return JsValue(JSVALUE_TYPE_HOSTERROR, 0, id);
 	}
-	static JsValue ForClrObject(int32_t id) {
-		return JsValue(JSVALUE_TYPE_CLROBJECT, 0, id);
+	static JsValue ForHostObject(int32_t id) {
+		return JsValue(JSVALUE_TYPE_HOSTOBJECT, 0, id);
 	}
 
 	int32_t ValueType() const {
@@ -115,12 +115,12 @@ public:
 		assert(v.type == JSVALUE_TYPE_JSSTRING);
 		return (Persistent<String>*)v.value.ptr;
 	}
-	int32_t ClrObjectIdValue() const {
-		assert(v.type == JSVALUE_TYPE_CLROBJECT || v.type == JSVALUE_TYPE_CLRERROR);
+	int32_t HostObjectIdValue() const {
+		assert(v.type == JSVALUE_TYPE_HOSTOBJECT || v.type == JSVALUE_TYPE_HOSTERROR);
 		return v.value.i32;
 	}
-	int32_t ClrObjectTemplateIdValue() const {
-		assert(v.type == JSVALUE_TYPE_CLROBJECT || v.type == JSVALUE_TYPE_CLRERROR);
+	int32_t HostObjectTemplateIdValue() const {
+		assert(v.type == JSVALUE_TYPE_HOSTOBJECT || v.type == JSVALUE_TYPE_HOSTERROR);
 		return v.templateId;
 	}
 

@@ -32,8 +32,8 @@
 #include "JsEngine.h"
 #include "JsValue.h"
 #include "JsScript.h"
-#include "ClrObjectRef.h"
-#include "ClrObjectManager.h"
+#include "HostObjectRef.h"
+#include "HostObjectManager.h"
 
 
 using namespace v8;
@@ -52,7 +52,7 @@ JsContext::JsContext(int32_t id, JsEngine* engine)
 
     context_ = new Persistent<Context>(isolate_, Context::New(isolate_));
 
-    clrObjectManager_ = new ClrObjectManager(this);
+    hostObjectManager_ = new HostObjectManager(this);
 
     // Do this last, in case anything above fails
     INCREMENT(js_mem_debug_context_count);
@@ -73,8 +73,8 @@ void JsContext::Dispose()
     delete context_;
     context_ = nullptr;
 
-    delete clrObjectManager_;
-    clrObjectManager_ = nullptr;
+    delete hostObjectManager_;
+    hostObjectManager_ = nullptr;
 
     engine_ = nullptr;
     isolate_ = nullptr;
