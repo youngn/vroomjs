@@ -2,16 +2,21 @@
 
 namespace VroomJs
 {
+    public interface IHostObjectCallbackContext
+    {
+
+    }
+
     public class HostObjectTemplate
     {
-        public delegate void RemoveDelegate(JsContext context, object obj);
-        public delegate bool TryGetPropertyValueDelegate(JsContext context, object obj, string name, out object value);
-        public delegate bool TrySetPropertyValueDelegate(JsContext context, object obj, string name, object value);
-        public delegate bool TryDeletePropertyDelegate(JsContext context, object obj, string name, out bool deleted);
-        public delegate IEnumerable<string> EnumeratePropertiesDelegate(JsContext context, object obj);
-        public delegate object InvokeDelegate(JsContext context, object obj, object[] args);
-        public delegate object ValueOfDelegate(JsContext context, object obj);
-        public delegate string ToStringDelegate(JsContext context, object obj);
+        public delegate void RemoveDelegate(object obj);
+        public delegate bool TryGetPropertyValueDelegate(IHostObjectCallbackContext context, object obj, string name, out object value);
+        public delegate bool TrySetPropertyValueDelegate(IHostObjectCallbackContext context, object obj, string name, object value);
+        public delegate bool TryDeletePropertyDelegate(IHostObjectCallbackContext context, object obj, string name, out bool deleted);
+        public delegate IEnumerable<string> EnumeratePropertiesDelegate(IHostObjectCallbackContext context, object obj);
+        public delegate object InvokeDelegate(IHostObjectCallbackContext context, object obj, object[] args);
+        public delegate object ValueOfDelegate(IHostObjectCallbackContext context, object obj);
+        public delegate string ToStringDelegate(IHostObjectCallbackContext context, object obj);
 
         public HostObjectTemplate(
             RemoveDelegate remove = null,

@@ -52,7 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClrObjectTests.cs" />
+    <Compile Include="ClrObjectTemplateTests.cs" />
     <Compile Include="HostObjectTemplateTests.cs" />
     <Compile Include="JsArrayTests.cs" />
     <Compile Include="JsContextTests.cs" />

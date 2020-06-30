@@ -267,11 +267,11 @@ namespace VroomJsTests
         [Test]
         public void Test_clr_object()
         {
-            // Use custom engine for this test as it requires ClrObjectHandler
-            // to be registered.
+            // Use custom engine for this test as it requires ConfigureClrTemplates
+            // to be called.
             using (var engine = new JsEngine())
             {
-                engine.RegisterHostObjectTemplate(new ClrObjectHandler());
+                engine.ConfigureClrTemplates();
 
                 using (var context = engine.CreateContext())
                 {

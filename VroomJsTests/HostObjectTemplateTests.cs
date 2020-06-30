@@ -17,9 +17,9 @@ namespace VroomJsTests
             {
                 // Property handlers are installed and return true (handled)
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    tryGetProperty: (JsContext ctx, object obj, string name, out object value) => { value = propValue; return true; },
-                    trySetProperty: (JsContext ctx, object obj, string name, object value) => { propValue = value; return true; },
-                    tryDeleteProperty: (JsContext ctx, object obj, string name, out bool deleted) => { propValue = null; deleted = true; return true; }
+                    tryGetProperty: (IHostObjectCallbackContext ctx, object obj, string name, out object value) => { value = propValue; return true; },
+                    trySetProperty: (IHostObjectCallbackContext ctx, object obj, string name, object value) => { propValue = value; return true; },
+                    tryDeleteProperty: (IHostObjectCallbackContext ctx, object obj, string name, out bool deleted) => { propValue = null; deleted = true; return true; }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -75,9 +75,9 @@ namespace VroomJsTests
             {
                 // Property handlers are installed, but return false (not handled)
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    tryGetProperty: (JsContext ctx, object obj, string name, out object value) => { value = null; return false; },
-                    trySetProperty: (JsContext ctx, object obj, string name, object value) => { return false; },
-                    tryDeleteProperty: (JsContext ctx, object obj, string name, out bool deleted) => { deleted = false; return false; }
+                    tryGetProperty: (IHostObjectCallbackContext ctx, object obj, string name, out object value) => { value = null; return false; },
+                    trySetProperty: (IHostObjectCallbackContext ctx, object obj, string name, object value) => { return false; },
+                    tryDeleteProperty: (IHostObjectCallbackContext ctx, object obj, string name, out bool deleted) => { deleted = false; return false; }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -109,7 +109,7 @@ namespace VroomJsTests
             {
                 // Property handlers are installed and return true (handled)
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    tryGetProperty: (JsContext ctx, object obj, string name, out object value) => { throw new Exception("uh oh"); }
+                    tryGetProperty: (IHostObjectCallbackContext ctx, object obj, string name, out object value) => { throw new Exception("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -131,7 +131,7 @@ namespace VroomJsTests
             {
                 // Property handlers are installed and return true (handled)
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    trySetProperty: (JsContext ctx, object obj, string name, object value) => { throw new Exception("uh oh"); }
+                    trySetProperty: (IHostObjectCallbackContext ctx, object obj, string name, object value) => { throw new Exception("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -153,7 +153,7 @@ namespace VroomJsTests
             {
                 // Property handlers are installed and return true (handled)
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    tryDeleteProperty: (JsContext ctx, object obj, string name, out bool deleted) => { throw new Exception("uh oh"); }
+                    tryDeleteProperty: (IHostObjectCallbackContext ctx, object obj, string name, out bool deleted) => { throw new Exception("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -174,7 +174,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    enumerateProperties: (JsContext ctx, object obj) => { return new string[] { "alpha", "beta", "gamma" }; }
+                    enumerateProperties: (IHostObjectCallbackContext ctx, object obj) => { return new string[] { "alpha", "beta", "gamma" }; }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -210,7 +210,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    enumerateProperties: (JsContext ctx, object obj) => { throw new Exception("uh oh"); }
+                    enumerateProperties: (IHostObjectCallbackContext ctx, object obj) => { throw new Exception("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -231,7 +231,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    invoke: (JsContext ctx, object obj, object[] args) => { return args.Sum(x => (int)x); }
+                    invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { return args.Sum(x => (int)x); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -253,7 +253,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    invoke: (JsContext ctx, object obj, object[] args) => { return JsUndefined.Value; }
+                    invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { return JsUndefined.Value; }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -273,7 +273,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    invoke: (JsContext ctx, object obj, object[] args) => { return null; }
+                    invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { return null; }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -293,7 +293,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    invoke: (JsContext ctx, object obj, object[] args) => { throw new Exception("uh oh"); }
+                    invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { throw new Exception("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -314,7 +314,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    valueOf: (JsContext ctx, object obj) => { return 1; }
+                    valueOf: (IHostObjectCallbackContext ctx, object obj) => { return 1; }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -349,7 +349,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    valueOf: (JsContext ctx, object obj) => { throw new Exception("uh oh"); }
+                    valueOf: (IHostObjectCallbackContext ctx, object obj) => { throw new Exception("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -370,7 +370,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    toString: (JsContext ctx, object obj) => { return "alpha"; }
+                    toString: (IHostObjectCallbackContext ctx, object obj) => { return "alpha"; }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -405,7 +405,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    toString: (JsContext ctx, object obj) => { throw new Exception("uh oh"); }
+                    toString: (IHostObjectCallbackContext ctx, object obj) => { throw new Exception("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())

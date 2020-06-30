@@ -11,7 +11,7 @@ namespace VroomJs.VroomJs
             InvokeHandler = Invoke;
         }
 
-        private object Invoke(JsContext context, object obj, object[] args)
+        private object Invoke(IHostObjectCallbackContext context, object obj, object[] args)
         {
             // TODO: This is pretty slow: use a cache of generated code to make it faster.
 

@@ -8,6 +8,14 @@ namespace VroomJs
     {
         internal class HostObjectTemplateRegistration
         {
+            class CallbackContext : IHostObjectCallbackContext
+            {
+                public CallbackContext(JsContext context)
+                {
+
+                }
+            }
+
             private readonly JsEngine _engine;
             private readonly Predicate<object> _selector;
             private readonly HostObjectTemplate _template;
@@ -52,7 +60,7 @@ namespace VroomJs
                 if (_template.RemoveHandler != null)
                 {
                     var obj = context.GetHostObject(objectId);
-                    _template.RemoveHandler(context, obj);
+                    _template.RemoveHandler(obj);
                 }
 
                 context.RemoveHostObject(objectId);
@@ -65,7 +73,7 @@ namespace VroomJs
 
                 try
                 {
-                    if (_template.TryGetPropertyValueHandler(context, obj, name, out object value))
+                    if (_template.TryGetPropertyValueHandler(new CallbackContext(context), obj, name, out object value))
                         return JsValue.ForValue(value, context);
 
                     return JsValue.ForEmpty(); // not handled
@@ -83,7 +91,7 @@ namespace VroomJs
                 var obj = context.GetHostObject(objectId);
                 try
                 {
-                    if(_template.TrySetPropertyValueHandler(context, obj, name, value.Extract(context)))
+                    if(_template.TrySetPropertyValueHandler(new CallbackContext(context), obj, name, value.Extract(context)))
                     {
                         // The actual value that we set here isn't important, it just has to be
                         // something other than Empty in order to indicate that we've handled it.
@@ -105,7 +113,7 @@ namespace VroomJs
                 var obj = context.GetHostObject(objectId);
                 try
                 {
-                    if(_template.TryDeletePropertyHandler(context, obj, name, out bool deleted))
+                    if(_template.TryDeletePropertyHandler(new CallbackContext(context), obj, name, out bool deleted))
                         return JsValue.ForBoolean(deleted);
 
                     return JsValue.ForEmpty(); // not handled
@@ -123,7 +131,7 @@ namespace VroomJs
                 var obj = context.GetHostObject(objectId);
                 try
                 {
-                    var result = _template.EnumeratePropertiesHandler(context, obj);
+                    var result = _template.EnumeratePropertiesHandler(new CallbackContext(context), obj);
 
                     // todo: clean this up
                     var values = result.Select(z => JsValue.ForValue(z, context)).ToArray();
@@ -148,7 +156,7 @@ namespace VroomJs
 
                 try
                 {
-                    var result = _template.InvokeHandler(context, obj, arguments);
+                    var result = _template.InvokeHandler(new CallbackContext(context), obj, arguments);
 
                     return JsValue.ForValue(result, context);
                 }
@@ -166,7 +174,7 @@ namespace VroomJs
 
                 try
                 {
-                    var result = _template.ValueOfHandler(context, obj);
+                    var result = _template.ValueOfHandler(new CallbackContext(context), obj);
 
                     return JsValue.ForValue(result, context);
                 }
@@ -184,7 +192,7 @@ namespace VroomJs
 
                 try
                 {
-                    var result = _template.ToStringHandler(context, obj);
+                    var result = _template.ToStringHandler(new CallbackContext(context), obj);
 
                     return JsValue.ForValue(result, context);
                 }

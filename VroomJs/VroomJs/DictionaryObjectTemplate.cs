@@ -17,7 +17,7 @@ namespace VroomJs
 
         public MissingPropertyHandling MissingPropertyHandling { get; set; }
 
-        private bool TryGetPropertyValue(JsContext context, object obj, string name, out object value)
+        private bool TryGetPropertyValue(IHostObjectCallbackContext context, object obj, string name, out object value)
         {
             // todo: can 'name' be null?
             var upperCamelCase = char.ToUpper(name[0]) + name.Substring(1);
@@ -37,14 +37,14 @@ namespace VroomJs
             return false; // not handled
         }
 
-        private bool TrySetPropertyValue(JsContext context, object obj, string name, object value)
+        private bool TrySetPropertyValue(IHostObjectCallbackContext context, object obj, string name, object value)
         {
             // todo: can 'name' be null?
             SetMemberValue(obj, name, value);
             return true;
         }
 
-        private bool TryDeleteProperty(JsContext context, object obj, string name, out bool deleted)
+        private bool TryDeleteProperty(IHostObjectCallbackContext context, object obj, string name, out bool deleted)
         {
             // TODO: This is pretty slow: use a cache of generated code to make it faster.
             if (obj is IDictionary dictionary)
@@ -60,7 +60,7 @@ namespace VroomJs
             throw new InvalidOperationException("Object is not a dictionary.");
         }
 
-        private IEnumerable<string> EnumerateProperties(JsContext context, object obj)
+        private IEnumerable<string> EnumerateProperties(IHostObjectCallbackContext context, object obj)
         {
             if (obj is IDictionary dictionary)
             {
