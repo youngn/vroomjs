@@ -178,7 +178,7 @@ namespace VroomJs
             }
 
             // First of all try with a public property (the most common case).
-            PropertyInfo pi = type.GetProperty(name, flags | BindingFlags.GetProperty);
+            PropertyInfo pi = type.GetProperty(name, flags);
             if (pi != null)
             {
                 value = pi.GetValue(obj, null);
@@ -186,7 +186,7 @@ namespace VroomJs
             }
 
             // try field.
-            FieldInfo fi = type.GetField(name, flags | BindingFlags.GetProperty);
+            FieldInfo fi = type.GetField(name, flags);
             if (fi != null)
             {
                 value = fi.GetValue(obj);
@@ -197,7 +197,7 @@ namespace VroomJs
             // parameter types so we just check if any method with the given name exists
             // and then keep alive a "weak delegate", i.e., just a name and the target.
             // The real method will be resolved during the invokation itself.
-            BindingFlags mFlags = flags | BindingFlags.InvokeMethod | BindingFlags.FlattenHierarchy;
+            BindingFlags mFlags = flags | BindingFlags.FlattenHierarchy;
 
             // TODO: This is probably slooow.
             if (type.GetMethods(mFlags).Any(x => x.Name == name))
@@ -229,7 +229,7 @@ namespace VroomJs
                 flags = BindingFlags.Public | BindingFlags.Instance;
             }
 
-            PropertyInfo pi = type.GetProperty(name, flags | BindingFlags.SetProperty);
+            PropertyInfo pi = type.GetProperty(name, flags);
             if (pi != null)
             {
                 pi.SetValue(obj, value, null);

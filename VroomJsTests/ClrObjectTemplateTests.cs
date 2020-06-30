@@ -40,6 +40,16 @@ namespace VroomJsTests
         }
 
         [Test]
+        public void Test_TryGetPropertyValue_empty_string()
+        {
+            var foo = new Foo();
+
+            var template = new ClrObjectTemplate();
+            var b = template.TryGetPropertyValue(new CallbackContext(), foo, "", out _);
+            Assert.IsFalse(b);
+        }
+
+        [Test]
         public void Test_TryGetPropertyValue_method()
         {
             var foo = new Foo();
@@ -83,8 +93,6 @@ namespace VroomJsTests
         [Test]
         public void Test_TryGetPropertyValue_toString()
         {
-            var foo = new Foo();
-
             var template = new ClrObjectTemplate();
             var b0 = template.TryGetPropertyValue(new CallbackContext(), new A0(), nameof(A0.toString), out _);
             Assert.IsFalse(b0);
@@ -105,13 +113,44 @@ namespace VroomJsTests
         }
 
         [Test]
+        public void Test_TrySetPropertyValue_method()
+        {
+            var foo = new Foo();
+
+            var template = new ClrObjectTemplate();
+            var b = template.TrySetPropertyValue(new CallbackContext(), foo, nameof(Foo.Gamma), null);
+            Assert.IsFalse(b); // cannot modify a method
+        }
+
+        [Test]
+        public void Test_TrySetPropertyValue_empty_string()
+        {
+            var foo = new Foo();
+
+            var template = new ClrObjectTemplate();
+            var b = template.TrySetPropertyValue(new CallbackContext(), foo, "", "def");
+            Assert.IsFalse(b);
+        }
+
+        [Test]
         public void Test_TrySetPropertyValue_missing()
         {
-            var foo = new Foo() { Alpha = "abc" };
+            var foo = new Foo();
 
             var template = new ClrObjectTemplate();
             var b = template.TrySetPropertyValue(new CallbackContext(), foo, "Alpha1", "def");
             Assert.IsFalse(b);
+        }
+
+        [Test]
+        public void Test_TrySetPropertyValue_toString()
+        {
+            var template = new ClrObjectTemplate();
+            var b0 = template.TrySetPropertyValue(new CallbackContext(), new A0(), nameof(A0.toString), "def");
+            Assert.IsFalse(b0);
+
+            var b1 = template.TrySetPropertyValue(new CallbackContext(), new A1(), nameof(A1.toString), "def");
+            Assert.IsFalse(b1);
         }
 
         [Test]
@@ -128,11 +167,32 @@ namespace VroomJsTests
         [Test]
         public void Test_TryDeleteProperty_missing()
         {
-            var foo = new Foo() { Alpha = "abc" };
+            var foo = new Foo();
 
             var template = new ClrObjectTemplate();
             var b = template.TryDeleteProperty(new CallbackContext(), foo, "Alpha1", out _);
             Assert.IsFalse(b);
+        }
+
+        [Test]
+        public void Test_TryDeleteProperty_empty_string()
+        {
+            var foo = new Foo();
+
+            var template = new ClrObjectTemplate();
+            var b = template.TryDeleteProperty(new CallbackContext(), foo, "", out _);
+            Assert.IsFalse(b);
+        }
+
+        [Test]
+        public void Test_TryDeleteProperty_toString()
+        {
+            var template = new ClrObjectTemplate();
+            var b0 = template.TryDeleteProperty(new CallbackContext(), new A0(), nameof(A0.toString), out _);
+            Assert.IsFalse(b0);
+
+            var b1 = template.TryDeleteProperty(new CallbackContext(), new A1(), nameof(A1.toString), out _);
+            Assert.IsFalse(b1);
         }
 
         [Test]
