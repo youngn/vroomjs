@@ -53,6 +53,7 @@ namespace VroomJs
         public void ConfigureClrTemplates(Predicate<object> selector = null)
         {
             RegisterHostObjectTemplate(new ClrMethodTemplate(), obj => obj is WeakDelegate);
+            RegisterHostObjectTemplate(new ClrDelegateTemplate(), obj => obj is Delegate);
             RegisterHostObjectTemplate(new ClrObjectTemplate(), selector);
         }
 
