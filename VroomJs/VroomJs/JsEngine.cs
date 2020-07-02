@@ -50,10 +50,10 @@ namespace VroomJs
             _templateRegistrations.Add(new HostObjectTemplateRegistration(this, template, selector));
         }
 
-        public void ConfigureClrTemplates()
+        public void ConfigureClrTemplates(Predicate<object> selector = null)
         {
             RegisterHostObjectTemplate(new ClrMethodTemplate(), obj => obj is WeakDelegate);
-            RegisterHostObjectTemplate(new ClrObjectTemplate());
+            RegisterHostObjectTemplate(new ClrObjectTemplate(), selector);
         }
 
         public JsContext CreateContext()

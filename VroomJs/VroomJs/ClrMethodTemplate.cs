@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 
-namespace VroomJs.VroomJs
+namespace VroomJs
 {
     public class ClrMethodTemplate : HostObjectTemplate
     {
@@ -11,25 +10,15 @@ namespace VroomJs.VroomJs
             InvokeHandler = Invoke;
         }
 
-        private object Invoke(IHostObjectCallbackContext context, object obj, object[] args)
+        internal object Invoke(IHostObjectCallbackContext context, object obj, object[] args)
         {
-            // TODO: This is pretty slow: use a cache of generated code to make it faster.
-
-            Type constructorType = obj as Type;
-            if (constructorType != null)
-            {
-                return Activator.CreateInstance(constructorType, args);
-            }
-
-            WeakDelegate func = obj as WeakDelegate;
+            var func = obj as WeakDelegate;
             if (func == null)
-            {
-                throw new Exception("not a function.");
-            }
+                throw new InvalidOperationException("Object is not a method.");
 
-            Type type = func.Target != null ? func.Target.GetType() : func.Type;
-            BindingFlags flags = BindingFlags.Public
-                    | BindingFlags.InvokeMethod | BindingFlags.FlattenHierarchy;
+            // TODO: This is pretty slow: use a cache of generated code to make it faster.
+            var type = func.Target != null ? func.Target.GetType() : func.Type;
+            var flags = BindingFlags.Public | BindingFlags.InvokeMethod | BindingFlags.FlattenHierarchy;
 
             if (func.Target != null)
             {
@@ -45,16 +34,9 @@ namespace VroomJs.VroomJs
                 flags |= BindingFlags.NonPublic;
             }
 
-            // need to convert methods from JsFunction's into delegates?
-            if (args.Any(z => z != null && z.GetType() == typeof(JsFunction)))
-            {
-                CheckAndResolveJsFunctions(type, func.MethodName, flags, args);
-            }
-
             try
             {
-                object result = type.InvokeMember(func.MethodName, flags, null, func.Target, args);
-                return result;
+                return type.InvokeMember(func.MethodName, flags, null, func.Target, args);
             }
             catch (TargetInvocationException e)
             {
@@ -63,25 +45,6 @@ namespace VroomJs.VroomJs
                 if (e.InnerException != null)
                     throw e.InnerException;
                 throw;
-            }
-        }
-
-        private static void CheckAndResolveJsFunctions(Type type, string methodName, BindingFlags flags, object[] args)
-        {
-            MethodInfo mi = type.GetMethod(methodName, flags);
-            ParameterInfo[] paramTypes = mi.GetParameters();
-
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (i >= paramTypes.Length)
-                {
-                    continue;
-                }
-                if (args[i] != null && args[i].GetType() == typeof(JsFunction))
-                {
-                    JsFunction function = (JsFunction)args[i];
-                    args[i] = function.MakeDelegate(paramTypes[i].ParameterType);
-                }
             }
         }
     }
