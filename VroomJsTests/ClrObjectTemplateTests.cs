@@ -233,12 +233,10 @@ namespace VroomJsTests
         {
             var obj = new B0();
 
-            var template = new ClrObjectTemplate() { UseNetToString = true };
+            var template = new ClrObjectTemplate(useNetToString: true);
             var s = template.ToString(new CallbackContext(), obj);
 
             Assert.AreEqual("B0:1234", s);
         }
-
-
     }
 }

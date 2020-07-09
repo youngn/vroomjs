@@ -17,6 +17,7 @@ namespace VroomJs
                 throw new InvalidOperationException("Object is not a method.");
 
             // TODO: This is pretty slow: use a cache of generated code to make it faster.
+
             var type = func.Target != null ? func.Target.GetType() : func.Type;
             var flags = BindingFlags.Public | BindingFlags.InvokeMethod | BindingFlags.FlattenHierarchy;
 

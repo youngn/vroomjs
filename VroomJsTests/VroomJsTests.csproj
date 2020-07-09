@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="ClrDelegateTemplateTests.cs" />
     <Compile Include="ClrMethodTemplateTests.cs" />
+    <Compile Include="ClrTypeTemplateTests.cs" />
     <Compile Include="ClrObjectTemplateTests.cs" />
     <Compile Include="HostObjectTemplateTests.cs" />
     <Compile Include="JsArrayTests.cs" />
