@@ -3,7 +3,7 @@
 #include "vroomjs.h"
 #include "JsObject.h"
 
-class JsFunction : JsObject
+class JsFunction : public JsObject
 {
 public:
     JsFunction(Persistent<Function>* func, JsContext* context)

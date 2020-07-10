@@ -202,12 +202,27 @@ JsValue JsContext::SetVariable(const uint16_t* name, JsValue value)
     return JsValue::ForEmpty();
 }
 
+JsValue JsContext::CreateObject()
+{
+    Locker locker(isolate_);
+    HandleScope scope(isolate_);
+
+    auto ctx = Local<Context>::New(isolate_, *context_);
+    Context::Scope contextScope(ctx);
+
+    auto obj = Object::New(isolate_);
+    return JsValue::ForValue(obj, this);
+}
+
 JsValue JsContext::CreateArray(int len, const jsvalue* elements)
 {
     assert(len >= 0);
 
     Locker locker(isolate_);
     HandleScope scope(isolate_);
+
+    auto ctx = Local<Context>::New(isolate_, *context_);
+    Context::Scope contextScope(ctx);
 
     auto arr = Array::New(isolate_, len);
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -89,6 +90,7 @@ namespace VroomJs
             {
                 var context = _engine.GetContext(contextId);
                 var obj = context.GetHostObject(objectId);
+
                 try
                 {
                     if(_template.TrySetPropertyValueHandler(new CallbackContext(context), obj, name, value.Extract(context)))
@@ -111,6 +113,7 @@ namespace VroomJs
             {
                 var context = _engine.GetContext(contextId);
                 var obj = context.GetHostObject(objectId);
+
                 try
                 {
                     if(_template.TryDeletePropertyHandler(new CallbackContext(context), obj, name, out bool deleted))
@@ -129,19 +132,20 @@ namespace VroomJs
             {
                 var context = _engine.GetContext(contextId);
                 var obj = context.GetHostObject(objectId);
+
+                JsValue[] propNames;
                 try
                 {
                     var result = _template.EnumeratePropertiesHandler(new CallbackContext(context), obj);
-
-                    // todo: clean this up
-                    var values = result.Select(z => JsValue.ForValue(z, context)).ToArray();
-                    return NativeApi.jscontext_new_array(context.Handle, values.Length, values);
+                    propNames = result.Select(z => JsValue.ForValue(z, context)).ToArray();
                 }
                 catch (Exception e)
                 {
                     // todo: allow convert to JS error
                     return JsValue.ForHostError(context.AddHostObject(e));
                 }
+
+                return NativeApi.jscontext_new_array(context.Handle, propNames.Length, propNames);
             }
 
             private JsValue Invoke(int contextId, int objectId, int argCount, IntPtr args)

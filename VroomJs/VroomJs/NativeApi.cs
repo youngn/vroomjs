@@ -72,6 +72,9 @@ namespace VroomJs
         public static extern JsValue jscontext_set_variable(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+        public static extern JsValue jscontext_new_object(HandleRef context);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern JsValue jscontext_new_array(HandleRef context, int len, [In]JsValue[] elements);
         
         #endregion

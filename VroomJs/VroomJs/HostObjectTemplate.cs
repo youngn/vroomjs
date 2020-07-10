@@ -39,6 +39,12 @@ namespace VroomJs
             ToStringHandler = toString;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// Must not throw. Any exception that escapes this handler may crash the process.
+        /// </remarks>
         public RemoveDelegate RemoveHandler;
         public TryGetPropertyValueDelegate TryGetPropertyValueHandler;
         public TrySetPropertyValueDelegate TrySetPropertyValueHandler;

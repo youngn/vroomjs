@@ -83,18 +83,23 @@ namespace Sandbox
             //        Console.WriteLine(result);
             //    }
             //}
+            //using (JsEngine engine = new JsEngine())
+            //using (JsContext ctx = engine.CreateContext())
+            //{
+            //    for (var i = 0; i < 100000; i++)
+            //    {
+            //        ctx.SetVariable("x", new object());
+            //    }
+            //    Console.WriteLine("Waiting for key...");
+            //    Console.Read();
+            //}
             using (JsEngine engine = new JsEngine())
             using (JsContext ctx = engine.CreateContext())
             {
-                for (var i = 0; i < 100000; i++)
-                {
-                    ctx.SetVariable("x", new object());
-                }
-                Console.WriteLine("Waiting for key...");
-                Console.Read();
+                ctx.CreateObject();
             }
             JsEngine.Shutdown();
-			return;
+            return;
 
 			debugtest dbg = new debugtest();
 

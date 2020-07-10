@@ -25,6 +25,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Timers;
 
@@ -224,6 +225,24 @@ namespace VroomJs
                 del = new BoundWeakDelegate(func.Method.DeclaringType, func.Method.Name);
             }
             SetVariable(name, del);
+        }
+
+        public JsObject CreateObject()
+        {
+            return (JsObject)NativeApi.jscontext_new_object(_contextHandle)
+                .Extract(this);
+        }
+
+        public JsArray CreateArray(params object[] elements)
+        {
+            if (elements == null)
+                throw new ArgumentNullException(nameof(elements));
+
+            return (JsArray)NativeApi.jscontext_new_array(
+                _contextHandle,
+                elements.Length,
+                elements.Select(z => JsValue.ForValue(z, this)).ToArray()
+            ).Extract(this);
         }
 
         public void Flush()

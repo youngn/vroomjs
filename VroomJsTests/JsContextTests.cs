@@ -111,5 +111,55 @@ namespace VroomJsTests
                 Assert.AreEqual(null, context.GetVariable("alpha"));
             }
         }
+
+        [Test]
+        public void Test_CreateObject()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                var obj = context.CreateObject();
+                Assert.IsNotNull(obj);
+            }
+        }
+
+        [Test]
+        public void Test_CreateArray_empty()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                var obj = context.CreateArray();
+                Assert.IsNotNull(obj);
+
+                Assert.AreEqual(0, obj.GetLength());
+            }
+        }
+
+        [Test]
+        public void Test_CreateArray_populated()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                var obj = context.CreateArray(1, "bob", null, true);
+                Assert.IsNotNull(obj);
+
+                Assert.AreEqual(4, obj.GetLength());
+                Assert.AreEqual(1, obj[0]);
+                Assert.AreEqual("bob", obj[1]);
+                Assert.AreEqual(null, obj[2]);
+                Assert.AreEqual(true, obj[3]);
+            }
+        }
+
+        [Test]
+        public void Test_CreateArray_null()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                Assert.Throws<ArgumentNullException>(() =>
+                {
+                    context.CreateArray(null);
+                });
+            }
+        }
     }
 }

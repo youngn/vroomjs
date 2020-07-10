@@ -19,6 +19,7 @@ public:
     JsValue GetVariable(const uint16_t* name);
     JsValue SetVariable(const uint16_t* name, JsValue value);
 
+    JsValue CreateObject();
     JsValue CreateArray(int len, const jsvalue* elements);
 
     void Dispose();

@@ -223,6 +223,16 @@ extern "C"
         return context->GetVariable(name);
     }
 
+    EXPORT jsvalue CALLINGCONVENTION jscontext_new_object(JsContext* context)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jscontext_new_object" << std::endl;
+#endif
+        assert(context != NULL);
+
+        return context->CreateObject();
+    }
+
     EXPORT jsvalue CALLINGCONVENTION jscontext_new_array(JsContext* context, int len, const jsvalue* elements)
     {
 #ifdef DEBUG_TRACE_API
