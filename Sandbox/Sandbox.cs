@@ -29,6 +29,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using VroomJs;
+using VroomJs.VroomJs;
 
 namespace Sandbox
 {
@@ -97,12 +98,16 @@ namespace Sandbox
 
 			debugtest dbg = new debugtest();
 
-        	//	Delegate.CreateDelegate()
-        	//Dictionary<string, object> values = new Dictionary<string, object>();
+            //	Delegate.CreateDelegate()
+            //Dictionary<string, object> values = new Dictionary<string, object>();
 
-        	//values["test"] = 333;
+            //values["test"] = 333;
+            var config = new EngineConfiguration();
+            config.Memory.MaxOldSpace = 32;
+            config.Memory.MaxYoungSpace = 4;
+
 			while (true) {
-				using (JsEngine js = new JsEngine(4, 32)) {
+				using (JsEngine js = new JsEngine(config)) {
 
 					using (JsContext context = js.CreateContext()) {
 						//context.SetVariable("dbg", dbg);

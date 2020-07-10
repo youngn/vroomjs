@@ -5,11 +5,11 @@ namespace VroomJs
 {
     public class ClrTypeTemplate : ClrMemberTemplate
     {
-        public ClrTypeTemplate(bool allowInvokeAsConstructor = false,
+        public ClrTypeTemplate(bool allowInvokeConstructor = false,
             MissingPropertyHandling missingPropertyHandling = MissingPropertyHandling.Ignore)
             :base(missingPropertyHandling)
         {
-            if(allowInvokeAsConstructor)
+            if(allowInvokeConstructor)
                 InvokeHandler = InvokeConstructor;
         }
 

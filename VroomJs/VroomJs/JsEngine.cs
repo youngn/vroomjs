@@ -38,23 +38,18 @@ namespace VroomJs
         private int _currentContextId = 0;
         private int _currentScriptId = 0;
 
-        public JsEngine(int maxYoungSpace = -1, int maxOldSpace = -1)
+        public JsEngine(EngineConfiguration configuration = null)
         {
+            var memoryConfig = configuration?.Memory ?? new EngineConfiguration.MemoryConfiguration();
+
             _engineHandle = new HandleRef(this, NativeApi.jsengine_new(
-                maxYoungSpace,
-                maxOldSpace));
-        }
+                memoryConfig.MaxYoungSpace,
+                memoryConfig.MaxOldSpace));
 
-        public void RegisterHostObjectTemplate(HostObjectTemplate template, Predicate<object> selector = null)
-        {
-            _templateRegistrations.Add(new HostObjectTemplateRegistration(this, template, selector));
-        }
-
-        public void ConfigureClrTemplates(Predicate<object> selector = null)
-        {
-            RegisterHostObjectTemplate(new ClrMethodTemplate(), obj => obj is WeakDelegate);
-            RegisterHostObjectTemplate(new ClrDelegateTemplate(), obj => obj is Delegate);
-            RegisterHostObjectTemplate(new ClrObjectTemplate(), selector);
+            if(configuration != null)
+            {
+                configuration.Apply(this);
+            }
         }
 
         public JsContext CreateContext()
@@ -96,6 +91,11 @@ namespace VroomJs
         }
 
         internal HandleRef Handle => _engineHandle;
+
+        internal void RegisterHostObjectTemplate(HostObjectTemplate template, Predicate<object> selector = null)
+        {
+            _templateRegistrations.Add(new HostObjectTemplateRegistration(this, template, selector));
+        }
 
         internal void DisposeObject(IntPtr ptr)
         {

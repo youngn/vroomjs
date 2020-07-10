@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using VroomJs;
+using VroomJs.VroomJs;
 
 namespace VroomJsTests
 {
@@ -267,12 +268,13 @@ namespace VroomJsTests
         [Test]
         public void Test_clr_object()
         {
-            // Use custom engine for this test as it requires ConfigureClrTemplates
-            // to be called.
-            using (var engine = new JsEngine())
-            {
-                engine.ConfigureClrTemplates();
+            // Use custom engine for this test as it requires ExposeObjects
+            // to be true.
+            var config = new EngineConfiguration();
+            config.ClrTemplates.EnableObjects = true;
 
+            using (var engine = new JsEngine(config))
+            {
                 using (var context = engine.CreateContext())
                 {
                     var foo = new Foo();

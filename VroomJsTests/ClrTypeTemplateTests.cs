@@ -214,10 +214,10 @@ namespace VroomJsTests
         [Test]
         public void Test_InvokeHandler()
         {
-            var template0 = new ClrTypeTemplate(allowInvokeAsConstructor: false);
+            var template0 = new ClrTypeTemplate(allowInvokeConstructor: false);
             Assert.IsNull(template0.InvokeHandler);
 
-            var template = new ClrTypeTemplate(allowInvokeAsConstructor: true);
+            var template = new ClrTypeTemplate(allowInvokeConstructor: true);
             Assert.IsNotNull(template.InvokeHandler);
             var obj = template.InvokeHandler(new CallbackContext(), typeof(C0), new object[] { 2 });
 
