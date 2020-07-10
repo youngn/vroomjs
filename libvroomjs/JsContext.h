@@ -18,12 +18,6 @@ public:
     JsValue GetGlobal();
     JsValue GetVariable(const uint16_t* name);
     JsValue SetVariable(const uint16_t* name, JsValue value);
-    JsValue GetPropertyNames(Persistent<Object>* obj);
-    JsValue GetPropertyValue(Persistent<Object>* obj, const uint16_t* name);
-    JsValue GetPropertyValue(Persistent<Object>* obj, const uint32_t index);
-    JsValue SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, JsValue value);
-    JsValue SetPropertyValue(Persistent<Object>* obj, const uint32_t index, JsValue value);
-    JsValue InvokeFunction(Persistent<Function>* func, JsValue receiver, int argCount, JsValue* args);
 
     JsValue CreateArray(int len, const jsvalue* elements);
 
@@ -36,6 +30,7 @@ public:
         return Local<Context>::New(isolate_, *context_);
     }
 
+    // todo: rename this
     HostObjectManager* HostObjectMgr() {
         return hostObjectManager_;
     }

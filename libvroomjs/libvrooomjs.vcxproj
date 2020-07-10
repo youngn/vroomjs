@@ -263,6 +263,8 @@
     <ClCompile Include="JsContext.cpp" />
     <ClCompile Include="JsEngine.cpp" />
     <ClCompile Include="JsErrorInfo.cpp" />
+    <ClCompile Include="JsFunction.cpp" />
+    <ClCompile Include="JsObject.cpp" />
     <ClCompile Include="JsScript.cpp" />
     <ClCompile Include="JsString.cpp" />
     <ClCompile Include="JsValue.cpp" />
@@ -275,6 +277,8 @@
     <ClInclude Include="JsContext.h" />
     <ClInclude Include="JsEngine.h" />
     <ClInclude Include="JsErrorInfo.h" />
+    <ClInclude Include="JsFunction.h" />
+    <ClInclude Include="JsObject.h" />
     <ClInclude Include="JsScript.h" />
     <ClInclude Include="JsString.h" />
     <ClInclude Include="JsValue.h" />

@@ -137,29 +137,6 @@ JsValue JsContext::Execute(JsScript* jsscript)
     }
 }
 
-JsValue JsContext::SetVariable(const uint16_t* name, JsValue value)
-{
-    assert(name != nullptr);
-
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    HandleScope scope(isolate_);
-
-    auto ctx = Local<Context>::New(isolate_, *context_);
-    Context::Scope contextScope(ctx);
-
-    auto v = value.Extract(this);
-    auto var_name = String::NewFromTwoByte(isolate_, name).ToLocalChecked();
-
-    ctx->Global()->Set(ctx, var_name, v).Check();
-
-    // This return value would be needed in order to pass an error back.
-    // However, it seems that Set can never fail, so we just return empty.
-    jsvalue none;
-    none.type = JSVALUE_TYPE_EMPTY;
-    return none;
-}
-
 JsValue JsContext::GetGlobal() {
 
     Locker locker(isolate_);
@@ -174,7 +151,8 @@ JsValue JsContext::GetGlobal() {
     Local<Value> value = ctx->Global();
     if (!value.IsEmpty()) {
         return JsValue::ForValue(value, this);
-    } else {
+    }
+    else {
         return JsValue::ForError(trycatch, this);
     }
 }
@@ -197,85 +175,14 @@ JsValue JsContext::GetVariable(const uint16_t* name)
     Local<Value> value;
     if (ctx->Global()->Get(ctx, var_name).ToLocal(&value)) {
         return JsValue::ForValue(value, this);
-    } else {
+    }
+    else {
         return JsValue::ForError(trycatch, this);
     }
 }
 
-JsValue JsContext::GetPropertyNames(Persistent<Object>* obj)
+JsValue JsContext::SetVariable(const uint16_t* name, JsValue value)
 {
-    assert(obj != nullptr);
-
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    HandleScope scope(isolate_);
-
-    auto ctx = Local<Context>::New(isolate_, *context_);
-    Context::Scope contextScope(ctx);
-
-    TryCatch trycatch(isolate_);
-
-    Local<Object> objLocal = Local<Object>::New(isolate_, *obj);
-    Local<Value> value = objLocal->GetPropertyNames(ctx).ToLocalChecked();
-    if (!value.IsEmpty()) {
-        return JsValue::ForValue(value, this);
-    } else {
-        return JsValue::ForError(trycatch, this);
-    }
-}
-
-JsValue JsContext::GetPropertyValue(Persistent<Object>* obj, const uint16_t* name)
-{
-    assert(obj != nullptr);
-    assert(name != nullptr);
-
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    HandleScope scope(isolate_);
-
-    auto ctx = Local<Context>::New(isolate_, *context_);
-    Context::Scope contextScope(ctx);
-
-    auto var_name = String::NewFromTwoByte(isolate_, name).ToLocalChecked();
-
-    auto objLocal = Local<Object>::New(isolate_, *obj);
-
-    TryCatch trycatch(isolate_);
-
-    Local<Value> value;
-    if (objLocal->Get(ctx, var_name).ToLocal(&value)) {
-        return JsValue::ForValue(value, this);
-    } else {
-        return JsValue::ForError(trycatch, this);
-    }
-}
-
-JsValue JsContext::GetPropertyValue(Persistent<Object>* obj, const uint32_t index)
-{
-    assert(obj != nullptr);
-
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    HandleScope scope(isolate_);
-
-    auto ctx = Local<Context>::New(isolate_, *context_);
-    Context::Scope contextScope(ctx);
-
-    auto objLocal = Local<Object>::New(isolate_, *obj);
-
-    TryCatch trycatch(isolate_);
-
-    Local<Value> value;
-    if (objLocal->Get(ctx, index).ToLocal(&value)) {
-        return JsValue::ForValue(value, this);
-    } else {
-        return JsValue::ForError(trycatch, this);
-    }
-}
-
-JsValue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint16_t* name, JsValue value)
-{
-    assert(obj != nullptr);
     assert(name != nullptr);
 
     Locker locker(isolate_);
@@ -287,71 +194,12 @@ JsValue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint16_t* nam
 
     auto v = value.Extract(this);
     auto var_name = String::NewFromTwoByte(isolate_, name).ToLocalChecked();
-    auto objLocal = Local<Object>::New(isolate_, *obj);
 
-    objLocal->Set(ctx, var_name, v).Check();
-
-    // This return value would be needed in order to pass an error back.
-    // However, it seems that Set can never fail, so we just return empty.
-    jsvalue none;
-    none.type = JSVALUE_TYPE_EMPTY;
-    return none;
-}
-
-JsValue JsContext::SetPropertyValue(Persistent<Object>* obj, const uint32_t index, JsValue value)
-{
-    assert(obj != nullptr);
-
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    HandleScope scope(isolate_);
-
-    auto ctx = Local<Context>::New(isolate_, *context_);
-    Context::Scope contextScope(ctx);
-
-    auto v = value.Extract(this);
-    auto objLocal = Local<Object>::New(isolate_, *obj);
-
-    objLocal->Set(ctx, index, v).Check();
+    ctx->Global()->Set(ctx, var_name, v).Check();
 
     // This return value would be needed in order to pass an error back.
     // However, it seems that Set can never fail, so we just return empty.
-    jsvalue none;
-    none.type = JSVALUE_TYPE_EMPTY;
-    return none;
-}
-
-JsValue JsContext::InvokeFunction(Persistent<Function>* func, JsValue receiver, int argCount, JsValue* args)
-{
-    assert(func != nullptr);
-    assert(argCount >= 0);
-    assert(argCount == 0 || args != NULL);
-
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    HandleScope scope(isolate_);
-
-    auto ctx = Local<Context>::New(isolate_, *context_);
-    Context::Scope contextScope(ctx);
-
-    auto funcLocal = Local<Function>::New(isolate_, *func);
-    auto recv = receiver.Extract(this);
-
-    TryCatch trycatch(isolate_);
-
-    std::vector<Local<Value>> argv(argCount);
-    if (args != nullptr) {
-        for (int i = 0; i < argCount; i++) {
-            argv[i] = args[i].Extract(this);
-        }
-    }
-
-    Local<Value> retVal;
-    if (funcLocal->Call(ctx, recv, argCount, &argv[0]).ToLocal(&retVal)) {
-        return JsValue::ForValue(retVal, this);
-    } else {
-        return JsValue::ForError(trycatch, this);
-    }
+    return JsValue::ForEmpty();
 }
 
 JsValue JsContext::CreateArray(int len, const jsvalue* elements)

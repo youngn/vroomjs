@@ -33,6 +33,8 @@
 #include "JsScript.h"
 #include "JsValue.h"
 #include "JsString.h"
+#include "JsObject.h"
+#include "JsFunction.h"
 
 using namespace v8;
 
@@ -241,7 +243,8 @@ extern "C"
         assert(obj != NULL);
         assert(name != NULL);
 
-        return context->GetPropertyValue(obj, name);
+        auto jsObj = JsObject(obj, context);
+        return jsObj.GetPropertyValue(name);
     }
     
     EXPORT jsvalue CALLINGCONVENTION jsobject_set_named_property_value(JsContext* context, Persistent<Object>* obj, const uint16_t* name, jsvalue value)
@@ -253,7 +256,8 @@ extern "C"
         assert(obj != NULL);
         assert(name != NULL);
 
-        return context->SetPropertyValue(obj, name, value);
+        auto jsObj = JsObject(obj, context);
+        return jsObj.SetPropertyValue(name, value);
     }    
 
     EXPORT jsvalue CALLINGCONVENTION jsobject_get_indexed_property_value(JsContext* context, Persistent<Object>* obj, const uint32_t index)
@@ -264,7 +268,8 @@ extern "C"
         assert(context != NULL);
         assert(obj != NULL);
 
-        return context->GetPropertyValue(obj, index);
+        auto jsObj = JsObject(obj, context);
+        return jsObj.GetPropertyValue(index);
     }
 
     EXPORT jsvalue CALLINGCONVENTION jsobject_set_indexed_property_value(JsContext* context, Persistent<Object>* obj, const uint32_t index, jsvalue value)
@@ -275,7 +280,8 @@ extern "C"
         assert(context != NULL);
         assert(obj != NULL);
 
-        return context->SetPropertyValue(obj, index, value);
+        auto jsObj = JsObject(obj, context);
+        return jsObj.SetPropertyValue(index, value);
     }
 
 	EXPORT jsvalue CALLINGCONVENTION jsobject_get_property_names(JsContext* context, Persistent<Object>* obj)
@@ -286,7 +292,8 @@ extern "C"
         assert(context != NULL);
         assert(obj != NULL);
 
-        return context->GetPropertyNames(obj);
+        auto jsObj = JsObject(obj, context);
+        return jsObj.GetPropertyNames();
     }    
 	    
 	EXPORT jsvalue CALLINGCONVENTION jsfunction_invoke(JsContext* context, Persistent<Function>* obj, jsvalue receiver, int argCount, jsvalue* args)
@@ -299,7 +306,8 @@ extern "C"
         assert(argCount >= 0);
         assert(argCount == 0 || args != NULL);
 
-        return context->InvokeFunction(obj, receiver, argCount, (JsValue*)args);
+        auto jsFunc = JsFunction(obj, context);
+        return jsFunc.Invoke(receiver, argCount, (JsValue*)args);
     }        
 
 	EXPORT JsScript* CALLINGCONVENTION jsscript_new(JsEngine *engine)
