@@ -6,7 +6,7 @@ namespace VroomJs.Interop
     [StructLayout(LayoutKind.Sequential)]
     internal struct jserrorinfo
     {
-        public JsValue Error;
+        public jsvalue Error;
         public int Line;
         public int Column;
         public IntPtr Resource;
@@ -14,7 +14,7 @@ namespace VroomJs.Interop
         public IntPtr Type;
         public IntPtr Text;
         public IntPtr StackStr;
-        public IntPtr StackFrames; // pointer to a JsStackFrame
+        public IntPtr StackFrames; // pointer to a jsstackframe
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -24,6 +24,6 @@ namespace VroomJs.Interop
         public int Column;
         public IntPtr Resource;
         public IntPtr Function;
-        public IntPtr Next; // pointer to next JsStackFrame
+        public IntPtr Next; // pointer to next jsstackframe
     }
 }

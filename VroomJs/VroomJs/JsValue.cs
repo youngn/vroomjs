@@ -345,7 +345,7 @@ namespace VroomJs
 
             // The error object can be anything is JS - it is not necessarily an Error object,
             // or even an Object, so we don't cast it.
-            var error = info.Error.GetValue(context);
+            var error = ((JsValue)info.Error).GetValue(context);
 
             var stackTrace = GetStackFrames(info.StackFrames);
 

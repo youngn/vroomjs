@@ -5,13 +5,13 @@ using System.Runtime.InteropServices;
 namespace VroomJs.Interop
 {
     delegate void KeepaliveRemoveDelegate(int contextId, int objectId);
-    delegate JsValue KeepAliveGetPropertyValueDelegate(int contextId, int objectId, [MarshalAs(UnmanagedType.LPWStr)] string name);
-    delegate JsValue KeepAliveSetPropertyValueDelegate(int contextId, int objectId, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
-    delegate JsValue KeepAliveDeletePropertyDelegate(int contextId, int objectId, [MarshalAs(UnmanagedType.LPWStr)] string name);
-    delegate JsValue KeepAliveEnumeratePropertiesDelegate(int contextId, int objectId);
-    delegate JsValue KeepAliveInvokeDelegate(int contextId, int objectId, int argCount, IntPtr args);
-    delegate JsValue KeepAliveValueOfDelegate(int contextId, int objectId);
-    delegate JsValue KeepAliveToStringDelegate(int contextId, int objectId);
+    delegate jsvalue KeepAliveGetPropertyValueDelegate(int contextId, int objectId, [MarshalAs(UnmanagedType.LPWStr)] string name);
+    delegate jsvalue KeepAliveSetPropertyValueDelegate(int contextId, int objectId, [MarshalAs(UnmanagedType.LPWStr)] string name, jsvalue value);
+    delegate jsvalue KeepAliveDeletePropertyDelegate(int contextId, int objectId, [MarshalAs(UnmanagedType.LPWStr)] string name);
+    delegate jsvalue KeepAliveEnumeratePropertiesDelegate(int contextId, int objectId);
+    delegate jsvalue KeepAliveInvokeDelegate(int contextId, int objectId, int argCount, IntPtr args);
+    delegate jsvalue KeepAliveValueOfDelegate(int contextId, int objectId);
+    delegate jsvalue KeepAliveToStringDelegate(int contextId, int objectId);
 
     [StructLayout(LayoutKind.Sequential)]
     struct hostobjectcallbacks
