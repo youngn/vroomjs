@@ -119,7 +119,7 @@ extern "C"
         delete engine;
     }
 
-    EXPORT int CALLINGCONVENTION jsengine_add_template(JsEngine* engine, jscallbacks callbacks)
+    EXPORT int CALLINGCONVENTION jsengine_add_template(JsEngine* engine, hostobjectcallbacks callbacks)
     {
 #ifdef DEBUG_TRACE_API
         std::wcout << "jsengine_add_template" << std::endl;

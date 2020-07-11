@@ -78,33 +78,33 @@ extern long js_mem_debug_context_count;
 extern long js_mem_debug_hostobjectref_count;
 extern long js_mem_debug_script_count;
 
-extern "C" 
+extern "C"
 {
     struct jsvalue
     {
         // 8 bytes is the maximum CLR alignment; by putting the union first and a
         // int64_t inside it we make (almost) sure the offset of 'type' will always
         // be 8 and the total size 16. We add a check to JsContext_new anyway.
-        
-        union 
+
+        union
         {
             int32_t     i32;
             int64_t     i64;
             double      num;
-            void*       ptr;
-            uint16_t*   str;
-            jsvalue*    arr;
+            void* ptr;
+            uint16_t* str;
+            jsvalue* arr;
         } value;
-        
+
         int32_t         type;
         union
         {
             int32_t     length;     // length of str
             int32_t     templateId; // template ID for host object/error
         };
-	};
-	
-	EXPORT void CALLINGCONVENTION jsvalue_dispose(jsvalue value);
+    };
+
+    EXPORT void CALLINGCONVENTION jsvalue_dispose(jsvalue value);
 }
 
 //class JsValue;
@@ -117,31 +117,31 @@ extern "C"
 // The only way for the C++/V8 side to call into the CLR is to use the function
 // pointers (CLR, delegates) defined below.
 
-extern "C" 
+extern "C"
 {
     // We don't have a keepalive_add_f because that is managed on the CLR side.
     // Its definition would be "int (*keepalive_add_f) (HostObjectRef obj)".
-    
-    typedef void (CALLINGCONVENTION* keepalive_remove_f) (int32_t context, int32_t id);
-    typedef jsvalue (CALLINGCONVENTION* keepalive_get_property_value_f) (int32_t context, int32_t id, uint16_t* name);
-    typedef jsvalue (CALLINGCONVENTION* keepalive_set_property_value_f) (int32_t context, int32_t id, uint16_t* name, jsvalue value);
-    typedef jsvalue (CALLINGCONVENTION* keepalive_delete_property_f) (int32_t context, int32_t id, uint16_t* name);
-    typedef jsvalue (CALLINGCONVENTION* keepalive_enumerate_properties_f) (int32_t context, int32_t id);
-    typedef jsvalue (CALLINGCONVENTION* keepalive_invoke_f) (int32_t context, int32_t id, int32_t argCount, jsvalue* args);
-    typedef jsvalue (CALLINGCONVENTION* keepalive_valueof_f) (int32_t context, int32_t id);
-    typedef jsvalue (CALLINGCONVENTION* keepalive_tostring_f) (int32_t context, int32_t id);
 
-	struct jscallbacks
-	{
-		keepalive_remove_f remove;
-		keepalive_get_property_value_f get_property_value;
-		keepalive_set_property_value_f set_property_value;
+    typedef void (CALLINGCONVENTION* keepalive_remove_f) (int32_t context, int32_t id);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_get_property_value_f) (int32_t context, int32_t id, uint16_t* name);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_set_property_value_f) (int32_t context, int32_t id, uint16_t* name, jsvalue value);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_delete_property_f) (int32_t context, int32_t id, uint16_t* name);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_enumerate_properties_f) (int32_t context, int32_t id);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_invoke_f) (int32_t context, int32_t id, int32_t argCount, jsvalue* args);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_valueof_f) (int32_t context, int32_t id);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_tostring_f) (int32_t context, int32_t id);
+
+    struct hostobjectcallbacks
+    {
+        keepalive_remove_f remove;
+        keepalive_get_property_value_f get_property_value;
+        keepalive_set_property_value_f set_property_value;
         keepalive_delete_property_f delete_property;
         keepalive_enumerate_properties_f enumerate_properties;
         keepalive_invoke_f invoke;
         keepalive_valueof_f valueof;
         keepalive_tostring_f tostring;
-	};
+    };
 }
 
 #endif

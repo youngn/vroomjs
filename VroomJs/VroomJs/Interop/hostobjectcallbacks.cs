@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace VroomJs
+namespace VroomJs.Interop
 {
     delegate void KeepaliveRemoveDelegate(int contextId, int objectId);
     delegate JsValue KeepAliveGetPropertyValueDelegate(int contextId, int objectId, [MarshalAs(UnmanagedType.LPWStr)] string name);
@@ -14,9 +14,9 @@ namespace VroomJs
     delegate JsValue KeepAliveToStringDelegate(int contextId, int objectId);
 
     [StructLayout(LayoutKind.Sequential)]
-    struct NativeHostObjectCallbacks
+    struct hostobjectcallbacks
     {
-        public NativeHostObjectCallbacks(
+        public hostobjectcallbacks(
             KeepaliveRemoveDelegate remove,
             KeepAliveGetPropertyValueDelegate getPropertyValue = null,
             KeepAliveSetPropertyValueDelegate setPropertyValue = null,

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using VroomJs.Interop;
 
 namespace VroomJs
 {
@@ -22,7 +23,7 @@ namespace VroomJs
             private readonly HostObjectTemplate _template;
 
             // Make sure the delegates we pass to the C++ engine won't fly away during a GC.
-            private readonly NativeHostObjectCallbacks _nativeCallbacks;
+            private readonly hostobjectcallbacks _nativeCallbacks;
 
             public HostObjectTemplateRegistration(
                 JsEngine engine, HostObjectTemplate template, Predicate<object> selector = null)
@@ -33,7 +34,7 @@ namespace VroomJs
 
                 // Only supply the native callback if the template has a handler defined.
                 // (This is the entire motivation for using a set of delegates as opposed to defining an interface.)
-                _nativeCallbacks = new NativeHostObjectCallbacks(
+                _nativeCallbacks = new hostobjectcallbacks(
                     Remove, // always set, because JsContext must be notified
                     template.TryGetPropertyValueHandler != null ? GetPropertyValue : (KeepAliveGetPropertyValueDelegate)null,
                     template.TrySetPropertyValueHandler != null ? SetPropertyValue : (KeepAliveSetPropertyValueDelegate)null,
@@ -133,11 +134,11 @@ namespace VroomJs
                 var context = _engine.GetContext(contextId);
                 var obj = context.GetHostObject(objectId);
 
-                JsValue[] propNames;
+                jsvalue[] propNames;
                 try
                 {
                     var result = _template.EnumeratePropertiesHandler(new CallbackContext(context), obj);
-                    propNames = result.Select(z => JsValue.ForValue(z, context)).ToArray();
+                    propNames = result.Select(z => (jsvalue)JsValue.ForValue(z, context)).ToArray();
                 }
                 catch (Exception e)
                 {

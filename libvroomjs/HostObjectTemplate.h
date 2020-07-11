@@ -8,7 +8,7 @@ class HostObjectRef;
 class HostObjectTemplate
 {
 public:
-    HostObjectTemplate(Isolate* isolate, jscallbacks callbacks);
+    HostObjectTemplate(Isolate* isolate, hostobjectcallbacks callbacks);
 
     Local<Object> NewInstance(Local<Context> ctx, HostObjectRef* ref) const;
 

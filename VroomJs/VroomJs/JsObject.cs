@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using VroomJs.Interop;
 
 namespace VroomJs
 {
@@ -52,7 +53,7 @@ namespace VroomJs
             CheckDisposed();
 
             // todo: make this more efficient by marshaling as a string array, rather than a JsArray
-            var v = NativeApi.jsobject_get_property_names(_context.Handle, _objectHandle);
+            var v = (JsValue)NativeApi.jsobject_get_property_names(_context.Handle, _objectHandle);
             var res = v.Extract(_context);
 
             Exception e = res as JsException;
@@ -70,7 +71,7 @@ namespace VroomJs
 
             CheckDisposed();
 
-            var v = NativeApi.jsobject_get_named_property_value(_context.Handle, _objectHandle, name);
+            var v = (JsValue)NativeApi.jsobject_get_named_property_value(_context.Handle, _objectHandle, name);
             var res = v.Extract(_context);
 
             Exception e = res as JsException;
@@ -83,7 +84,7 @@ namespace VroomJs
         {
             CheckDisposed();
 
-            var v = NativeApi.jsobject_get_indexed_property_value(_context.Handle, _objectHandle, index);
+            var v = (JsValue)NativeApi.jsobject_get_indexed_property_value(_context.Handle, _objectHandle, index);
             var res = v.Extract(_context);
 
             Exception e = res as JsException;
@@ -100,7 +101,7 @@ namespace VroomJs
             CheckDisposed();
 
             var a = JsValue.ForValue(value, _context);
-            var v = NativeApi.jsobject_set_named_property_value(_context.Handle, _objectHandle, name, a);
+            var v = (JsValue)NativeApi.jsobject_set_named_property_value(_context.Handle, _objectHandle, name, a);
             var res = v.Extract(_context);
 
             Exception e = res as JsException;
@@ -113,7 +114,7 @@ namespace VroomJs
             CheckDisposed();
 
             var a = JsValue.ForValue(value, _context);
-            var v = NativeApi.jsobject_set_indexed_property_value(_context.Handle, _objectHandle, index, a);
+            var v = (JsValue)NativeApi.jsobject_set_indexed_property_value(_context.Handle, _objectHandle, index, a);
             var res = v.Extract(_context);
 
             Exception e = res as JsException;

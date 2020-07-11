@@ -2,7 +2,6 @@
 using System;
 using System.Linq;
 using VroomJs;
-using VroomJs.VroomJs;
 
 namespace VroomJsTests
 {

@@ -1,7 +1,7 @@
 #include "HostObjectTemplate.h"
 #include "HostObjectRef.h"
 
-HostObjectTemplate::HostObjectTemplate(Isolate* isolate, jscallbacks callbacks)
+HostObjectTemplate::HostObjectTemplate(Isolate* isolate, hostobjectcallbacks callbacks)
     :callbacks_(callbacks), isolate_(isolate)
 {
     Locker locker(isolate);

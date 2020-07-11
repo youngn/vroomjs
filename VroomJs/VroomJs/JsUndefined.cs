@@ -1,4 +1,4 @@
-﻿namespace VroomJs.VroomJs
+﻿namespace VroomJs
 {
     public class JsUndefined
     {

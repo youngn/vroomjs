@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace VroomJs.VroomJs
+namespace VroomJs
 {
     public class EngineConfiguration
     {

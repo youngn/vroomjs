@@ -28,22 +28,28 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
-using VroomJs.VroomJs;
+using VroomJs.Interop;
 
 namespace VroomJs
 {
-    [StructLayout(LayoutKind.Explicit)]
     internal struct JsValue
     {
-        [FieldOffset(0)] private int I32;
-        [FieldOffset(0)] private long I64;
-        [FieldOffset(0)] private double Num;
-        [FieldOffset(0)] private IntPtr Ptr;
+        private readonly jsvalue _data;
 
-        [FieldOffset(8)] public JsValueType Type; // marshaled as integer.
+        public JsValue(jsvalue data)
+        {
+            _data = data;
+        }
 
-        [FieldOffset(12)] private int Length; // Length of array or string
-        [FieldOffset(12)] private int TemplateId;
+        public static implicit operator JsValue(jsvalue data)
+        {
+            return new JsValue(data);
+        }
+
+        public static implicit operator jsvalue(JsValue value)
+        {
+            return value._data;
+        }
 
         public static JsValue ForValue(object obj, JsContext context)
         {
@@ -122,42 +128,42 @@ namespace VroomJs
 
         public override string ToString()
         {
-            return string.Format("[JsValue({0})]", Type);
+            return string.Format("[JsValue({0})]", _data.Type);
         }
 
         #region Factory methods
 
         public static JsValue ForEmpty()
         {
-            return new JsValue() { Type = JsValueType.Empty };
+            return new jsvalue() { Type = JsValueType.Empty };
         }
         public static JsValue ForUnknownError()
         {
-            return new JsValue { Type = JsValueType.UnknownError };
+            return new jsvalue { Type = JsValueType.UnknownError };
         }
         public static JsValue ForNull()
         {
-            return new JsValue { Type = JsValueType.Null };
+            return new jsvalue { Type = JsValueType.Null };
         }
         public static JsValue ForBoolean(bool value)
         {
-            return new JsValue { Type = JsValueType.Boolean, I32 = value ? 1 : 0 };
+            return new jsvalue { Type = JsValueType.Boolean, I32 = value ? 1 : 0 };
         }
         public static JsValue ForInt32(int value)
         {
-            return new JsValue { Type = JsValueType.Integer, I32 = value };
+            return new jsvalue { Type = JsValueType.Integer, I32 = value };
         }
         public static JsValue ForUInt32(uint value)
         {
-            return new JsValue { Type = JsValueType.Index, I64 = value };
+            return new jsvalue { Type = JsValueType.Index, I64 = value };
         }
         public static JsValue ForNumber(double value)
         {
-            return new JsValue { Type = JsValueType.Number, Num = value };
+            return new jsvalue { Type = JsValueType.Number, Num = value };
         }
         public static JsValue ForDate(double value)
         {
-            return new JsValue { Type = JsValueType.Date, Num = value };
+            return new jsvalue { Type = JsValueType.Date, Num = value };
         }
         private static JsValue ForJsString(string value, JsContext context)
         {
@@ -169,25 +175,25 @@ namespace VroomJs
         public static JsValue ForJsArray(JsArray value)
         {
             Debug.Assert(value != null);
-            return new JsValue { Type = JsValueType.JsArray, Ptr = value.Handle };
+            return new jsvalue { Type = JsValueType.JsArray, Ptr = value.Handle };
         }
         public static JsValue ForJsFunction(JsFunction value)
         {
             Debug.Assert(value != null);
-            return new JsValue { Type = JsValueType.JsFunction, Ptr = value.Handle };
+            return new jsvalue { Type = JsValueType.JsFunction, Ptr = value.Handle };
         }
         public static JsValue ForJsObject(JsObject value)
         {
             Debug.Assert(value != null);
-            return new JsValue { Type = JsValueType.JsObject, Ptr = value.Handle };
+            return new jsvalue { Type = JsValueType.JsObject, Ptr = value.Handle };
         }
         public static JsValue ForHostError(int id)
         {
-            return new JsValue { Type = JsValueType.HostError, I32 = id, TemplateId = 0 /* TODO: select error template ID */ };
+            return new jsvalue { Type = JsValueType.HostError, I32 = id, TemplateId = 0 /* TODO: select error template ID */ };
         }
         public static JsValue ForHostObject(int id, int templateId)
         {
-            return new JsValue { Type = JsValueType.HostObject, I32 = id, TemplateId = templateId };
+            return new jsvalue { Type = JsValueType.HostObject, I32 = id, TemplateId = templateId };
         }
 
         #endregion
@@ -196,7 +202,7 @@ namespace VroomJs
 
         private object GetValue(JsContext context)
         {
-            switch (Type)
+            switch (_data.Type)
             {
                 case JsValueType.Empty:
                     // todo: return JsUndefined.Value here instead?
@@ -249,77 +255,77 @@ namespace VroomJs
                     return JsErrorValue(context);
 
                 default:
-                    throw new InvalidOperationException("unknown type code: " + Type);
+                    throw new InvalidOperationException("unknown type code: " + _data.Type);
             }
         }
 
         private bool BooleanValue()
         {
-            Debug.Assert(Type == JsValueType.Boolean);
-            return I32 != 0;
+            Debug.Assert(_data.Type == JsValueType.Boolean);
+            return _data.I32 != 0;
         }
         private int Int32Value()
         {
-            Debug.Assert(Type == JsValueType.Integer);
-            return I32;
+            Debug.Assert(_data.Type == JsValueType.Integer);
+            return _data.I32;
         }
         private uint UInt32Value()
         {
-            Debug.Assert(Type == JsValueType.Index);
-            return (uint)I64;
+            Debug.Assert(_data.Type == JsValueType.Index);
+            return (uint)_data.I64;
         }
         private double NumberValue()
         {
-            Debug.Assert(Type == JsValueType.Number);
-            return Num;
+            Debug.Assert(_data.Type == JsValueType.Number);
+            return _data.Num;
         }
         private string StringValue()
         {
-            Debug.Assert(Type == JsValueType.String);
-            return Marshal.PtrToStringUni(Ptr);
+            Debug.Assert(_data.Type == JsValueType.String);
+            return Marshal.PtrToStringUni(_data.Ptr);
         }
         private object JsStringValue(JsContext context)
         {
-            Debug.Assert(Type == JsValueType.JsString);
+            Debug.Assert(_data.Type == JsValueType.JsString);
 
             // The value of the string is copied into the buffer with no null terminator.
-            var buffer = new char[Length];
-            var n = NativeApi.jsstring_get_value(context.Engine.Handle, Ptr, buffer);
-            if (n != Length)
+            var buffer = new char[_data.Length];
+            var n = Interop.NativeApi.jsstring_get_value(context.Engine.Handle, _data.Ptr, buffer);
+            if (n != _data.Length)
                 throw new JsInteropException("Failed to copy string.");
             return new string(buffer);
         }
         private DateTimeOffset DateValue()
         {
-            Debug.Assert(Type == JsValueType.Date);
-            return DateTimeOffset.FromUnixTimeMilliseconds((long)Num);
+            Debug.Assert(_data.Type == JsValueType.Date);
+            return DateTimeOffset.FromUnixTimeMilliseconds((long)_data.Num);
         }
         private JsArray JsArrayValue(JsContext context)
         {
-            Debug.Assert(Type == JsValueType.JsArray);
-            return new JsArray(context, Ptr);
+            Debug.Assert(_data.Type == JsValueType.JsArray);
+            return new JsArray(context, _data.Ptr);
         }
         private JsFunction JsFunctionValue(JsContext context)
         {
-            Debug.Assert(Type == JsValueType.JsFunction);
-            return new JsFunction(context, Ptr);
+            Debug.Assert(_data.Type == JsValueType.JsFunction);
+            return new JsFunction(context, _data.Ptr);
         }
         private JsObject JsObjectValue(JsContext context)
         {
-            Debug.Assert(Type == JsValueType.JsObject);
-            return new JsObject(context, Ptr);
+            Debug.Assert(_data.Type == JsValueType.JsObject);
+            return new JsObject(context, _data.Ptr);
         }
         private object HostObjectValue(JsContext context)
         {
-            Debug.Assert(Type == JsValueType.HostObject || Type == JsValueType.HostError);
-            return context.GetHostObject(I32);
+            Debug.Assert(_data.Type == JsValueType.HostObject || _data.Type == JsValueType.HostError);
+            return context.GetHostObject(_data.I32);
         }
 
         private JsException JsErrorValue(JsContext context)
         {
-            Debug.Assert(Type == JsValueType.JsError);
+            Debug.Assert(_data.Type == JsValueType.JsError);
 
-            var info = Marshal.PtrToStructure<JsErrorInfo>(Ptr);
+            var info = Marshal.PtrToStructure<jserrorinfo>(_data.Ptr);
 
             var resource = info.Resource != null ? Marshal.PtrToStringUni(info.Resource) : null;
             var description = info.Description != null ? Marshal.PtrToStringUni(info.Description) : null;
@@ -350,7 +356,7 @@ namespace VroomJs
         {
             while(stackFrame != IntPtr.Zero)
             {
-                var info = Marshal.PtrToStructure<JsStackFrame>(stackFrame);
+                var info = Marshal.PtrToStructure<jsstackframe>(stackFrame);
 
                 var resource = info.Resource != null ? Marshal.PtrToStringUni(info.Resource) : null;
                 var function = info.Function != null ? Marshal.PtrToStringUni(info.Function) : null;
@@ -370,7 +376,7 @@ namespace VroomJs
             // Dispose of any unmanaged resources.
             // For efficiency, we only do the pinvoke if we know that the type has
             // unmanaged resources that require disposal.
-            switch (Type)
+            switch (_data.Type)
             {
                 case JsValueType.String:
                 case JsValueType.JsString:

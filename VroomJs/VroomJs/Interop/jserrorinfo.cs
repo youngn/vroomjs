@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace VroomJs
+namespace VroomJs.Interop
 {
     [StructLayout(LayoutKind.Sequential)]
-    internal struct JsErrorInfo
+    internal struct jserrorinfo
     {
         public JsValue Error;
         public int Line;
@@ -18,7 +18,7 @@ namespace VroomJs
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct JsStackFrame
+    internal struct jsstackframe
     {
         public int Line;
         public int Column;

@@ -7,7 +7,7 @@
 class HostObjectCallbacks
 {
 public:
-    HostObjectCallbacks(jscallbacks callbacks)
+    HostObjectCallbacks(hostobjectcallbacks callbacks)
         :callbacks(callbacks)
     {
         // The 'remove' callback is not optional, because we need to inform the host side
@@ -48,6 +48,6 @@ public:
     }
 
 private:
-    jscallbacks callbacks;
+    hostobjectcallbacks callbacks;
 };
 

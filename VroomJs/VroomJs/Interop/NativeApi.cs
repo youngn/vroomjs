@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace VroomJs
+namespace VroomJs.Interop
 {
     static class NativeApi
     {
@@ -41,7 +41,7 @@ namespace VroomJs
         public static extern void jsengine_dispose_object(HandleRef engine, IntPtr obj);
 
         [DllImport(DllName)]
-        public static extern int jsengine_add_template(HandleRef engine, NativeHostObjectCallbacks callbacks);
+        public static extern int jsengine_add_template(HandleRef engine, hostobjectcallbacks callbacks);
 
         #endregion
 
@@ -57,47 +57,47 @@ namespace VroomJs
         public static extern void jscontext_force_gc();
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-        public static extern JsValue jscontext_execute(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string str, [MarshalAs(UnmanagedType.LPWStr)] string name);
+        public static extern jsvalue jscontext_execute(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string str, [MarshalAs(UnmanagedType.LPWStr)] string name);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-        public static extern JsValue jscontext_execute_script(HandleRef context, HandleRef script);
+        public static extern jsvalue jscontext_execute_script(HandleRef context, HandleRef script);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern JsValue jscontext_get_global(HandleRef context);
+        public static extern jsvalue jscontext_get_global(HandleRef context);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern JsValue jscontext_get_variable(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string name);
+        public static extern jsvalue jscontext_get_variable(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string name);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern JsValue jscontext_set_variable(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
+        public static extern jsvalue jscontext_set_variable(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string name, jsvalue value);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern JsValue jscontext_new_object(HandleRef context);
+        public static extern jsvalue jscontext_new_object(HandleRef context);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern JsValue jscontext_new_array(HandleRef context, int len, [In]JsValue[] elements);
+        public static extern jsvalue jscontext_new_array(HandleRef context, int len, [In]jsvalue[] elements);
         
         #endregion
 
         #region jsobject
 
         [DllImport(DllName)]
-        public static extern JsValue jsobject_get_property_names(HandleRef context, IntPtr obj);
+        public static extern jsvalue jsobject_get_property_names(HandleRef context, IntPtr obj);
 
         [DllImport(DllName)]
-        public static extern JsValue jsobject_get_named_property_value(HandleRef context, IntPtr obj, [MarshalAs(UnmanagedType.LPWStr)] string name);
+        public static extern jsvalue jsobject_get_named_property_value(HandleRef context, IntPtr obj, [MarshalAs(UnmanagedType.LPWStr)] string name);
 
         [DllImport(DllName)]
-        public static extern JsValue jsobject_get_indexed_property_value(HandleRef context, IntPtr obj, int index);
+        public static extern jsvalue jsobject_get_indexed_property_value(HandleRef context, IntPtr obj, int index);
 
         [DllImport(DllName)]
-        public static extern JsValue jsobject_set_named_property_value(HandleRef context, IntPtr obj, [MarshalAs(UnmanagedType.LPWStr)] string name, JsValue value);
+        public static extern jsvalue jsobject_set_named_property_value(HandleRef context, IntPtr obj, [MarshalAs(UnmanagedType.LPWStr)] string name, jsvalue value);
 
         [DllImport(DllName)]
-        public static extern JsValue jsobject_set_indexed_property_value(HandleRef context, IntPtr obj, int index, JsValue value);
+        public static extern jsvalue jsobject_set_indexed_property_value(HandleRef context, IntPtr obj, int index, jsvalue value);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern JsValue jsfunction_invoke(HandleRef context, IntPtr obj, JsValue receiver, int argCount, [In]JsValue[] args);
+        public static extern jsvalue jsfunction_invoke(HandleRef context, IntPtr obj, jsvalue receiver, int argCount, [In]jsvalue[] args);
 
         #endregion
 
@@ -107,7 +107,7 @@ namespace VroomJs
         public static extern IntPtr jsscript_new(HandleRef engine);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-        public static extern JsValue jsscript_compile(HandleRef script, [MarshalAs(UnmanagedType.LPWStr)] string str,
+        public static extern jsvalue jsscript_compile(HandleRef script, [MarshalAs(UnmanagedType.LPWStr)] string str,
                                                       [MarshalAs(UnmanagedType.LPWStr)] string name);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
@@ -118,14 +118,14 @@ namespace VroomJs
         #region jsvalue
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern void jsvalue_dispose(JsValue value);
+        public static extern void jsvalue_dispose(jsvalue value);
 
         #endregion
 
         #region jssstring
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern JsValue jsstring_new(HandleRef engine, [MarshalAs(UnmanagedType.LPWStr)] string value);
+        public static extern jsvalue jsstring_new(HandleRef engine, [MarshalAs(UnmanagedType.LPWStr)] string value);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
         public static extern int jsstring_get_value(HandleRef engine, IntPtr str, [Out]char[] buffer);

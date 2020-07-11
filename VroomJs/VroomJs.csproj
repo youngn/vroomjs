@@ -45,6 +45,7 @@
     <Compile Include="VroomJs\ClrMemberTemplate.cs" />
     <Compile Include="VroomJs\ClrTypeTemplate.cs" />
     <Compile Include="VroomJs\EngineConfiguration.cs" />
+    <Compile Include="VroomJs\Interop\jsvalue.cs" />
     <Compile Include="VroomJs\JsUndefined.cs" />
     <Compile Include="VroomJs\MissingPropertyHandling.cs" />
     <Compile Include="VroomJs\ClrMethodTemplate.cs" />
@@ -55,10 +56,10 @@
     <Compile Include="VroomJs\JsStackTrace.cs" />
     <Compile Include="VroomJs\BoundWeakDelegate.cs" />
     <Compile Include="VroomJs\JsArray.cs" />
-    <Compile Include="VroomJs\NativeHostObjectCallbacks.cs" />
+    <Compile Include="VroomJs\Interop\hostobjectcallbacks.cs" />
     <Compile Include="VroomJs\JsContext.cs" />
     <Compile Include="VroomJs\JsEngine.cs" />
-    <Compile Include="VroomJs\JsErrorInfo.cs" />
+    <Compile Include="VroomJs\Interop\jserrorinfo.cs" />
     <Compile Include="VroomJs\JsExecutionTimedOutException.cs" />
     <Compile Include="VroomJs\JsFunction.cs" />
     <Compile Include="VroomJs\JsObject.cs" />
@@ -67,7 +68,7 @@
     <Compile Include="VroomJs\JsException.cs" />
     <Compile Include="VroomJs\JsValueType.cs" />
     <Compile Include="VroomJs\JsInteropException.cs" />
-    <Compile Include="VroomJs\NativeApi.cs" />
+    <Compile Include="VroomJs\Interop\NativeApi.cs" />
     <Compile Include="VroomJs\HostObjectTemplate.cs" />
     <Compile Include="VroomJs\WeakDelegate.cs" />
     <Compile Include="VroomJs\JsEngineStats.cs" />

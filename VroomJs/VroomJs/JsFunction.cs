@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using VroomJs.Interop;
 
 namespace VroomJs
 {
@@ -17,10 +18,10 @@ namespace VroomJs
         {
             CheckDisposed();
 
-            var jsargs = (args ?? Array.Empty<object>()).Select(a => JsValue.ForValue(a, Context)).ToArray();
+            var jsargs = (args ?? Array.Empty<object>()).Select(a => (jsvalue)JsValue.ForValue(a, Context)).ToArray();
             var recv = JsValue.ForValue(receiver, Context);
 
-            var v = NativeApi.jsfunction_invoke(Context.Handle, Handle, recv, jsargs.Length, jsargs);
+            var v = (JsValue)NativeApi.jsfunction_invoke(Context.Handle, Handle, recv, jsargs.Length, jsargs);
             var res = v.Extract(Context);
 
             var e = res as JsException;

@@ -28,6 +28,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Timers;
+using VroomJs.Interop;
 
 namespace VroomJs
 {
@@ -92,7 +93,7 @@ namespace VroomJs
             object res;
             try
             {
-                JsValue v = NativeApi.jscontext_execute_script(_contextHandle, script.Handle);
+                var v = (JsValue)NativeApi.jscontext_execute_script(_contextHandle, script.Handle);
                 res = v.Extract(this);
             }
             finally
@@ -142,7 +143,7 @@ namespace VroomJs
             try
             {
                 watch2.Start();
-                JsValue v = NativeApi.jscontext_execute(_contextHandle, code, name ?? "<Unnamed Script>");
+                var v = (JsValue)NativeApi.jscontext_execute(_contextHandle, code, name ?? "<Unnamed Script>");
                 watch2.Stop();
                 res = v.Extract(this);
             }
@@ -172,7 +173,7 @@ namespace VroomJs
         internal object GetGlobal()
         {
             CheckDisposed();
-            JsValue v = NativeApi.jscontext_get_global(_contextHandle);
+            var v = (JsValue)NativeApi.jscontext_get_global(_contextHandle);
             object res = v.Extract(this);
 
             Exception e = res as JsException;
@@ -188,7 +189,7 @@ namespace VroomJs
 
             CheckDisposed();
 
-            JsValue v = NativeApi.jscontext_get_variable(_contextHandle, name);
+            var v = (JsValue)NativeApi.jscontext_get_variable(_contextHandle, name);
             object res = v.Extract(this);
 
             Exception e = res as JsException;
@@ -204,8 +205,8 @@ namespace VroomJs
 
             CheckDisposed();
 
-            JsValue a = JsValue.ForValue(value, this);
-            JsValue b = NativeApi.jscontext_set_variable(_contextHandle, name, a);
+            var a = JsValue.ForValue(value, this);
+            var b = (JsValue)NativeApi.jscontext_set_variable(_contextHandle, name, a);
 
             // Extract the return value so that it gets cleaned up, even if not used
             var result = b.Extract(this);
@@ -229,8 +230,8 @@ namespace VroomJs
 
         public JsObject CreateObject()
         {
-            return (JsObject)NativeApi.jscontext_new_object(_contextHandle)
-                .Extract(this);
+            var v = (JsValue)NativeApi.jscontext_new_object(_contextHandle);
+            return (JsObject)v.Extract(this);
         }
 
         public JsArray CreateArray(params object[] elements)
@@ -238,11 +239,13 @@ namespace VroomJs
             if (elements == null)
                 throw new ArgumentNullException(nameof(elements));
 
-            return (JsArray)NativeApi.jscontext_new_array(
+            var v = (JsValue)NativeApi.jscontext_new_array(
                 _contextHandle,
                 elements.Length,
-                elements.Select(z => JsValue.ForValue(z, this)).ToArray()
-            ).Extract(this);
+                elements.Select(z => (jsvalue)JsValue.ForValue(z, this)).ToArray()
+            );
+
+            return (JsArray)v.Extract(this);
         }
 
         public void Flush()

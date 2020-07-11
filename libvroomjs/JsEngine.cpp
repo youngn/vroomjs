@@ -109,7 +109,7 @@ JsContext* JsEngine::NewContext(int32_t id)
     return new JsContext(id, this);
 }
 
-int JsEngine::AddTemplate(jscallbacks callbacks)
+int JsEngine::AddTemplate(hostobjectcallbacks callbacks)
 {
     templates_.push_back(new HostObjectTemplate(isolate_, callbacks));
     return templates_.size() - 1; // template id

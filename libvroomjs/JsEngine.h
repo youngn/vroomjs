@@ -26,7 +26,7 @@ public:
     Isolate* Isolate() { return isolate_; }
     JsContext* NewContext(int32_t id);
 
-    int AddTemplate(jscallbacks callbacks);
+    int AddTemplate(hostobjectcallbacks callbacks);
 
     const HostObjectTemplate* Template(int i) {
         assert(i >= 0 && i < templates_.size());
