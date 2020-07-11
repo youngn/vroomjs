@@ -339,7 +339,8 @@ namespace VroomJs
             if (type == "SyntaxError")
             {
                 // todo: do we actually get a JS error object here? If so, include it
-                return new JsSyntaxException(description, resource, line, column, type, text);
+                return new JsSyntaxException(
+                    new JsErrorInfo(description, resource, line, column, null, text, type, null, null));
             }
 
             // The error object can be anything is JS - it is not necessarily an Error object,
@@ -348,8 +349,12 @@ namespace VroomJs
 
             var stackTrace = GetStackFrames(info.StackFrames);
 
-            return new JsException(description, resource, line, column, error, text, type, stackStr,
-                new JsStackTrace(stackTrace.ToList()));
+            return new JsException(
+                new JsErrorInfo(
+                    description, resource, line, column, error, text, type, stackStr,
+                        new JsStackTrace(stackTrace.ToList())
+                )
+            );
         }
 
         private IEnumerable<JsStackTrace.Frame> GetStackFrames(IntPtr stackFrame)

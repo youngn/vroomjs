@@ -46,6 +46,7 @@
     <Compile Include="VroomJs\ClrTypeTemplate.cs" />
     <Compile Include="VroomJs\EngineConfiguration.cs" />
     <Compile Include="VroomJs\Interop\jsvalue.cs" />
+    <Compile Include="VroomJs\JsErrorInfo.cs" />
     <Compile Include="VroomJs\JsUndefined.cs" />
     <Compile Include="VroomJs\MissingPropertyHandling.cs" />
     <Compile Include="VroomJs\ClrMethodTemplate.cs" />

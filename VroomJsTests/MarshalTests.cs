@@ -122,18 +122,19 @@ namespace VroomJsTests
                 catch (JsException e)
                 {
                     //Console.WriteLine(e);
+                    var info = e.ErrorInfo;
 
-                    Assert.AreEqual(2, e.Line);
-                    Assert.AreEqual(4, e.Column);
-                    Assert.AreEqual("TypeError", e.ErrorName);
-                    Assert.AreEqual("TypeError: Uh oh", e.ErrorText);
-                    Assert.AreEqual("Uncaught TypeError: Uh oh", e.Description);
-                    Assert.AreEqual(stackStr, e.ErrorStackString);
+                    Assert.AreEqual(2, info.Line);
+                    Assert.AreEqual(4, info.Column);
+                    Assert.AreEqual("TypeError", info.ErrorName);
+                    Assert.AreEqual("TypeError: Uh oh", info.ErrorText);
+                    Assert.AreEqual("Uncaught TypeError: Uh oh", info.Description);
+                    Assert.AreEqual(stackStr, info.ErrorStackString);
                     Assert.AreEqual(stackStr, e.Message); // designed to be identical to ErrorStackString
 
-                    Assert.IsNotNull(e.ErrorStackTrace);
+                    Assert.IsNotNull(info.ErrorStackTrace);
 
-                    var error = e.Error as JsObject;
+                    var error = info.Error as JsObject;
                     Assert.IsNotNull(error);
                     Assert.AreEqual("Uh oh", error["message"]);
                     Assert.AreEqual("TypeError", error["name"]);
@@ -174,18 +175,19 @@ namespace VroomJsTests
                 catch (JsException e)
                 {
                     //Console.WriteLine(e);
+                    var info = e.ErrorInfo;
 
-                    Assert.AreEqual(2, e.Line);
-                    Assert.AreEqual(4, e.Column);
-                    Assert.AreEqual(null, e.ErrorName); // no .name property available
-                    Assert.AreEqual("Uh oh", e.ErrorText);
-                    Assert.AreEqual("Uncaught Uh oh", e.Description);
-                    Assert.AreEqual(null, e.ErrorStackString); // no .stack property available
+                    Assert.AreEqual(2, info.Line);
+                    Assert.AreEqual(4, info.Column);
+                    Assert.AreEqual(null, info.ErrorName); // no .name property available
+                    Assert.AreEqual("Uh oh", info.ErrorText);
+                    Assert.AreEqual("Uncaught Uh oh", info.Description);
+                    Assert.AreEqual(null, info.ErrorStackString); // no .stack property available
                     Assert.AreEqual(stackStr, e.Message);
 
-                    Assert.IsNotNull(e.ErrorStackTrace);
+                    Assert.IsNotNull(info.ErrorStackTrace);
 
-                    var error = e.Error as string;
+                    var error = info.Error as string;
                     Assert.IsNotNull(error);
                     Assert.AreEqual("Uh oh", error);
                 }
