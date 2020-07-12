@@ -124,12 +124,11 @@ Local<Value> JsValue::GetValue(JsContext* context)
         auto pObj = JsFunctionValue();
         return Local<Function>::New(isolate, *pObj);
     }
-
-    if (ValueType() == JSVALUE_TYPE_HOSTOBJECT || ValueType() == JSVALUE_TYPE_HOSTERROR) {
-        // This is an ID to a Host object that lives inside the JsContext keep-alive
-        // cache. We just wrap it and the pointer to the engine inside an External. A
-        // Host error is still a Host object so it is wrapped exactly as a normal
-        // Host object.
+    if (ValueType() == JSVALUE_TYPE_HOSTERROR) {
+        auto pObj = HostErrorValue();
+        return Local<Object>::New(isolate, *pObj);
+    }
+    if (ValueType() == JSVALUE_TYPE_HOSTOBJECT) {
         return context->HostObjectMgr()->GetProxy(HostObjectIdValue(), HostObjectTemplateIdValue());
     }
 
@@ -139,23 +138,6 @@ Local<Value> JsValue::GetValue(JsContext* context)
 
 JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)
 {
-    assert(trycatch.HasCaught()); // an exception has been caught
-
-    auto isolate = context->Isolate();
-    auto ctx = context->Ctx();
-
-    HandleScope scope(isolate);
-
-    auto exception = trycatch.Exception();
-    assert(!exception.IsEmpty());
-
-    // Is this a host exception?
-    Local<Object> obj;
-    if (exception->ToObject(ctx).ToLocal(&obj) && obj->InternalFieldCount() == 1) {
-        auto ref = (HostObjectRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
-        return JsValue::ForHostError(ref->Id());
-    }
-
     auto errorInfo = JsErrorInfo::Capture(trycatch, context);
     return JsValue::ForError(errorInfo);
 }

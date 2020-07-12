@@ -110,6 +110,9 @@ namespace VroomJs
             if (type == typeof(JsFunction))
                 return ForJsFunction((JsFunction)obj);
 
+            if (type == typeof(HostErrorInfo))
+                return ForHostError((HostErrorInfo)obj);
+
             var templateId = context.Engine.SelectTemplate(obj);
             if(templateId >= 0)
             {
@@ -167,6 +170,7 @@ namespace VroomJs
         }
         private static JsValue ForJsString(string value, JsContext context)
         {
+            Debug.Assert(value != null);
             var v = NativeApi.jsstring_new(context.Engine.Handle, value);
             if (v.Type == JsValueType.Empty)
                 throw new JsInteropException("String exceeds maximum allowable length."); //todo:test?
@@ -187,9 +191,10 @@ namespace VroomJs
             Debug.Assert(value != null);
             return new jsvalue { Type = JsValueType.JsObject, Ptr = value.Handle };
         }
-        public static JsValue ForHostError(int id)
+        public static JsValue ForHostError(HostErrorInfo errorInfo)
         {
-            return new jsvalue { Type = JsValueType.HostError, I32 = id, TemplateId = 0 /* TODO: select error template ID */ };
+            Debug.Assert(errorInfo != null);
+            return new jsvalue { Type = JsValueType.HostError, Ptr = errorInfo.ErrorObject.Handle };
         }
         public static JsValue ForHostObject(int id, int templateId)
         {

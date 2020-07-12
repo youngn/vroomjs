@@ -8,6 +8,13 @@ namespace VroomJsTests
     [TestFixture]
     class HostObjectTemplateTests
     {
+        private class FooException : Exception
+        {
+            public FooException(string message) : base(message) { }
+        }
+
+        private const string HostErrorName = "HostError";
+
         [Test]
         public void Test_named_property()
         {
@@ -108,7 +115,8 @@ namespace VroomJsTests
             {
                 // Property handlers are installed and return true (handled)
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    tryGetProperty: (IHostObjectCallbackContext ctx, object obj, string name, out object value) => { throw new Exception("uh oh"); }
+                    tryGetProperty: (IHostObjectCallbackContext ctx, object obj, string name, out object value)
+                        => { throw new FooException("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -116,9 +124,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { x.bar; } catch(e) { e; }") as Exception;
+                    var result = context.Execute("try { x.bar; } catch(e) { e; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual("uh oh", result.Message);
+                    Assert.AreEqual(HostErrorName, result["name"]);
+                    Assert.AreEqual("uh oh", result["message"]);
+                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
                 }
             }
         }
@@ -130,7 +140,8 @@ namespace VroomJsTests
             {
                 // Property handlers are installed and return true (handled)
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    trySetProperty: (IHostObjectCallbackContext ctx, object obj, string name, object value) => { throw new Exception("uh oh"); }
+                    trySetProperty: (IHostObjectCallbackContext ctx, object obj, string name, object value)
+                        => { throw new FooException("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -138,9 +149,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { x.bar = 1; } catch(e) { e; }") as Exception;
+                    var result = context.Execute("try { x.bar = 1; } catch(e) { e; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual("uh oh", result.Message);
+                    Assert.AreEqual(HostErrorName, result["name"]);
+                    Assert.AreEqual("uh oh", result["message"]);
+                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
                 }
             }
         }
@@ -152,7 +165,8 @@ namespace VroomJsTests
             {
                 // Property handlers are installed and return true (handled)
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    tryDeleteProperty: (IHostObjectCallbackContext ctx, object obj, string name, out bool deleted) => { throw new Exception("uh oh"); }
+                    tryDeleteProperty: (IHostObjectCallbackContext ctx, object obj, string name, out bool deleted)
+                        => { throw new FooException("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -160,9 +174,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { delete x.bar; } catch(e) { e; }") as Exception;
+                    var result = context.Execute("try { delete x.bar; } catch(e) { e; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual("uh oh", result.Message);
+                    Assert.AreEqual(HostErrorName, result["name"]);
+                    Assert.AreEqual("uh oh", result["message"]);
+                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
                 }
             }
         }
@@ -209,7 +225,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    enumerateProperties: (IHostObjectCallbackContext ctx, object obj) => { throw new Exception("uh oh"); }
+                    enumerateProperties: (IHostObjectCallbackContext ctx, object obj) => { throw new FooException("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -217,9 +233,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { Object.keys(x); } catch(e) { e; }") as Exception;
+                    var result = context.Execute("try { Object.keys(x); } catch(e) { e; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual("uh oh", result.Message);
+                    Assert.AreEqual(HostErrorName, result["name"]);
+                    Assert.AreEqual("uh oh", result["message"]);
+                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
                 }
             }
         }
@@ -292,7 +310,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { throw new Exception("uh oh"); }
+                    invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { throw new FooException("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -300,9 +318,11 @@ namespace VroomJsTests
                     var f = new object();
                     context.SetVariable("f", f);
 
-                    var result = context.Execute("try { f(); } catch(e) { e; }") as Exception;
+                    var result = context.Execute("try { f(); } catch(e) { e; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual("uh oh", result.Message);
+                    Assert.AreEqual(HostErrorName, result["name"]);
+                    Assert.AreEqual("uh oh", result["message"]);
+                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
                 }
             }
         }
@@ -348,7 +368,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    valueOf: (IHostObjectCallbackContext ctx, object obj) => { throw new Exception("uh oh"); }
+                    valueOf: (IHostObjectCallbackContext ctx, object obj) => { throw new FooException("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -356,9 +376,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { x.valueOf(); } catch(e) { e; }") as Exception;
+                    var result = context.Execute("try { x.valueOf(); } catch(e) { e; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual("uh oh", result.Message);
+                    Assert.AreEqual(HostErrorName, result["name"]);
+                    Assert.AreEqual("uh oh", result["message"]);
+                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
                 }
             }
         }
@@ -404,7 +426,7 @@ namespace VroomJsTests
             using (var engine = new JsEngine())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    toString: (IHostObjectCallbackContext ctx, object obj) => { throw new Exception("uh oh"); }
+                    toString: (IHostObjectCallbackContext ctx, object obj) => { throw new FooException("uh oh"); }
                 ));
 
                 using (var context = engine.CreateContext())
@@ -412,9 +434,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { x.toString(); } catch(e) { e; }") as Exception;
+                    var result = context.Execute("try { x.toString(); } catch(e) { e; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual("uh oh", result.Message);
+                    Assert.AreEqual(HostErrorName, result["name"]);
+                    Assert.AreEqual("uh oh", result["message"]);
+                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
                 }
             }
         }

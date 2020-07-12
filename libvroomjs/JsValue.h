@@ -64,9 +64,6 @@ public:
 		assert(value != nullptr);
 		return JsValue(JSVALUE_TYPE_JSERROR, 0, (void*)value);
 	}
-	static JsValue ForHostError(int32_t id) {
-		return JsValue(JSVALUE_TYPE_HOSTERROR, 0, id);
-	}
 	static JsValue ForHostObject(int32_t id) {
 		return JsValue(JSVALUE_TYPE_HOSTOBJECT, 0, id);
 	}
@@ -109,6 +106,10 @@ public:
 	}
 	Persistent<Object>* JsObjectValue() const {
 		assert(v.type == JSVALUE_TYPE_JSOBJECT);
+		return (Persistent<Object>*)v.value.ptr;
+	}
+	Persistent<Object>* HostErrorValue() const {
+		assert(v.type == JSVALUE_TYPE_HOSTERROR);
 		return (Persistent<Object>*)v.value.ptr;
 	}
 	Persistent<String>* JsStringValue() const {
