@@ -214,7 +214,7 @@ JsValue JsContext::CreateObject()
     return JsValue::ForValue(obj, this);
 }
 
-JsValue JsContext::CreateArray(int len, const jsvalue* elements)
+JsValue JsContext::CreateArray(int len, const JsValue * elements)
 {
     assert(len >= 0);
 

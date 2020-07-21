@@ -48,7 +48,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
         std::wcout << "js_initialize " << type << std::endl;
 #endif
-        assert(directory_path != NULL);
+        assert(directory_path != nullptr);
 
         // todo: protect this from multiple calls?
 
@@ -87,7 +87,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
                 std::wcout << "jsengine_terminate_execution" << std::endl;
 #endif
-        assert(engine != NULL);
+        assert(engine != nullptr);
 		engine->TerminateExecution();
 	}
 
@@ -95,7 +95,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
                 std::wcout << "jsengine_dump_heap_stats" << std::endl;
 #endif
-        assert(engine != NULL);
+        assert(engine != nullptr);
         engine->DumpHeapStats();
 	}
 
@@ -114,7 +114,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsengine_dispose" << std::endl;
 #endif
-        assert(engine != NULL);
+        assert(engine != nullptr);
         engine->Dispose();
         delete engine;
     }
@@ -124,7 +124,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
         std::wcout << "jsengine_add_template" << std::endl;
 #endif
-        assert(engine != NULL);
+        assert(engine != nullptr);
         return engine->AddTemplate(callbacks);
     }
 
@@ -133,7 +133,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_new" << std::endl;
 #endif
-        assert(engine != NULL);
+        assert(engine != nullptr);
         return engine->NewContext(id);
     }
 
@@ -151,7 +151,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_dispose" << std::endl;
 #endif
-        assert(context != NULL);
+        assert(context != nullptr);
         context->Dispose();
         delete context;
     }
@@ -161,7 +161,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_dispose_object" << std::endl;
 #endif
-        if (engine != NULL) {
+        if (engine != nullptr) {
             // Allow V8 GC to reclaim the JS Object
             engine->DisposeObject(obj);
 		}
@@ -175,8 +175,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_execute" << std::endl;
 #endif
-        assert(context != NULL);
-        assert(str != NULL);
+        assert(context != nullptr);
+        assert(str != nullptr);
 
         return context->Execute(str, resourceName);
     }
@@ -186,8 +186,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_execute_script" << std::endl;
 #endif
-        assert(context != NULL);
-        assert(script != NULL);
+        assert(context != nullptr);
+        assert(script != nullptr);
 
         return context->Execute(script);
     }
@@ -197,7 +197,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_get_global" << std::endl;
 #endif
-        assert(context != NULL);
+        assert(context != nullptr);
         return context->GetGlobal();
     }
 	
@@ -206,8 +206,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_set_variable" << std::endl;
 #endif
-        assert(context != NULL);
-        assert(name != NULL);
+        assert(context != nullptr);
+        assert(name != nullptr);
 
         return context->SetVariable(name, value);
     }
@@ -217,8 +217,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_get_variable" << std::endl;
 #endif
-        assert(context != NULL);
-        assert(name != NULL);
+        assert(context != nullptr);
+        assert(name != nullptr);
 
         return context->GetVariable(name);
     }
@@ -228,7 +228,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
         std::wcout << "jscontext_new_object" << std::endl;
 #endif
-        assert(context != NULL);
+        assert(context != nullptr);
 
         return context->CreateObject();
     }
@@ -238,10 +238,10 @@ extern "C"
 #ifdef DEBUG_TRACE_API
         std::wcout << "jscontext_new_array" << std::endl;
 #endif
-        assert(context != NULL);
+        assert(context != nullptr);
         assert(len >= 0);
 
-        return context->CreateArray(len, elements);
+        return context->CreateArray(len, (const JsValue*)elements);
     }
 
     EXPORT jsvalue CALLINGCONVENTION jsobject_get_named_property_value(JsContext* context, Persistent<Object>* obj, const uint16_t* name)
@@ -249,9 +249,9 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsobject_get_named_property_value" << std::endl;
 #endif
-        assert(context != NULL);
-        assert(obj != NULL);
-        assert(name != NULL);
+        assert(context != nullptr);
+        assert(obj != nullptr);
+        assert(name != nullptr);
 
         auto jsObj = JsObject(obj, context);
         return jsObj.GetPropertyValue(name);
@@ -262,9 +262,9 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsobject_set_named_property_value" << std::endl;
 #endif
-        assert(context != NULL);
-        assert(obj != NULL);
-        assert(name != NULL);
+        assert(context != nullptr);
+        assert(obj != nullptr);
+        assert(name != nullptr);
 
         auto jsObj = JsObject(obj, context);
         return jsObj.SetPropertyValue(name, value);
@@ -275,8 +275,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
         std::wcout << "jsobject_get_indexed_property_value" << std::endl;
 #endif
-        assert(context != NULL);
-        assert(obj != NULL);
+        assert(context != nullptr);
+        assert(obj != nullptr);
 
         auto jsObj = JsObject(obj, context);
         return jsObj.GetPropertyValue(index);
@@ -287,8 +287,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
         std::wcout << "jsobject_set_indexed_property_value" << std::endl;
 #endif
-        assert(context != NULL);
-        assert(obj != NULL);
+        assert(context != nullptr);
+        assert(obj != nullptr);
 
         auto jsObj = JsObject(obj, context);
         return jsObj.SetPropertyValue(index, value);
@@ -299,8 +299,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsobject_get_property_names" << std::endl;
 #endif
-        assert(context != NULL);
-        assert(obj != NULL);
+        assert(context != nullptr);
+        assert(obj != nullptr);
 
         auto jsObj = JsObject(obj, context);
         return jsObj.GetPropertyNames();
@@ -311,10 +311,10 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsfunction_invoke" << std::endl;
 #endif
-        assert(context != NULL);
-        assert(obj != NULL);
+        assert(context != nullptr);
+        assert(obj != nullptr);
         assert(argCount >= 0);
-        assert(argCount == 0 || args != NULL);
+        assert(argCount == 0 || args != nullptr);
 
         auto jsFunc = JsFunction(obj, context);
         return jsFunc.Invoke(receiver, argCount, (JsValue*)args);
@@ -325,7 +325,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsscript_new" << std::endl;
 #endif
-        assert(engine != NULL);
+        assert(engine != nullptr);
 
         return JsScript::New(engine);
     }
@@ -335,7 +335,7 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsscript_dispose" << std::endl;
 #endif
-        assert(script != NULL);
+        assert(script != nullptr);
 
         script->Dispose();
 		delete script;
@@ -346,8 +346,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsscript_compile" << std::endl;
 #endif
-        assert(script != NULL);
-        assert(str != NULL);
+        assert(script != nullptr);
+        assert(str != nullptr);
 
         return script->Compile(str, resourceName);
     }
@@ -357,8 +357,8 @@ extern "C"
 #ifdef DEBUG_TRACE_API
         std::wcout << "jsstring_new" << std::endl;
 #endif
-        assert(engine != NULL);
-        assert(value != NULL);
+        assert(engine != nullptr);
+        assert(value != nullptr);
 
         int len;
         auto str = JsString::Create(engine->Isolate(), value, len);
@@ -374,9 +374,9 @@ extern "C"
 #ifdef DEBUG_TRACE_API
         std::wcout << "jsstring_get_value" << std::endl;
 #endif
-        assert(engine != NULL);
-        assert(str != NULL);
-        assert(buffer != NULL);
+        assert(engine != nullptr);
+        assert(str != nullptr);
+        assert(buffer != nullptr);
 
         return JsString::GetValue(engine->Isolate(), str, buffer);
     }
