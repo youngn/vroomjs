@@ -34,14 +34,7 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
     }
 
     if (value->IsString()) {
-        auto s = Local<String>::Cast(value);
-        return ForJsString(new Persistent<String>(isolate, s), s->Length());
-        //auto len = s->Length();
-
-        //// todo: is this the best way to convert?
-        //uint16_t* str = new uint16_t[len + 1];
-        //s->Write(isolate, str);
-        //return ForString(len, str);
+        return ForJsString(Local<String>::Cast(value), context);
     }
 
     if (value->IsDate()) {
@@ -49,8 +42,7 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
     }
 
     if (value->IsArray()) {
-        auto arr = Local<Array>::Cast(value);
-        return ForJsArray(new Persistent<Array>(isolate, arr));
+        return ForJsArray(Local<Array>::Cast(value), context);
     }
 
     if (value->IsFunction()) {
@@ -63,7 +55,7 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
             return ForHostObject(ref->Id());
         }
         else {
-            return ForJsFunction(new Persistent<Function>(isolate, function));
+            return ForJsFunction(function, context);
         }
     }
 
@@ -74,12 +66,43 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
             return ForHostObject(ref->Id());
         }
         else {
-            return ForJsObject(new Persistent<Object>(isolate, obj));
+            return ForJsObject(obj, context);
         }
     }
 
     // Default to a generic error.
     return ForUnknownError();
+}
+
+JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)
+{
+    auto errorInfo = JsErrorInfo::Capture(trycatch, context);
+    return JsValue::ForError(errorInfo);
+}
+
+JsValue JsValue::ForJsString(Local<String> value, JsContext* context)
+{
+    assert(!value.IsEmpty());
+    assert(context != nullptr);
+    return JsValue(JSVALUE_TYPE_JSSTRING, value->Length(), (void*)new Persistent<String>(context->Isolate(), value));
+}
+
+inline JsValue JsValue::ForJsArray(Local<Array> value, JsContext* context) {
+    assert(!value.IsEmpty());
+    assert(context != nullptr);
+    return JsValue(JSVALUE_TYPE_JSARRAY, 0, (void*)new Persistent<Array>(context->Isolate(), value));
+}
+
+inline JsValue JsValue::ForJsFunction(Local<Function> value, JsContext* context) {
+    assert(!value.IsEmpty());
+    assert(context != nullptr);
+    return JsValue(JSVALUE_TYPE_JSFUNCTION, 0, (void*)new Persistent<Function>(context->Isolate(), value));
+}
+
+inline JsValue JsValue::ForJsObject(Local<Object> value, JsContext* context) {
+    assert(!value.IsEmpty());
+    assert(context != nullptr);
+    return JsValue(JSVALUE_TYPE_JSOBJECT, 0, (void*)new Persistent<Object>(context->Isolate(), value));
 }
 
 Local<Value> JsValue::GetValue(JsContext* context)
@@ -134,12 +157,6 @@ Local<Value> JsValue::GetValue(JsContext* context)
 
     // todo: throw?
     return Null(isolate);
-}
-
-JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)
-{
-    auto errorInfo = JsErrorInfo::Capture(trycatch, context);
-    return JsValue::ForError(errorInfo);
 }
 
 void JsValue::Dispose()

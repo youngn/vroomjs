@@ -42,25 +42,17 @@ public:
         assert(value != nullptr);
         return JsValue(JSVALUE_TYPE_STRING, length, value);
     }
+    static JsValue ForDate(double value) {
+        return JsValue(JSVALUE_TYPE_DATE, 0, value);
+    }
+    static JsValue ForJsString(Local<String> value, JsContext* context);
     static JsValue ForJsString(Persistent<String>* value, int32_t length) {
         assert(value != nullptr);
         return JsValue(JSVALUE_TYPE_JSSTRING, length, (void*)value);
     }
-    static JsValue ForDate(double value) {
-        return JsValue(JSVALUE_TYPE_DATE, 0, value);
-    }
-    static JsValue ForJsArray(Persistent<Array>* value) {
-        assert(value != nullptr);
-        return JsValue(JSVALUE_TYPE_JSARRAY, 0, (void*)value);
-    }
-    static JsValue ForJsFunction(Persistent<Function>* value) {
-        assert(value != nullptr);
-        return JsValue(JSVALUE_TYPE_JSFUNCTION, 0, (void*)value);
-    }
-    static JsValue ForJsObject(Persistent<Object>* value) {
-        assert(value != nullptr);
-        return JsValue(JSVALUE_TYPE_JSOBJECT, 0, (void*)value);
-    }
+    static JsValue ForJsArray(Local<Array> value, JsContext* context);
+    static JsValue ForJsFunction(Local<Function> value, JsContext* context);
+    static JsValue ForJsObject(Local<Object> value, JsContext* context);
     static JsValue ForError(JsErrorInfo* value) {
         assert(value != nullptr);
         return JsValue(JSVALUE_TYPE_JSERROR, 0, (void*)value);
