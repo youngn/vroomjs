@@ -241,12 +241,6 @@ namespace VroomJs
                 case JsValueType.HostObject:
                     return HostObjectValue(context);
 
-                case JsValueType.HostError:
-                    // todo: do we really want to wrapping in JsException? maybe better to just rethrow raw?
-                    var inner = HostObjectValue(context) as Exception;
-                    var msg = inner?.Message ?? "Unknown error"; // todo: make this better
-                    return new JsException(msg, inner);
-
                 case JsValueType.JsObject:
                     return JsObjectValue(context);
 
@@ -295,7 +289,7 @@ namespace VroomJs
 
             // The value of the string is copied into the buffer with no null terminator.
             var buffer = new char[_data.Length];
-            var n = Interop.NativeApi.jsstring_get_value(context.Engine.Handle, _data.Ptr, buffer);
+            var n = NativeApi.jsstring_get_value(context.Engine.Handle, _data.Ptr, buffer);
             if (n != _data.Length)
                 throw new JsInteropException("Failed to copy string.");
             return new string(buffer);
