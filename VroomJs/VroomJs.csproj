@@ -45,6 +45,7 @@
     <Compile Include="VroomJs\ClrMemberTemplate.cs" />
     <Compile Include="VroomJs\ClrTypeTemplate.cs" />
     <Compile Include="VroomJs\EngineConfiguration.cs" />
+    <Compile Include="VroomJs\ExceptionTemplate.cs" />
     <Compile Include="VroomJs\HostErrorInfo.cs" />
     <Compile Include="VroomJs\Interop\jsvalue.cs" />
     <Compile Include="VroomJs\JsErrorInfo.cs" />

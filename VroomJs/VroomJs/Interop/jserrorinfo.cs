@@ -10,7 +10,6 @@ namespace VroomJs.Interop
         public int Line;
         public int Column;
         public IntPtr Resource;
-        public IntPtr Description;
         public IntPtr Type;
         public IntPtr Text;
         public IntPtr StackStr;

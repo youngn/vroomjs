@@ -124,11 +124,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { x.bar; } catch(e) { e; }") as JsObject;
+                    var result = context.Execute("try { x.bar; } catch(e) { [e.name, e.message, e.exceptionType]; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual(HostErrorName, result["name"]);
-                    Assert.AreEqual("uh oh", result["message"]);
-                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
+                    Assert.AreEqual(HostErrorName, result[0]);
+                    Assert.AreEqual("uh oh", result[1]);
+                    Assert.AreEqual(nameof(FooException), result[2]);
                 }
             }
         }
@@ -149,11 +149,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { x.bar = 1; } catch(e) { e; }") as JsObject;
+                    var result = context.Execute("try { x.bar = 1; } catch(e) { [e.name, e.message, e.exceptionType]; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual(HostErrorName, result["name"]);
-                    Assert.AreEqual("uh oh", result["message"]);
-                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
+                    Assert.AreEqual(HostErrorName, result[0]);
+                    Assert.AreEqual("uh oh", result[1]);
+                    Assert.AreEqual(nameof(FooException), result[2]);
                 }
             }
         }
@@ -174,11 +174,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { delete x.bar; } catch(e) { e; }") as JsObject;
+                    var result = context.Execute("try { delete x.bar; } catch(e) { [e.name, e.message, e.exceptionType]; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual(HostErrorName, result["name"]);
-                    Assert.AreEqual("uh oh", result["message"]);
-                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
+                    Assert.AreEqual(HostErrorName, result[0]);
+                    Assert.AreEqual("uh oh", result[1]);
+                    Assert.AreEqual(nameof(FooException), result[2]);
                 }
             }
         }
@@ -233,11 +233,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { Object.keys(x); } catch(e) { e; }") as JsObject;
+                    var result = context.Execute("try { Object.keys(x); } catch(e) { [e.name, e.message, e.exceptionType]; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual(HostErrorName, result["name"]);
-                    Assert.AreEqual("uh oh", result["message"]);
-                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
+                    Assert.AreEqual(HostErrorName, result[0]);
+                    Assert.AreEqual("uh oh", result[1]);
+                    Assert.AreEqual(nameof(FooException), result[2]);
                 }
             }
         }
@@ -318,11 +318,11 @@ namespace VroomJsTests
                     var f = new object();
                     context.SetVariable("f", f);
 
-                    var result = context.Execute("try { f(); } catch(e) { e; }") as JsObject;
+                    var result = context.Execute("try { f(); } catch(e) { [e.name, e.message, e.exceptionType]; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual(HostErrorName, result["name"]);
-                    Assert.AreEqual("uh oh", result["message"]);
-                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
+                    Assert.AreEqual(HostErrorName, result[0]);
+                    Assert.AreEqual("uh oh", result[1]);
+                    Assert.AreEqual(nameof(FooException), result[2]);
                 }
             }
         }
@@ -376,11 +376,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { x.valueOf(); } catch(e) { e; }") as JsObject;
+                    var result = context.Execute("try { x.valueOf(); } catch(e) { [e.name, e.message, e.exceptionType]; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual(HostErrorName, result["name"]);
-                    Assert.AreEqual("uh oh", result["message"]);
-                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
+                    Assert.AreEqual(HostErrorName, result[0]);
+                    Assert.AreEqual("uh oh", result[1]);
+                    Assert.AreEqual(nameof(FooException), result[2]);
                 }
             }
         }
@@ -434,11 +434,11 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    var result = context.Execute("try { x.toString(); } catch(e) { e; }") as JsObject;
+                    var result = context.Execute("try { x.toString(); } catch(e) { [e.name, e.message, e.exceptionType]; }") as JsObject;
                     Assert.IsNotNull(result);
-                    Assert.AreEqual(HostErrorName, result["name"]);
-                    Assert.AreEqual("uh oh", result["message"]);
-                    Assert.AreEqual(nameof(FooException), result["exceptionType"]);
+                    Assert.AreEqual(HostErrorName, result[0]);
+                    Assert.AreEqual("uh oh", result[1]);
+                    Assert.AreEqual(nameof(FooException), result[2]);
                 }
             }
         }

@@ -128,7 +128,6 @@ namespace VroomJsTests
                     Assert.AreEqual(4, info.Column);
                     Assert.AreEqual("TypeError", info.ErrorName);
                     Assert.AreEqual("TypeError: Uh oh", info.ErrorText);
-                    Assert.AreEqual("Uncaught TypeError: Uh oh", info.Description);
                     Assert.AreEqual(stackStr, info.ErrorStackString);
                     Assert.AreEqual(stackStr, e.Message); // designed to be identical to ErrorStackString
 
@@ -181,7 +180,6 @@ namespace VroomJsTests
                     Assert.AreEqual(4, info.Column);
                     Assert.AreEqual(null, info.ErrorName); // no .name property available
                     Assert.AreEqual("Uh oh", info.ErrorText);
-                    Assert.AreEqual("Uncaught Uh oh", info.Description);
                     Assert.AreEqual(null, info.ErrorStackString); // no .stack property available
                     Assert.AreEqual(stackStr, e.Message);
 
@@ -193,6 +191,69 @@ namespace VroomJsTests
                 }
             }
         }
+        private class FooException : Exception
+        {
+            public FooException(string message) : base(message) { }
+        }
+
+        [Test]
+        public void Test_host_error()
+        {
+            const string script =
+                "function beta() {\n" +
+                "    alpha();\n" +
+                "}\n" +
+                "function gamma() {\n" +
+                "    beta();\n" +
+                "}\n" +
+                "\n" +
+                "gamma()";
+
+            const string stackStr = "HostError: Uh oh\n" +
+                "    at beta (<Unnamed Script>:2:5)\n" +
+                "    at gamma (<Unnamed Script>:5:5)\n" +
+                "    at <Unnamed Script>:8:1";
+
+            // Use own engine instance here, since we need to register a template
+            using (var engine = new JsEngine())
+            using (var context = engine.CreateContext())
+            {
+                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                    invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { throw new FooException("Uh oh"); }
+                ));
+
+                try
+                {
+                    var alpha = new object();
+                    context.SetVariable("alpha", alpha);
+
+                    context.Execute(script);
+
+                    Assert.Fail("Expected the JS error to be thrown as exception on CLR side.");
+                }
+                catch (JsException e)
+                {
+                    //Console.WriteLine(e);
+                    var info = e.ErrorInfo;
+
+                    Assert.AreEqual(2, info.Line);
+                    Assert.AreEqual(4, info.Column);
+                    Assert.AreEqual("HostError", info.ErrorName);
+                    Assert.AreEqual("HostError: Uh oh", info.ErrorText);
+                    // todo: ErrorStackString is not populated when exception does not originate in JS
+                    //Assert.AreEqual(stackStr, info.ErrorStackString);
+                    Assert.AreEqual(stackStr, e.Message); // designed to be identical to ErrorStackString
+
+                    Assert.IsNotNull(info.ErrorStackTrace);
+
+                    var error = info.Error as JsObject;
+                    Assert.IsNotNull(error);
+                    Assert.AreEqual("Uh oh", error["message"]);
+                    Assert.AreEqual("HostError", error["name"]);
+                }
+            }
+        }
+
 
         [Test]
         public void Test_JsObject()

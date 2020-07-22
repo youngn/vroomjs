@@ -235,3 +235,17 @@ JsValue JsContext::CreateArray(int len, const JsValue * elements)
 
     return JsValue::ForValue(arr, this);
 }
+
+JsValue JsContext::GetHostObjectProxy(JsValue hostObject)
+{
+    if (hostObject.ValueType() != JSVALUE_TYPE_HOSTOBJECT)
+        return JsValue::ForEmpty();
+
+    Locker locker(isolate_);
+    HandleScope scope(isolate_);
+
+    // The extracted value is the proxy. We just need to marshal it back
+    // to the other side as a JsObject.
+    auto obj = Local<Object>::Cast(hostObject.Extract(this));
+    return JsValue::ForJsObject(obj, this);
+}

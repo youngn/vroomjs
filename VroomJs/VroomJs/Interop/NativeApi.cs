@@ -76,7 +76,10 @@ namespace VroomJs.Interop
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern jsvalue jscontext_new_array(HandleRef context, int len, [In]jsvalue[] elements);
-        
+
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+        public static extern jsvalue jscontext_get_proxy(HandleRef context, jsvalue hostObject);
+
         #endregion
 
         #region jsobject

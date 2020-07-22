@@ -35,7 +35,6 @@ private:
         int32_t line;
         int32_t column;
         char16_t* resource;
-        char16_t* description;
         char16_t* type;
         char16_t* text;
         char16_t* stackstr;
@@ -45,9 +44,8 @@ private:
 public:
     static JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context);
 
-    JsErrorInfo(char16_t* description, int32_t line, int32_t column,
+    JsErrorInfo(int32_t line, int32_t column,
         char16_t* resource, char16_t* type, char16_t* text, jsvalue error, char16_t* stackstr, jsstackframe* stackframes) {
-        v.description = description;
         v.line = line;
         v.column = column;
         v.resource = resource;
@@ -67,8 +65,6 @@ public:
     }
 
     ~JsErrorInfo() {
-        if (v.description)
-            delete[] v.description;
         if (v.resource)
             delete[] v.resource;
         if (v.type)
@@ -82,6 +78,7 @@ public:
     }
 
 private:
+    static char16_t* GetExceptionType(Local<Value> exception, JsContext* context);
     static jsstackframe* CaptureStackFrames(Local<StackTrace> stackTrace, JsContext* context);
     static char16_t* CreateString(Local<String> value, JsContext* context);
 

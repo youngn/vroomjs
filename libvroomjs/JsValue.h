@@ -8,7 +8,7 @@ class JsErrorInfo;
 class JsValue
 {
 public:
-    static JsValue ForValue(Local<Value> value, JsContext* context);
+    static JsValue ForValue(Local<Value> value, JsContext* context, bool unproxy = true);
     static JsValue ForError(TryCatch& trycatch, JsContext* context);
 
     Local<Value> Extract(JsContext* context) {

@@ -244,6 +244,16 @@ extern "C"
         return context->CreateArray(len, (const JsValue*)elements);
     }
 
+    EXPORT jsvalue CALLINGCONVENTION jscontext_get_proxy(JsContext* context, jsvalue hostObject)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jscontext_get_proxy" << std::endl;
+#endif
+        assert(context != nullptr);
+
+        return context->GetHostObjectProxy(hostObject);
+    }
+
     EXPORT jsvalue CALLINGCONVENTION jsobject_get_named_property_value(JsContext* context, Persistent<Object>* obj, const uint16_t* name)
     {
 #ifdef DEBUG_TRACE_API

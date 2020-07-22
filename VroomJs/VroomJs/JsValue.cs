@@ -333,7 +333,6 @@ namespace VroomJs
             var info = Marshal.PtrToStructure<jserrorinfo>(_data.Ptr);
 
             var resource = info.Resource != null ? Marshal.PtrToStringUni(info.Resource) : null;
-            var description = info.Description != null ? Marshal.PtrToStringUni(info.Description) : null;
             var type = info.Type != null ? Marshal.PtrToStringUni(info.Type) : null;
             var text = info.Text != null ? Marshal.PtrToStringUni(info.Text) : null;
             var stackStr = info.StackStr != null ? Marshal.PtrToStringUni(info.StackStr) : null;
@@ -345,7 +344,7 @@ namespace VroomJs
             {
                 // todo: do we actually get a JS error object here? If so, include it
                 return new JsSyntaxException(
-                    new JsErrorInfo(description, resource, line, column, null, text, type, null, null));
+                    new JsErrorInfo(resource, line, column, null, text, type, null, null));
             }
 
             // The error object can be anything is JS - it is not necessarily an Error object,
@@ -355,9 +354,8 @@ namespace VroomJs
             var stackTrace = GetStackFrames(info.StackFrames);
 
             return new JsException(
-                new JsErrorInfo(
-                    description, resource, line, column, error, text, type, stackStr,
-                        new JsStackTrace(stackTrace.ToList())
+                new JsErrorInfo(resource, line, column, error, text, type, stackStr,
+                    new JsStackTrace(stackTrace.ToList())
                 )
             );
         }

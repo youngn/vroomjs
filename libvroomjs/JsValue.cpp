@@ -8,7 +8,7 @@
 #include "HostObjectManager.h"
 
 
-JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
+JsValue JsValue::ForValue(Local<Value> value, JsContext* context, bool unproxy)
 {
     auto isolate = context->Isolate();
     auto ctx = context->Ctx();
@@ -48,9 +48,8 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
     if (value->IsFunction()) {
         auto function = Local<Function>::Cast(value);
 
-        // TODO: why is it that the proxy object is a function? It seems like we shouldn't need this 'if' here
-        // (unless the object being proxied is a CLR delegate, in which case it could make sense)
-        if (function->InternalFieldCount() > 0) {
+        // Is the function a proxied Host object?
+        if (unproxy && function->InternalFieldCount() > 0) {
             auto ref = (HostObjectRef*)Local<External>::Cast(function->GetInternalField(0))->Value();
             return ForHostObject(ref->Id());
         }
@@ -61,7 +60,9 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
 
     if (value->IsObject()) {
         auto obj = Local<Object>::Cast(value);
-        if (obj->InternalFieldCount() > 0) {
+
+        // Is the object a proxied Host object?
+        if (unproxy && obj->InternalFieldCount() > 0) {
             auto ref = (HostObjectRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
             return ForHostObject(ref->Id());
         }

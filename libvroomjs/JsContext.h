@@ -21,6 +21,7 @@ public:
 
     JsValue CreateObject();
     JsValue CreateArray(int len, const JsValue* elements);
+    JsValue GetHostObjectProxy(JsValue hostObject);
 
     void Dispose();
 

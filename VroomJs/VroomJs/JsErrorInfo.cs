@@ -3,7 +3,6 @@
     public class JsErrorInfo
     {
         internal JsErrorInfo(
-            string description,
             string resource,
             int line,
             int col,
@@ -13,7 +12,6 @@
             string stackStr,
             JsStackTrace stackTrace)
         {
-            Description = description;
             Resource = resource;
             Line = line;
             Column = col;
@@ -23,11 +21,6 @@
             ErrorStackString = stackStr;
             ErrorStackTrace = stackTrace;
         }
-
-        /// <summary>
-        /// Gets the description of the error as provided by V8.
-        /// </summary>
-        public string Description { get; }
 
         /// <summary>
         /// Gets the resource containing the script from which the error was thrown.

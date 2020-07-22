@@ -30,6 +30,7 @@ namespace VroomJs
 
         private readonly List<HostObjectTemplateRegistration> _templateRegistrations
             = new List<HostObjectTemplateRegistration>();
+        private readonly HostObjectTemplateRegistration _exceptionTemplateRegistration;
 
         private readonly HandleRef _engineHandle;
         private readonly Dictionary<int, JsContext> _aliveContexts = new Dictionary<int, JsContext>();
@@ -47,7 +48,9 @@ namespace VroomJs
                 memoryConfig.MaxYoungSpace,
                 memoryConfig.MaxOldSpace));
 
-            if(configuration != null)
+            _exceptionTemplateRegistration = new HostObjectTemplateRegistration(this, new ExceptionTemplate());
+
+            if (configuration != null)
             {
                 configuration.Apply(this);
             }

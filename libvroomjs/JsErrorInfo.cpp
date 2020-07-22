@@ -15,7 +15,7 @@ JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context)
     auto exception = trycatch.Exception();
     assert(!exception.IsEmpty()); // should only be empty if no exception was caught
 
-    auto error = JsValue::ForValue(exception, context);
+    auto error = JsValue::ForValue(exception, context, /* keep the proxy */false);
     auto text = JsErrorInfo::CreateString(exception->ToString(ctx).FromMaybe(Local<String>()), context);
 
     auto message = trycatch.Message();
@@ -28,14 +28,7 @@ JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context)
         ? JsErrorInfo::CreateString(message->GetScriptResourceName()->ToString(ctx).FromMaybe(Local<String>()), context)
         : nullptr;
 
-    auto description = hasMessage
-        ? JsErrorInfo::CreateString(message->Get(), context)
-        : nullptr;
-
-    // todo: is ctor name really useful? JS Error has a .name property, and that's more important - see MDN
-    auto type = exception->IsObject()
-        ? JsErrorInfo::CreateString(Local<Object>::Cast(exception)->GetConstructorName(), context)
-        : nullptr;
+    auto type = GetExceptionType(exception, context);
 
     Local<Value> stackStrValue;
     auto stackstr = trycatch.StackTrace(ctx).ToLocal(&stackStrValue)
@@ -44,7 +37,25 @@ JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context)
 
     auto stackFrames = CaptureStackFrames(message->GetStackTrace(), context);
 
-    return new JsErrorInfo(description, line, column, resource, type, text, error, stackstr, stackFrames);
+    return new JsErrorInfo(line, column, resource, type, text, error, stackstr, stackFrames);
+}
+
+char16_t* JsErrorInfo::GetExceptionType(Local<Value> exception, JsContext* context)
+{
+    if (exception->IsObject()) {
+        auto errObj = Local<Object>::Cast(exception);
+
+        // Retrieve the .name property (e.g. Error object)
+        Local<Value> name;
+        Local<String> nameStr;
+        if (errObj->Get(context->Ctx(), String::NewFromUtf8Literal(context->Isolate(), "name")).ToLocal(&name)
+            && name->ToString(context->Ctx()).ToLocal(&nameStr))
+            return JsErrorInfo::CreateString(nameStr, context);
+    }
+
+    // If it's not an object, or doesn't have a 'name' property...
+    // todo: Can we still give the type name here (e.g. string, number, etc)?
+    return nullptr;
 }
 
 JsErrorInfo::jsstackframe* JsErrorInfo::CaptureStackFrames(Local<StackTrace> stackTrace, JsContext* context)
