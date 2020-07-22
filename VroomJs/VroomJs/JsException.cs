@@ -49,7 +49,7 @@ namespace VroomJs
         }
 
         internal JsException(JsErrorInfo errorInfo, Exception inner)
-            : base(FormatMessage(errorInfo.ErrorText, errorInfo.ErrorStackTrace), inner)
+            : base(FormatMessage(errorInfo.Text, errorInfo.StackTrace), inner)
         {
             ErrorInfo = errorInfo;
         }

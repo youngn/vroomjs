@@ -126,12 +126,12 @@ namespace VroomJsTests
 
                     Assert.AreEqual(2, info.Line);
                     Assert.AreEqual(4, info.Column);
-                    Assert.AreEqual("TypeError", info.ErrorName);
-                    Assert.AreEqual("TypeError: Uh oh", info.ErrorText);
-                    Assert.AreEqual(stackStr, info.ErrorStackString);
+                    Assert.AreEqual("TypeError", info.Name);
+                    Assert.AreEqual("TypeError: Uh oh", info.Text);
+                    Assert.AreEqual(stackStr, info.StackString);
                     Assert.AreEqual(stackStr, e.Message); // designed to be identical to ErrorStackString
 
-                    Assert.IsNotNull(info.ErrorStackTrace);
+                    Assert.IsNotNull(info.StackTrace);
 
                     var error = info.Error as JsObject;
                     Assert.IsNotNull(error);
@@ -178,12 +178,12 @@ namespace VroomJsTests
 
                     Assert.AreEqual(2, info.Line);
                     Assert.AreEqual(4, info.Column);
-                    Assert.AreEqual(null, info.ErrorName); // no .name property available
-                    Assert.AreEqual("Uh oh", info.ErrorText);
-                    Assert.AreEqual(null, info.ErrorStackString); // no .stack property available
+                    Assert.AreEqual(null, info.Name); // no .name property available
+                    Assert.AreEqual("Uh oh", info.Text);
+                    Assert.AreEqual(null, info.StackString); // no .stack property available
                     Assert.AreEqual(stackStr, e.Message);
 
-                    Assert.IsNotNull(info.ErrorStackTrace);
+                    Assert.IsNotNull(info.StackTrace);
 
                     var error = info.Error as string;
                     Assert.IsNotNull(error);
@@ -239,15 +239,15 @@ namespace VroomJsTests
 
                     Assert.AreEqual(2, info.Line);
                     Assert.AreEqual(4, info.Column);
-                    Assert.AreEqual("HostError", info.ErrorName);
-                    Assert.AreEqual("HostError: Uh oh", info.ErrorText);
+                    Assert.AreEqual("HostError", info.Name);
+                    Assert.AreEqual("HostError: Uh oh", info.Text);
                     // todo: ErrorStackString is not populated when exception does not originate in JS
                     //Assert.AreEqual(stackStr, info.ErrorStackString);
                     Assert.AreEqual(stackStr, e.Message); // designed to be identical to ErrorStackString
 
                     Assert.AreSame(fooException, e.InnerException);
 
-                    Assert.IsNotNull(info.ErrorStackTrace);
+                    Assert.IsNotNull(info.StackTrace);
 
                     var error = info.Error as JsObject;
                     Assert.IsNotNull(error);

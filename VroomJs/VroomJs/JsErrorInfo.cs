@@ -16,10 +16,10 @@
             Line = line;
             Column = col;
             Error = error;
-            ErrorText = text;
-            ErrorName = type;
-            ErrorStackString = stackStr;
-            ErrorStackTrace = stackTrace;
+            Text = text;
+            Name = type;
+            StackString = stackStr;
+            StackTrace = stackTrace;
         }
 
         /// <summary>
@@ -45,21 +45,21 @@
         /// <summary>
         /// Gets the result of the .toString() method of the error object.
         /// </summary>
-        public string ErrorText { get; }
+        public string Text { get; }
 
         /// <summary>
         /// Gets the value of the .name property of the error object; may be null.
         /// </summary>
-        public string ErrorName { get; }
+        public string Name { get; }
 
         /// <summary>
         /// Gets the value of the .stack property of the error object; may be null.
         /// </summary>
-        public string ErrorStackString { get; }
+        public string StackString { get; }
 
         /// <summary>
         /// Gets the stack trace.
         /// </summary>
-        public JsStackTrace ErrorStackTrace { get; }
+        public JsStackTrace StackTrace { get; }
     }
 }
