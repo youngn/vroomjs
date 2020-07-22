@@ -96,6 +96,8 @@ namespace VroomJs
 
         internal HandleRef Handle => _engineHandle;
 
+        internal int ExceptionTemplateId => _exceptionTemplateRegistration.Id;
+
         internal void RegisterHostObjectTemplate(HostObjectTemplate template, Predicate<object> selector = null)
         {
             _templateRegistrations.Add(new HostObjectTemplateRegistration(this, template, selector));

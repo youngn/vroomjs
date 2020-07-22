@@ -1,6 +1,5 @@
 #include <cassert>
 
-#include "vroomjs.h"
 #include "JsValue.h"
 #include "JsContext.h"
 #include "JsErrorInfo.h"
@@ -8,7 +7,7 @@
 #include "HostObjectManager.h"
 
 
-JsValue JsValue::ForValue(Local<Value> value, JsContext* context, bool unproxy)
+JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
 {
     auto isolate = context->Isolate();
     auto ctx = context->Ctx();
@@ -49,7 +48,7 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context, bool unproxy)
         auto function = Local<Function>::Cast(value);
 
         // Is the function a proxied Host object?
-        if (unproxy && function->InternalFieldCount() > 0) {
+        if (function->InternalFieldCount() > 0) {
             auto ref = (HostObjectRef*)Local<External>::Cast(function->GetInternalField(0))->Value();
             return ForHostObject(ref->Id());
         }
@@ -62,7 +61,7 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context, bool unproxy)
         auto obj = Local<Object>::Cast(value);
 
         // Is the object a proxied Host object?
-        if (unproxy && obj->InternalFieldCount() > 0) {
+        if (obj->InternalFieldCount() > 0) {
             auto ref = (HostObjectRef*)Local<External>::Cast(obj->GetInternalField(0))->Value();
             return ForHostObject(ref->Id());
         }

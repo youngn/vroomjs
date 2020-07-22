@@ -320,5 +320,17 @@ namespace VroomJs
 
             _engine.CheckDisposed();
         }
+
+        internal JsObject GetExceptionProxy(Exception ex)
+        {
+            return GetHostObjectProxy(ex, _engine.ExceptionTemplateId);
+        }
+
+        internal JsObject GetHostObjectProxy(object obj, int templateId)
+        {
+            var x = JsValue.ForHostObject(AddHostObject(obj), templateId);
+            var v = (JsValue)NativeApi.jscontext_get_proxy(_contextHandle, x);
+            return (JsObject)v.Extract(this);
+        }
     }
 }

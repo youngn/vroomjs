@@ -204,9 +204,7 @@ namespace VroomJs
             private JsValue ConvertException(Exception e, JsContext context)
             {
                 // Wrap the Exception in a JS proxy object
-                var x = JsValue.ForHostObject(context.AddHostObject(e), _engine._exceptionTemplateRegistration.Id);
-                var v = (JsValue)NativeApi.jscontext_get_proxy(context.Handle, x);
-                var errorObj = (JsObject)v.Extract(context);
+                var errorObj = context.GetExceptionProxy(e);
 
                 // todo: should we call 'captureStackTrace' to populate the .stack property?
                 // Problem is, it shows a funny thing at the top of the stack, due to error originating outside of JS

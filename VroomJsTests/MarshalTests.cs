@@ -215,11 +215,12 @@ namespace VroomJsTests
                 "    at <Unnamed Script>:8:1";
 
             // Use own engine instance here, since we need to register a template
+            var fooException = new FooException("Uh oh");
             using (var engine = new JsEngine())
             using (var context = engine.CreateContext())
             {
                 engine.RegisterHostObjectTemplate(new HostObjectTemplate(
-                    invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { throw new FooException("Uh oh"); }
+                    invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { throw fooException; }
                 ));
 
                 try
@@ -243,6 +244,8 @@ namespace VroomJsTests
                     // todo: ErrorStackString is not populated when exception does not originate in JS
                     //Assert.AreEqual(stackStr, info.ErrorStackString);
                     Assert.AreEqual(stackStr, e.Message); // designed to be identical to ErrorStackString
+
+                    Assert.AreSame(fooException, e.InnerException);
 
                     Assert.IsNotNull(info.ErrorStackTrace);
 

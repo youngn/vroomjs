@@ -48,8 +48,8 @@ namespace VroomJs
         {
         }
 
-        internal JsException(JsErrorInfo errorInfo)
-            : base(FormatMessage(errorInfo.ErrorText, errorInfo.ErrorStackTrace))
+        internal JsException(JsErrorInfo errorInfo, Exception inner)
+            : base(FormatMessage(errorInfo.ErrorText, errorInfo.ErrorStackTrace), inner)
         {
             ErrorInfo = errorInfo;
         }
@@ -65,7 +65,7 @@ namespace VroomJs
     public class JsSyntaxException : JsException
     {
         internal JsSyntaxException(JsErrorInfo errorInfo)
-            : base(errorInfo)
+            : base(errorInfo, inner: null)
         {
         }
     }

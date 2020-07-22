@@ -15,7 +15,7 @@ JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context)
     auto exception = trycatch.Exception();
     assert(!exception.IsEmpty()); // should only be empty if no exception was caught
 
-    auto error = JsValue::ForValue(exception, context, /* keep the proxy */false);
+    auto error = JsValue::ForValue(exception, context);
     auto text = JsErrorInfo::CreateString(exception->ToString(ctx).FromMaybe(Local<String>()), context);
 
     auto message = trycatch.Message();
