@@ -111,7 +111,7 @@ namespace VroomJs
                 return ForJsFunction((JsFunction)obj);
 
             if (type == typeof(HostErrorInfo))
-                return ForHostError((HostErrorInfo)obj);
+                return ForHostError((HostErrorInfo)obj, context);
 
             var templateId = context.Engine.SelectTemplate(obj);
             if(templateId >= 0)
@@ -191,10 +191,11 @@ namespace VroomJs
             Debug.Assert(value != null);
             return new jsvalue { Type = JsValueType.JsObject, Ptr = value.Handle };
         }
-        public static JsValue ForHostError(HostErrorInfo errorInfo)
+        public static JsValue ForHostError(HostErrorInfo errorInfo, JsContext context)
         {
             Debug.Assert(errorInfo != null);
-            return new jsvalue { Type = JsValueType.HostError, Ptr = errorInfo.ErrorObject.Handle };
+            var errorObj = errorInfo.ToErrorObject(context);
+            return new jsvalue { Type = JsValueType.HostError, Ptr = errorObj.Handle };
         }
         public static JsValue ForHostObject(int id, int templateId)
         {

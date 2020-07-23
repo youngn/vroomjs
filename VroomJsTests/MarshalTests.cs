@@ -209,7 +209,7 @@ namespace VroomJsTests
                 "\n" +
                 "gamma()";
 
-            const string stackStr = "HostError: Uh oh\n" +
+            const string stackStr = "Error: Uh oh\n" +
                 "    at beta (<Unnamed Script>:2:5)\n" +
                 "    at gamma (<Unnamed Script>:5:5)\n" +
                 "    at <Unnamed Script>:8:1";
@@ -239,8 +239,8 @@ namespace VroomJsTests
 
                     Assert.AreEqual(2, info.Line);
                     Assert.AreEqual(4, info.Column);
-                    Assert.AreEqual("HostError", info.Name);
-                    Assert.AreEqual("HostError: Uh oh", info.Text);
+                    Assert.AreEqual("Error", info.Name);
+                    Assert.AreEqual("Error: Uh oh", info.Text);
                     // todo: ErrorStackString is not populated when exception does not originate in JS
                     //Assert.AreEqual(stackStr, info.ErrorStackString);
                     Assert.AreEqual(stackStr, e.Message); // designed to be identical to ErrorStackString
@@ -252,7 +252,7 @@ namespace VroomJsTests
                     var error = info.Error as JsObject;
                     Assert.IsNotNull(error);
                     Assert.AreEqual("Uh oh", error["message"]);
-                    Assert.AreEqual("HostError", error["name"]);
+                    Assert.AreEqual("Error", error["name"]);
                 }
             }
         }
