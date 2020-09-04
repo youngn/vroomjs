@@ -16,8 +16,8 @@ namespace VroomJs
 
         static class ExceptionDataKeys
         {
-            public const string Name = "VroomJs." + nameof(ExceptionTemplate) + ".ErrorName";
-            public const string Message = "VroomJs." + nameof(ExceptionTemplate) + ".ErrorMessage";
+            public const string Name = nameof(VroomJs) + "." + nameof(ExceptionTemplate) + ".ErrorName";
+            public const string Message = nameof(VroomJs) + "." + nameof(ExceptionTemplate) + ".ErrorMessage";
         }
 
         public ExceptionTemplate()

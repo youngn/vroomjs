@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace VroomJs
 {
     public class HostErrorInfo
     {
+        private Dictionary<string, object> _customProperties;
+
         internal HostErrorInfo(Exception exception = null, string name = null, string message = null)
         {
             Exception = exception;
@@ -17,7 +20,26 @@ namespace VroomJs
 
         public string Message { get; }
 
-        // todo: allow addition of arbitrary properties on the error object
+        /// <summary>
+        /// Gets or sets an additional property on the error object.
+        /// </summary>
+        /// <param name="key">The name of the property.</param>
+        /// <returns>The property value.</returns>
+        public object this[string key]
+        {
+            get
+            {
+                if (_customProperties == null)
+                    return null;
+                return _customProperties.TryGetValue(key, out object v) ? v : null;
+            }
+            set
+            {
+                if (_customProperties == null)
+                    _customProperties = new Dictionary<string, object>();
+                _customProperties[key] = value;
+            }
+        }
 
         public JsObject ToErrorObject(JsContext context)
         {
@@ -28,7 +50,6 @@ namespace VroomJs
                 errorObj = context.GetExceptionProxy(Exception);
 
                 // If name/message were provided, they should override the default values.
-                // todo: make this work
                 if (!string.IsNullOrEmpty(Name))
                     errorObj["name"] = Name;
                 if (!string.IsNullOrEmpty(Message))
@@ -41,17 +62,21 @@ namespace VroomJs
                 errorObj["message"] = !string.IsNullOrEmpty(Message) ? Message : "An unknown error occurred.";
             }
 
-
-            //errorObj.SetPropertyValue("name", "HostError");
-            //errorObj.SetPropertyValue("message", e.Message);
-            //errorObj.SetPropertyValue("exceptionType", e.GetType().Name);
-
             // todo: should we call 'captureStackTrace' to populate the .stack property?
             // Problem is, it shows a funny thing at the top of the stack, due to error originating outside of JS
             //var global = (JsObject)context.GetGlobal();
             //var errorClass = (JsObject)global.GetPropertyValue("Error");
             //var captureStackTrace = (JsFunction)errorClass.GetPropertyValue("captureStackTrace");
             //captureStackTrace.Invoke(errorClass, errorObj, errorObj);
+
+            // Copy custom properties
+            if(_customProperties != null)
+            {
+                foreach(var kvp in _customProperties)
+                {
+                    errorObj[kvp.Key] = kvp.Value;
+                }
+            }
 
             return errorObj;
         }

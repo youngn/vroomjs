@@ -346,7 +346,7 @@ namespace VroomJs
             // or even an Object, so we don't cast it.
             var error = ((JsValue)info.Error).GetValue(context);
 
-            // If the error object is an actual Exception, replace it with the proxy object
+            // If the error object is an actual CLR Exception, replace it with the proxy object
             // instead, and stash the raw Exception as the JsException.InnerException.
             // TODO: does this make sense, or should we just use the raw exception???
             var exception = error as Exception;
