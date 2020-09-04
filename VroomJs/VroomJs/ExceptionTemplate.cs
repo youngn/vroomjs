@@ -45,6 +45,7 @@ namespace VroomJs
                     return true;
 
                 default:
+                    // Do not handle; allow the property to be retrieved from the V8 object.
                     value = null;
                     return false;
             }
@@ -67,6 +68,7 @@ namespace VroomJs
                     return true;
 
                 default:
+                    // Do not handle; allow the property to be set on the V8 object.
                     return false;
             }
         }
@@ -77,6 +79,8 @@ namespace VroomJs
             if (ex == null)
                 throw new InvalidOperationException("Object is not an exception.");
 
+            // We only need to enumerate special properties here; V8 will add properties
+            // that exist on the actual V8 object.
             yield return PropertyNames.Name;
             yield return PropertyNames.Message;
         }

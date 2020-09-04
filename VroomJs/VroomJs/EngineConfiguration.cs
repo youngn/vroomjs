@@ -30,6 +30,15 @@ namespace VroomJs
 
         public ClrTemplateConfiguration ClrTemplates { get; set; } = new ClrTemplateConfiguration();
 
+        /// <summary>
+        /// Gets or sets the host-error filter.
+        /// </summary>
+        /// <remarks>
+        /// The filter allows client code to interecept and modify a <see cref="HostErrorInfo"/>
+        /// before it is raised as a JavaScript error. This may be used, for example, to customize
+        /// the script error object based on the host exception type.
+        /// </remarks>
+        public HostErrorFilterDelegate HostErrorFilter { get; set; }
 
         public EngineConfiguration RegisterHostObjectTemplate(HostObjectTemplate template, Predicate<object> selector = null)
         {
@@ -78,6 +87,11 @@ namespace VroomJs
             if(ClrTemplates.EnableObjects)
             {
                 engine.RegisterHostObjectTemplate(new ClrObjectTemplate(useNetToString: ClrTemplates.UseNetToString), ClrTemplates.ObjectFilter);
+            }
+
+            if(HostErrorFilter != null)
+            {
+                engine.HostErrorFilter = HostErrorFilter;
             }
         }
     }

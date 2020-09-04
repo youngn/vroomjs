@@ -5,20 +5,39 @@ namespace VroomJs
 {
     public class HostErrorInfo
     {
+        private const string DefaultErrorName = "Error";
+        private const string DefaultErrorMessage = "An unknown error occurred.";
+
         private Dictionary<string, object> _customProperties;
+        private string _name;
+        private string _message;
 
         internal HostErrorInfo(Exception exception = null, string name = null, string message = null)
         {
             Exception = exception;
-            Name = name;
-            Message = message;
+            _name = name;
+            _message = message;
         }
 
-        public Exception Exception { get; }
+        public Exception Exception { get; set; }
 
-        public string Name { get; }
+        public string Name
+        {
+            get { return _name ?? DefaultErrorName; }
+            set
+            {
+                _name = value;
+            }
+        }
 
-        public string Message { get; }
+        public string Message
+        {
+            get { return _message ?? Exception?.Message; }
+            set
+            {
+                _message = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets an additional property on the error object.
@@ -45,21 +64,22 @@ namespace VroomJs
         {
             // If there's an exception, wrap it; otherwise just create a new object 
             JsObject errorObj;
-            if(Exception != null)
+            if (Exception != null)
             {
                 errorObj = context.GetExceptionProxy(Exception);
 
-                // If name/message were provided, they should override the default values.
-                if (!string.IsNullOrEmpty(Name))
-                    errorObj["name"] = Name;
-                if (!string.IsNullOrEmpty(Message))
-                    errorObj["message"] = Message;
+                // If custom name/message were provided, assign them in order to override
+                // the default values that would be inferred from the exception.
+                if (!string.IsNullOrEmpty(_name))
+                    errorObj["name"] = _name;
+                if (!string.IsNullOrEmpty(_message))
+                    errorObj["message"] = _message;
             }
             else
             {
                 errorObj = context.CreateObject();
-                errorObj["name"] = !string.IsNullOrEmpty(Name) ? Name : "Error";
-                errorObj["message"] = !string.IsNullOrEmpty(Message) ? Message : "An unknown error occurred.";
+                errorObj["name"] = Name;
+                errorObj["message"] = Message ?? DefaultErrorMessage;
             }
 
             // todo: should we call 'captureStackTrace' to populate the .stack property?
@@ -70,9 +90,9 @@ namespace VroomJs
             //captureStackTrace.Invoke(errorClass, errorObj, errorObj);
 
             // Copy custom properties
-            if(_customProperties != null)
+            if (_customProperties != null)
             {
-                foreach(var kvp in _customProperties)
+                foreach (var kvp in _customProperties)
                 {
                     errorObj[kvp.Key] = kvp.Value;
                 }

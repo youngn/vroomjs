@@ -98,6 +98,8 @@ namespace VroomJs
 
         internal int ExceptionTemplateId => _exceptionTemplateRegistration.Id;
 
+        internal HostErrorFilterDelegate HostErrorFilter { get; set; }
+
         internal void RegisterHostObjectTemplate(HostObjectTemplate template, Predicate<object> selector = null)
         {
             _templateRegistrations.Add(new HostObjectTemplateRegistration(this, template, selector));

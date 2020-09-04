@@ -118,8 +118,8 @@ namespace VroomJsTests
             var errorInfo = HostErrorInfo.ConvertException(ex);
 
             Assert.AreEqual(ex, errorInfo.Exception);
-            Assert.AreEqual(null, errorInfo.Name);
-            Assert.AreEqual(null, errorInfo.Message);
+            Assert.AreEqual("Error", errorInfo.Name);
+            Assert.AreEqual("Too many foos in the bar.", errorInfo.Message);
         }
 
         [Test]
@@ -141,8 +141,8 @@ namespace VroomJsTests
             var errorInfo = HostErrorInfo.ConvertException(ex1);
 
             Assert.AreEqual(ex, errorInfo.Exception);
-            Assert.AreEqual(null, errorInfo.Name);
-            Assert.AreEqual(null, errorInfo.Message);
+            Assert.AreEqual("Error", errorInfo.Name);
+            Assert.AreEqual("Too many foos in the bar.", errorInfo.Message);
         }
 
         [Test]

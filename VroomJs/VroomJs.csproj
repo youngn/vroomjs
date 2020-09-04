@@ -41,6 +41,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="VroomJs\HostErrorFilterDelegate.cs" />
     <Compile Include="VroomJs\ClrDelegateTemplate.cs" />
     <Compile Include="VroomJs\ClrMemberTemplate.cs" />
     <Compile Include="VroomJs\ClrTypeTemplate.cs" />
