@@ -70,8 +70,12 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
         }
     }
 
-    // Default to a generic error.
-    return ForUnknownError();
+    // todo: other primitive types?
+    //  Symbol
+
+    // Should never get here because all possible JS types should be covered above.
+    assert(false);
+    return ForEmpty();
 }
 
 JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)

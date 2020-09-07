@@ -119,7 +119,7 @@ namespace VroomJs
                 return ForHostObject(context.AddHostObject(obj), templateId);
             }
 
-            throw new JsInteropException($"Object of type {type} cannot be marshaled to JavaScript.");
+            throw new InteropException($"Object of type {type} cannot be marshaled to JavaScript.");
         }
 
         public object Extract(JsContext context)
@@ -139,10 +139,6 @@ namespace VroomJs
         public static JsValue ForEmpty()
         {
             return new jsvalue() { Type = JsValueType.Empty };
-        }
-        public static JsValue ForUnknownError()
-        {
-            return new jsvalue { Type = JsValueType.UnknownError };
         }
         public static JsValue ForNull()
         {
@@ -173,7 +169,7 @@ namespace VroomJs
             Debug.Assert(value != null);
             var v = NativeApi.jsstring_new(context.Engine.Handle, value);
             if (v.Type == JsValueType.Empty)
-                throw new JsInteropException("String exceeds maximum allowable length."); //todo:test?
+                throw new InteropException("String exceeds maximum allowable length."); //todo:test?
             return v;
         }
         public static JsValue ForJsArray(JsArray value)
@@ -236,9 +232,6 @@ namespace VroomJs
                 case JsValueType.Date:
                     return DateValue();
 
-                case JsValueType.UnknownError:
-                    return new JsInteropException("unknown error without reason"); // todo: improve this
-
                 case JsValueType.HostObject:
                     return HostObjectValue(context);
 
@@ -292,7 +285,7 @@ namespace VroomJs
             var buffer = new char[_data.Length];
             var n = NativeApi.jsstring_get_value(context.Engine.Handle, _data.Ptr, buffer);
             if (n != _data.Length)
-                throw new JsInteropException("Failed to copy string.");
+                throw new InteropException("Failed to copy string.");
             return new string(buffer);
         }
         private DateTimeOffset DateValue()

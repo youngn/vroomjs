@@ -37,7 +37,6 @@ using namespace v8;
 // jsvalue (JsValue on the CLR side) is a struct that can be easily marshaled
 // by simply blitting its value (being only 16 bytes should be quite fast too).
 
-#define JSVALUE_TYPE_UNKNOWN_ERROR  -1
 #define JSVALUE_TYPE_EMPTY           0
 #define JSVALUE_TYPE_NULL            1
 #define JSVALUE_TYPE_BOOLEAN         2

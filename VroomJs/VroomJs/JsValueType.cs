@@ -27,7 +27,6 @@ namespace VroomJs
 {
     internal enum JsValueType
     {
-        UnknownError = -1,
         Empty = 0,
         Null = 1,
         Boolean = 2,

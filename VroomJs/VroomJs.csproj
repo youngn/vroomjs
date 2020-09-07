@@ -72,7 +72,7 @@
     <Compile Include="VroomJs\JsValue.cs" />
     <Compile Include="VroomJs\JsException.cs" />
     <Compile Include="VroomJs\JsValueType.cs" />
-    <Compile Include="VroomJs\JsInteropException.cs" />
+    <Compile Include="VroomJs\InteropException.cs" />
     <Compile Include="VroomJs\Interop\NativeApi.cs" />
     <Compile Include="VroomJs\HostObjectTemplate.cs" />
     <Compile Include="VroomJs\WeakDelegate.cs" />

@@ -62,6 +62,7 @@ namespace VroomJs
         }
     }
 
+    // todo: should this really be derived from JsException? i.e. can it have ErrorInfo?
     public class JsSyntaxException : JsException
     {
         internal JsSyntaxException(JsErrorInfo errorInfo)
