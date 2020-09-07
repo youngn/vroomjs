@@ -84,11 +84,6 @@ namespace VroomJs
             //return script;
         }
 
-        public void TerminateExecution()
-        {
-            NativeApi.jsengine_terminate_execution(_engineHandle);
-        }
-
         public void DumpHeapStats()
         {
             NativeApi.jsengine_dump_heap_stats(_engineHandle);
@@ -128,6 +123,11 @@ namespace VroomJs
         {
             var template = _templateRegistrations.FirstOrDefault(r => r.IsApplicableTo(obj));
             return template != null ? template.Id : -1;
+        }
+
+        internal void TerminateExecution()
+        {
+            NativeApi.jsengine_terminate_execution(_engineHandle);
         }
 
         private void ContextDisposed(int id)

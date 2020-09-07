@@ -80,6 +80,10 @@ JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
 
 JsValue JsValue::ForError(TryCatch& trycatch, JsContext* context)
 {
+    // Handle case where execution was forcibly terminated. 
+    if (trycatch.HasTerminated())
+        return JsValue::ForTermination();
+
     auto errorInfo = JsErrorInfo::Capture(trycatch, context);
     return JsValue::ForError(errorInfo);
 }

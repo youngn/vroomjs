@@ -92,11 +92,12 @@ namespace Sandbox
             //    Console.WriteLine("Waiting for key...");
             //    Console.Read();
             //}
-            using (JsEngine engine = new JsEngine())
-            using (JsContext ctx = engine.CreateContext())
-            {
-                ctx.CreateObject();
-            }
+            //using (JsEngine engine = new JsEngine())
+            //using (JsContext ctx = engine.CreateContext())
+            //{
+            //    ctx.CreateObject();
+            //}
+            Test_exception_error_suppression();
             JsEngine.Shutdown();
             return;
 
@@ -165,7 +166,56 @@ namespace Sandbox
             }*/
         }
 
-    	private static bool Activate(int arg) {
+        public static void Test_exception_error_suppression()
+        {
+            var config = new EngineConfiguration();
+
+            // Use filter to prevent host error from being caught by script
+            config.HostErrorFilter = (context, errorInfo) =>
+            {
+                return false;
+            };
+
+            var fooEx = new Exception("uh oh");
+            config.RegisterHostObjectTemplate(new HostObjectTemplate(
+                tryGetProperty: (IHostObjectCallbackContext ctx, object obj, string name, out object value)
+                    => { throw fooEx; }
+            ));
+
+            using (var engine = new JsEngine(config))
+            {
+                using (var context = engine.CreateContext())
+                {
+                    var x = new object();
+                    context.SetVariable("x", x);
+
+                    try
+                    {
+                        var result = context.Execute(
+                            "var c = 0;" +
+                            "try { " +
+                            "   for(var i = 0; i < 100;i++) {" +
+                            "       c++;" +
+                            "       x.bar;" +
+                            "   }" +
+                            "} catch(e) {" +
+                            "   [e.name, e.message];" +
+                            "}");
+
+                        Console.WriteLine(result);
+
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine(context.GetVariable("c"));
+                }
+            }
+        }
+
+        private static bool Activate(int arg) {
     		return arg > 5;
     	}
     }

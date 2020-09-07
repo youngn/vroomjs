@@ -24,8 +24,8 @@
 // THE SOFTWARE.
 
 using System;
-using System.Diagnostics;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Timers;
 using VroomJs.Interop;
@@ -43,6 +43,9 @@ namespace VroomJs
 
         private readonly Action<int> _notifyDispose;
         private bool _disposed;
+
+        private ExceptionDispatchInfo _pendingExceptionInfo;
+        private bool _timeoutExceeded;// todo: needs thread sync (use Interlocked int?)
 
         internal JsContext(int id, JsEngine engine, HandleRef engineHandle, Action<int> notifyDispose)
         {
@@ -77,7 +80,6 @@ namespace VroomJs
 
             CheckDisposed();
 
-            bool executionTimedOut = false;
             Timer timer = null;
             if (executionTimeout.HasValue)
             {
@@ -85,16 +87,16 @@ namespace VroomJs
                 timer.Elapsed += (sender, args) =>
                 {
                     timer.Stop();
-                    executionTimedOut = true;
+                    _timeoutExceeded = true;
                     _engine.TerminateExecution();
                 };
                 timer.Start();
             }
-            object res;
+
             try
             {
                 var v = (JsValue)NativeApi.jscontext_execute_script(_contextHandle, script.Handle);
-                res = ExtractAndCheckReturnValue(v);
+                return ExtractAndCheckReturnValue(v);
             }
             finally
             {
@@ -103,27 +105,15 @@ namespace VroomJs
                     timer.Dispose();
                 }
             }
-
-            if (executionTimedOut)
-            {
-                throw new JsExecutionTimedOutException();
-            }
-
-            return res;
         }
 
         public object Execute(string code, string name = null, TimeSpan? executionTimeout = null)
         {
-            Stopwatch watch1 = new Stopwatch();
-            Stopwatch watch2 = new Stopwatch();
-
-            watch1.Start();
             if (code == null)
                 throw new ArgumentNullException(nameof(code));
 
             CheckDisposed();
 
-            bool executionTimedOut = false;
             Timer timer = null;
             if (executionTimeout.HasValue)
             {
@@ -131,18 +121,16 @@ namespace VroomJs
                 timer.Elapsed += (sender, args) =>
                 {
                     timer.Stop();
-                    executionTimedOut = true;
+                    _timeoutExceeded = true;
                     _engine.TerminateExecution();
                 };
                 timer.Start();
             }
-            object res;
+
             try
             {
-                watch2.Start();
                 var v = (JsValue)NativeApi.jscontext_execute(_contextHandle, code, name ?? "<Unnamed Script>");
-                watch2.Stop();
-                res = ExtractAndCheckReturnValue(v);
+                return ExtractAndCheckReturnValue(v);
             }
             finally
             {
@@ -151,16 +139,6 @@ namespace VroomJs
                     timer.Dispose();
                 }
             }
-
-            if (executionTimedOut)
-            {
-                throw new JsExecutionTimedOutException();
-            }
-
-            watch1.Stop();
-
-            // Console.WriteLine("Execution time " + watch2.ElapsedTicks + " total time " + watch1.ElapsedTicks);
-            return res;
         }
 
         // todo: Is this really a good idea? Let's keep it private for now
@@ -319,6 +297,24 @@ namespace VroomJs
 
         internal object ExtractAndCheckReturnValue(JsValue value)
         {
+            if(value.ValueType == JsValueType.Termination)
+            {
+                // There should only be 2 reasons for termation: timeout or pending exception.
+                // Copy this state into locals and clear it.
+                var timedOut = _timeoutExceeded; _timeoutExceeded = false;
+                var exInfo = _pendingExceptionInfo; _pendingExceptionInfo = null;
+
+                if (timedOut)
+                    throw new JsExecutionTimedOutException();
+
+                if (exInfo != null)
+                {
+                    // Clear the pending exception info, and throw the exception
+                    _pendingExceptionInfo = null;
+                    exInfo.Throw();
+                }
+            }
+
             var obj = value.Extract(this);
             if (value.ValueType == JsValueType.JsError)
             {
@@ -329,6 +325,11 @@ namespace VroomJs
                 throw ex;
             }
             return obj;
+        }
+
+        internal void SetPendingException(Exception exception)
+        {
+            _pendingExceptionInfo = ExceptionDispatchInfo.Capture(exception);
         }
     }
 }

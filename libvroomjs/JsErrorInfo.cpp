@@ -35,7 +35,9 @@ JsErrorInfo* JsErrorInfo::Capture(TryCatch& trycatch, JsContext* context)
         ? JsErrorInfo::CreateString(stackStrValue->ToString(ctx).FromMaybe(Local<String>()), context)
         : nullptr;
 
-    auto stackFrames = CaptureStackFrames(message->GetStackTrace(), context);
+    auto stackFrames = hasMessage
+        ? CaptureStackFrames(message->GetStackTrace(), context)
+        : nullptr;
 
     return new JsErrorInfo(line, column, resource, type, text, error, stackstr, stackFrames);
 }

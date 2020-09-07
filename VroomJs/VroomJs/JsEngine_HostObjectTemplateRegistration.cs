@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using VroomJs.Interop;
 
@@ -157,7 +158,7 @@ namespace VroomJs
                 var callbackContext = new CallbackContext(context);
                 var obj = context.GetHostObject(objectId);
 
-                var stepSize = Marshal.SizeOf<JsValue>();
+                var stepSize = Marshal.SizeOf<JsValue>(); // todo: save this
                 var arguments = Enumerable.Range(0, argCount)
                     .Select(i => Marshal.PtrToStructure<JsValue>(new IntPtr(args.ToInt64() + (stepSize * i))).Extract(context))
                     .ToArray();
@@ -213,8 +214,16 @@ namespace VroomJs
             private JsValue ConvertException(Exception e, CallbackContext callbackContext)
             {
                 var errorInfo = HostErrorInfo.ConvertException(e);
-                _engine.HostErrorFilter?.Invoke(callbackContext, errorInfo);
-                return JsValue.ForHostError(errorInfo, callbackContext.Context);
+                var raiseError = _engine.HostErrorFilter?.Invoke(callbackContext, errorInfo) ?? true;
+                if(raiseError)
+                    return JsValue.ForHostError(errorInfo, callbackContext.Context);
+
+                // The error was suppressed by the filter, so script execution must be terminated,
+                // and the CLR exception re-thrown after termination.
+                _engine.TerminateExecution();
+                callbackContext.Context.SetPendingException(errorInfo.Exception ?? e);
+
+                return JsValue.ForEmpty();
             }
         }
     }

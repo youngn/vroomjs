@@ -16,6 +16,10 @@ public:
         Dispose();
         return result;
     }
+
+    static JsValue ForTermination() {
+        return JsValue(JSVALUE_TYPE_TERMINATION, 0, 0);
+    }
     static JsValue ForEmpty() {
         return JsValue(JSVALUE_TYPE_EMPTY, 0, 0);
     }
