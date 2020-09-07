@@ -1,4 +1,6 @@
-﻿namespace VroomJs
+﻿using System;
+
+namespace VroomJs
 {
     public class JsErrorInfo
     {
@@ -10,7 +12,8 @@
             string text,
             string type,
             string stackStr,
-            JsStackTrace stackTrace)
+            JsStackTrace stackTrace,
+            Exception clrException)
         {
             Resource = resource;
             Line = line;
@@ -20,6 +23,7 @@
             Name = type;
             StackString = stackStr;
             StackTrace = stackTrace;
+            ClrException = clrException;
         }
 
         /// <summary>
@@ -61,5 +65,11 @@
         /// Gets the stack trace.
         /// </summary>
         public JsStackTrace StackTrace { get; }
+
+        /// <summary>
+        /// Gets the underlying CLR Exception if this error wraps a CLR Exception,
+        /// otherwise null.
+        /// </summary>
+        public Exception ClrException { get; }
     }
 }

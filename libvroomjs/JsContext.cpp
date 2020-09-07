@@ -198,10 +198,15 @@ JsValue JsContext::SetVariable(const uint16_t* name, JsValue value)
     auto v = value.Extract(this);
     auto var_name = String::NewFromTwoByte(isolate_, name).ToLocalChecked();
 
+    TryCatch trycatch(isolate_);
+
     ctx->Global()->Set(ctx, var_name, v).Check();
 
-    // This return value would be needed in order to pass an error back.
-    // However, it seems that Set can never fail, so we just return empty.
+    // Not entirely clear whether a Set() call can ever throw,
+    // but just to be on the safe side, we check it here.
+    if(trycatch.HasCaught())
+        return JsValue::ForError(trycatch, this);
+
     return JsValue::ForEmpty();
 }
 

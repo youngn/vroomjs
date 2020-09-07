@@ -122,6 +122,8 @@ namespace VroomJs
             throw new InteropException($"Object of type {type} cannot be marshaled to JavaScript.");
         }
 
+        public JsValueType ValueType => _data.Type;
+
         public object Extract(JsContext context)
         {
             var result = GetValue(context);
@@ -314,7 +316,7 @@ namespace VroomJs
             return context.GetHostObject(_data.I32);
         }
 
-        private JsException JsErrorValue(JsContext context)
+        private JsErrorInfo JsErrorValue(JsContext context)
         {
             Debug.Assert(_data.Type == JsValueType.JsError);
 
@@ -328,16 +330,10 @@ namespace VroomJs
             var line = info.Line;
             var column = info.Column;
 
-            if (type == "SyntaxError")
-            {
-                // todo: do we actually get a JS error object here? If so, include it
-                return new JsSyntaxException(
-                    new JsErrorInfo(resource, line, column, null, text, type, null, null));
-            }
-
             // The error object can be anything is JS - it is not necessarily an Error object,
             // or even an Object, so we don't cast it.
             var error = ((JsValue)info.Error).GetValue(context);
+            var stackTrace = new JsStackTrace(GetStackFrames(info.StackFrames).ToList());
 
             // If the error object is an actual CLR Exception, replace it with the proxy object
             // instead, and stash the raw Exception as the JsException.InnerException.
@@ -348,14 +344,8 @@ namespace VroomJs
                 error = context.GetExceptionProxy(exception);
             }
 
-            var stackTrace = GetStackFrames(info.StackFrames);
-
-            return new JsException(
-                new JsErrorInfo(resource, line, column, error, text, type, stackStr,
-                    new JsStackTrace(stackTrace.ToList())
-                ),
-                exception
-            );
+            return new JsErrorInfo(resource, line, column, error, text,
+                type, stackStr, stackTrace, exception);
         }
 
         private IEnumerable<JsStackTrace.Frame> GetStackFrames(IntPtr stackFrame)

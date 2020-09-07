@@ -363,5 +363,33 @@ namespace VroomJsTests
                 }
             }
         }
+
+        /// <summary>
+        /// Regression test for bug where previously attempting to pass a JsErrorInfo
+        /// back from JS was not possible because it would automatically be thrown
+        /// as an exception. Not that there is any real use case for this - it is rather
+        /// contrived.
+        /// </summary>
+        [Test]
+        public void Test_JsErrorInfo()
+        {
+            // Use custom engine for this test as it requires ExposeObjects
+            // to be true.
+            var config = new EngineConfiguration();
+            config.ClrTemplates.EnableObjects = true;
+
+            using (var engine = new JsEngine(config))
+            {
+                using (var context = engine.CreateContext())
+                {
+                    var foo = new JsErrorInfo("", 0, 0, null, "", "", "", null, null);
+                    context.SetVariable("x", foo);
+
+                    // Ensure round-trippable
+                    var fooReturned = context.Execute("x");
+                    Assert.AreSame(foo, fooReturned);
+                }
+            }
+        }
     }
 }

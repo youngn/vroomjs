@@ -73,7 +73,7 @@ namespace VroomJs
         public object Execute(JsScript script, TimeSpan? executionTimeout = null)
         {
             if (script == null)
-                throw new ArgumentNullException("script");
+                throw new ArgumentNullException(nameof(script));
 
             CheckDisposed();
 
@@ -94,7 +94,7 @@ namespace VroomJs
             try
             {
                 var v = (JsValue)NativeApi.jscontext_execute_script(_contextHandle, script.Handle);
-                res = v.Extract(this);
+                res = ExtractAndCheckReturnValue(v);
             }
             finally
             {
@@ -109,9 +109,6 @@ namespace VroomJs
                 throw new JsExecutionTimedOutException();
             }
 
-            Exception e = res as JsException;
-            if (e != null)
-                throw e;
             return res;
         }
 
@@ -122,7 +119,7 @@ namespace VroomJs
 
             watch1.Start();
             if (code == null)
-                throw new ArgumentNullException("code");
+                throw new ArgumentNullException(nameof(code));
 
             CheckDisposed();
 
@@ -145,7 +142,7 @@ namespace VroomJs
                 watch2.Start();
                 var v = (JsValue)NativeApi.jscontext_execute(_contextHandle, code, name ?? "<Unnamed Script>");
                 watch2.Stop();
-                res = v.Extract(this);
+                res = ExtractAndCheckReturnValue(v);
             }
             finally
             {
@@ -160,9 +157,6 @@ namespace VroomJs
                 throw new JsExecutionTimedOutException();
             }
 
-            Exception e = res as JsException;
-            if (e != null)
-                throw e;
             watch1.Stop();
 
             // Console.WriteLine("Execution time " + watch2.ElapsedTicks + " total time " + watch1.ElapsedTicks);
@@ -174,46 +168,35 @@ namespace VroomJs
         {
             CheckDisposed();
             var v = (JsValue)NativeApi.jscontext_get_global(_contextHandle);
-            object res = v.Extract(this);
-
-            Exception e = res as JsException;
-            if (e != null)
-                throw e;
-            return res;
+            return ExtractAndCheckReturnValue(v);
         }
 
         public object GetVariable(string name)
         {
             if (name == null)
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             CheckDisposed();
 
             var v = (JsValue)NativeApi.jscontext_get_variable(_contextHandle, name);
-            object res = v.Extract(this);
-
-            Exception e = res as JsException;
-            if (e != null)
-                throw e;
-            return res;
+            return ExtractAndCheckReturnValue(v);
         }
 
         public void SetVariable(string name, object value)
         {
             if (name == null)
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             CheckDisposed();
 
-            var a = JsValue.ForValue(value, this);
-            var b = (JsValue)NativeApi.jscontext_set_variable(_contextHandle, name, a);
+            var v = (JsValue)NativeApi.jscontext_set_variable(_contextHandle, name, JsValue.ForValue(value, this));
 
-            // Extract the return value so that it gets cleaned up, even if not used
-            var result = b.Extract(this);
-            // TODO: Check the result of the operation for errors.
+            // Extract the return value so that it gets cleaned up,
+            // and we check the result of the operation for errors.
+            ExtractAndCheckReturnValue(v);
         }
 
-        // NEED TESTS
+        // todo: is this needed? get rid of it?
         public void SetFunction(string name, Delegate func)
         {
             WeakDelegate del;
@@ -231,7 +214,7 @@ namespace VroomJs
         public JsObject CreateObject()
         {
             var v = (JsValue)NativeApi.jscontext_new_object(_contextHandle);
-            return (JsObject)v.Extract(this);
+            return (JsObject)ExtractAndCheckReturnValue(v);
         }
 
         public JsArray CreateArray(params object[] elements)
@@ -245,10 +228,11 @@ namespace VroomJs
                 elements.Select(z => (jsvalue)JsValue.ForValue(z, this)).ToArray()
             );
 
-            return (JsArray)v.Extract(this);
+            return (JsArray)ExtractAndCheckReturnValue(v);
         }
 
-        public void Flush()
+        // todo: is this needed? get rid of it?
+        internal void Flush()
         {
             NativeApi.jscontext_force_gc();
         }
@@ -330,7 +314,21 @@ namespace VroomJs
         {
             var x = JsValue.ForHostObject(AddHostObject(obj), templateId);
             var v = (JsValue)NativeApi.jscontext_get_proxy(_contextHandle, x);
-            return (JsObject)v.Extract(this);
+            return (JsObject)ExtractAndCheckReturnValue(v);
+        }
+
+        internal object ExtractAndCheckReturnValue(JsValue value)
+        {
+            var obj = value.Extract(this);
+            if (value.ValueType == JsValueType.JsError)
+            {
+                var errorInfo = (JsErrorInfo)obj;
+                var ex = (errorInfo.Name == "SyntaxError")
+                    ? new JsSyntaxException(errorInfo)
+                    : new JsException(errorInfo, errorInfo.ClrException);
+                throw ex;
+            }
+            return obj;
         }
     }
 }

@@ -22,13 +22,8 @@ namespace VroomJs
             var recv = JsValue.ForValue(receiver, Context);
 
             var v = (JsValue)NativeApi.jsfunction_invoke(Context.Handle, Handle, recv, jsargs.Length, jsargs);
-            var res = v.Extract(Context);
 
-            var e = res as JsException;
-            if (e != null)
-                throw e;
-
-            return res;
+            return Context.ExtractAndCheckReturnValue(v);
         }
 
         // todo: what is this for?

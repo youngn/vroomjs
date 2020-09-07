@@ -54,11 +54,7 @@ namespace VroomJs
 
             // todo: make this more efficient by marshaling as a string array, rather than a JsArray
             var v = (JsValue)NativeApi.jsobject_get_property_names(_context.Handle, _objectHandle);
-            var res = v.Extract(_context);
-
-            Exception e = res as JsException;
-            if (e != null)
-                throw e;
+            var res = _context.ExtractAndCheckReturnValue(v);
 
             var arr = (JsArray)res;
             return arr.Cast<object>();
@@ -72,12 +68,7 @@ namespace VroomJs
             CheckDisposed();
 
             var v = (JsValue)NativeApi.jsobject_get_named_property_value(_context.Handle, _objectHandle, name);
-            var res = v.Extract(_context);
-
-            Exception e = res as JsException;
-            if (e != null)
-                throw e;
-            return res;
+            return _context.ExtractAndCheckReturnValue(v);
         }
 
         public object GetPropertyValue(int index)
@@ -85,12 +76,7 @@ namespace VroomJs
             CheckDisposed();
 
             var v = (JsValue)NativeApi.jsobject_get_indexed_property_value(_context.Handle, _objectHandle, index);
-            var res = v.Extract(_context);
-
-            Exception e = res as JsException;
-            if (e != null)
-                throw e;
-            return res;
+            return _context.ExtractAndCheckReturnValue(v);
         }
 
         public void SetPropertyValue(string name, object value)
@@ -100,26 +86,24 @@ namespace VroomJs
 
             CheckDisposed();
 
-            var a = JsValue.ForValue(value, _context);
-            var v = (JsValue)NativeApi.jsobject_set_named_property_value(_context.Handle, _objectHandle, name, a);
-            var res = v.Extract(_context);
+            var v = (JsValue)NativeApi.jsobject_set_named_property_value(
+                _context.Handle, _objectHandle, name, JsValue.ForValue(value, _context));
 
-            Exception e = res as JsException;
-            if (e != null)
-                throw e;
+            // Extract the return value so that it gets cleaned up,
+            // and we check the result of the operation for errors.
+            _context.ExtractAndCheckReturnValue(v);
         }
 
         public void SetPropertyValue(int index, object value)
         {
             CheckDisposed();
 
-            var a = JsValue.ForValue(value, _context);
-            var v = (JsValue)NativeApi.jsobject_set_indexed_property_value(_context.Handle, _objectHandle, index, a);
-            var res = v.Extract(_context);
+            var v = (JsValue)NativeApi.jsobject_set_indexed_property_value(
+                _context.Handle, _objectHandle, index, JsValue.ForValue(value, _context));
 
-            Exception e = res as JsException;
-            if (e != null)
-                throw e;
+            // Extract the return value so that it gets cleaned up,
+            // and we check the result of the operation for errors.
+            _context.ExtractAndCheckReturnValue(v);
         }
 
         public object InvokeMethod(string name, params object[] args)
