@@ -297,22 +297,24 @@ namespace VroomJs
 
         internal object ExtractAndCheckReturnValue(JsValue value)
         {
-            if(value.ValueType == JsValueType.Termination)
+            // TODO: Ideally we would move this block inside the test for Termination,
+            // but for reasons that are not clear, the Termination is not always observed
+            // (see HostErrorFilterTests for test cases that illustrate this) prior to
+            // getting here... so for now we have to check for a pending exception even
+            // when termination is has not been observed.
+            if(_pendingExceptionInfo != null)
+            {
+                var exInfo = _pendingExceptionInfo; _pendingExceptionInfo = null;
+                exInfo.Throw();
+            }
+
+            if (value.ValueType == JsValueType.Termination)
             {
                 // There should only be 2 reasons for termation: timeout or pending exception.
-                // Copy this state into locals and clear it.
                 var timedOut = _timeoutExceeded; _timeoutExceeded = false;
-                var exInfo = _pendingExceptionInfo; _pendingExceptionInfo = null;
 
                 if (timedOut)
                     throw new JsExecutionTimedOutException();
-
-                if (exInfo != null)
-                {
-                    // Clear the pending exception info, and throw the exception
-                    _pendingExceptionInfo = null;
-                    exInfo.Throw();
-                }
             }
 
             var obj = value.Extract(this);

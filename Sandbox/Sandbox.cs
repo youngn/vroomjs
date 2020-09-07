@@ -97,7 +97,7 @@ namespace Sandbox
             //{
             //    ctx.CreateObject();
             //}
-            Test_exception_error_suppression();
+            Test_exception_error_suppression2();
             JsEngine.Shutdown();
             return;
 
@@ -201,6 +201,45 @@ namespace Sandbox
                             "} catch(e) {" +
                             "   [e.name, e.message];" +
                             "}");
+
+                        Console.WriteLine(result);
+
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine(context.GetVariable("c"));
+                }
+            }
+        }
+        public static void Test_exception_error_suppression2()
+        {
+            var config = new EngineConfiguration();
+
+            // Use filter to prevent host error from being caught by script
+            config.HostErrorFilter = (context, errorInfo) =>
+            {
+                return false;
+            };
+
+            var fooEx = new Exception("uh oh");
+            config.RegisterHostObjectTemplate(new HostObjectTemplate(
+                tryGetProperty: (IHostObjectCallbackContext ctx, object obj, string name, out object value)
+                    => { throw fooEx; }
+            ));
+
+            using (var engine = new JsEngine(config))
+            {
+                using (var context = engine.CreateContext())
+                {
+                    var x = new object();
+                    context.SetVariable("x", x);
+
+                    try
+                    {
+                        var result = context.Execute("x.bar;");
 
                         Console.WriteLine(result);
 

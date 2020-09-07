@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using VroomJs;
 
 namespace VroomJsTests
@@ -51,7 +52,8 @@ namespace VroomJsTests
         }
 
         [Test]
-        public void Test_exception_error_suppression()
+        [TestCaseSource(nameof(TestCases_error_suppression))]
+        public void Test_exception_error_suppression(string script)
         {
             var fooEx = new FooException("uh oh");
             using (var engine = new JsEngine())
@@ -74,26 +76,12 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    try
+                    var ex = Assert.Throws<FooException>(() =>
                     {
-                        var result = context.Execute(
-                            "var i = 0;" +
-                            "try { " +
-                            "   for(; i < 100;i++) {" +
-                            "       x.bar;" +
-                            "   }" +
-                            "} catch(e) {" +
-                            "   [e.name, e.message];" +
-                            "}");
+                        context.Execute(script);
+                    });
 
-                        Console.WriteLine(result);
-                        Console.WriteLine(context.GetVariable("i"));
-                        Assert.Fail("Expected exception to be thrown.");
-                    }
-                    catch (Exception e)
-                    {
-                        Assert.AreEqual(fooEx, e);
-                    }
+                    Assert.AreSame(fooEx, ex);
                 }
             }
         }
@@ -136,7 +124,8 @@ namespace VroomJsTests
         }
 
         [Test]
-        public void Test_custom_error_suppression()
+        [TestCaseSource(nameof(TestCases_error_suppression))]
+        public void Test_custom_error_suppression(string script)
         {
             using (var engine = new JsEngine())
             {
@@ -158,33 +147,35 @@ namespace VroomJsTests
                     var x = new object();
                     context.SetVariable("x", x);
 
-                    try
+                    var ex = Assert.Throws<HostErrorException>(() =>
                     {
-                        var result = context.Execute(
-                            "var i = 0;" +
-                            "try { " +
-                            "   for(; i < 100;i++) {" +
-                            "       x.bar;" +
-                            "   }" +
-                            "} catch(e) {" +
-                            "   [e.name, e.message];" +
-                            "}");
+                        context.Execute(script);
+                    });
 
-                        Console.WriteLine(result);
-                        Console.WriteLine(context.GetVariable("i"));
-                        Assert.Fail("Expected exception to be thrown.");
-                    }
-                    catch (Exception e)
-                    {
-                        Assert.IsInstanceOf<HostErrorException>(e);
-                        var errorInfo = ((HostErrorException)e).ErrorInfo;
-                        Assert.IsNotNull(errorInfo);
-                        Assert.AreEqual("MyError", errorInfo.Name);
-                        Assert.AreEqual("uh oh", errorInfo.Message);
-                        Assert.AreEqual(null, errorInfo.Exception);
-                    }
+                    var errorInfo = ex.ErrorInfo;
+                    Assert.IsNotNull(errorInfo);
+                    Assert.AreEqual("MyError", errorInfo.Name);
+                    Assert.AreEqual("uh oh", errorInfo.Message);
+                    Assert.AreEqual(null, errorInfo.Exception);
                 }
             }
+        }
+
+        private static IEnumerable<string> TestCases_error_suppression()
+        {
+            yield return
+                "try { " +
+                "   for(var i = 0; i < 100; i++) {" +
+                "       x.bar;" +
+                "   }" +
+                "} catch(e) {" +
+                "}";
+
+            yield return
+                "try { " +
+                "   var y = x.bar; y++;" +
+                "} catch(e) {" +
+                "}";
         }
     }
 }
