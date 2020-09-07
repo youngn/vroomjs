@@ -101,6 +101,7 @@ JsValue JsContext::Execute(const uint16_t* str, const uint16_t* resourceName = N
 
     ScriptOrigin scriptOrigin(res_name);
 
+    // todo: why are we calling GetCurrentContext() below when we already know it?
     Local<Script> script;
     if (!Script::Compile(isolate_->GetCurrentContext(), source, &scriptOrigin).ToLocal(&script))
     {
@@ -108,6 +109,7 @@ JsValue JsContext::Execute(const uint16_t* str, const uint16_t* resourceName = N
         return JsValue::ForError(trycatch, this);
     }
 
+    // todo: why are we calling GetCurrentContext() below when we already know it?
     Local<Value> result;
     if (script->Run(isolate_->GetCurrentContext()).ToLocal(&result)) {
         return JsValue::ForValue(result, this);
@@ -129,6 +131,7 @@ JsValue JsContext::Execute(JsScript* jsscript)
 
     auto script = Local<Script>::New(isolate_, *(jsscript->GetScript()));
 
+    // todo: why are we calling GetCurrentContext() below when we already know it?
     Local<Value> result;
     if (script->Run(isolate_->GetCurrentContext()).ToLocal(&result)) {
         return JsValue::ForValue(result, this);

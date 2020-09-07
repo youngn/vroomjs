@@ -8,19 +8,20 @@
 
 void HostObjectManager::WeakHandleCallback(const WeakCallbackInfo<HostObjectManager::WeakCallbackArgs>& info)
 {
-#ifdef DEBUG_TRACE_API
-    std::cout << "WeakHandleCallback" << std::endl;
-#endif
     auto args = info.GetParameter();
 
+#ifdef DEBUG_TRACE_API
     std::cout << "WeakHandleCallback " << args->id << " " << std::this_thread::get_id() << std::endl;
+#endif
 
     args->owner->RemoveEntry(args->id);
 }
 
 Local<Object> HostObjectManager::GetProxy(int id, int templateId)
 {
+#ifdef DEBUG_TRACE_API
     std::cout << "GetProxy " << id << " " << std::this_thread::get_id() << std::endl;
+#endif
 
     auto isolate = context_->Isolate();
 
