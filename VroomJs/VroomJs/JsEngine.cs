@@ -147,7 +147,7 @@ namespace VroomJs
                 _aliveContexts.Clear();
             }
 
-            NativeApi.jsengine_dispose(_engineHandle);
+            NativeApi.js_dispose(_engineHandle);
         }
 
         ~JsEngine()

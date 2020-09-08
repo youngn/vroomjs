@@ -4,7 +4,8 @@
 #include "JsValue.h"
 
 
-class JsErrorInfo {
+class JsErrorInfo
+{
 private:
     struct jsstackframe
     {

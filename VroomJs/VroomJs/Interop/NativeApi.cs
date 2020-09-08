@@ -18,6 +18,9 @@ namespace VroomJs.Interop
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern void js_dump_allocated_items();
 
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+        public static extern void js_dispose(HandleRef disposable);
+        
         #endregion
 
         #region jsengine
@@ -34,9 +37,6 @@ namespace VroomJs.Interop
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern void jsengine_dump_heap_stats(HandleRef engine);
 
-        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern void jsengine_dispose(HandleRef engine);
-
         [DllImport(DllName)]
         public static extern void jsengine_dispose_object(HandleRef engine, IntPtr obj);
 
@@ -49,9 +49,6 @@ namespace VroomJs.Interop
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern IntPtr jscontext_new(int id, HandleRef engine);
-
-        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern void jscontext_dispose(HandleRef context);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern void jscontext_force_gc();
@@ -112,9 +109,6 @@ namespace VroomJs.Interop
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
         public static extern jsvalue jsscript_execute(HandleRef script);
-
-        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern IntPtr jsscript_dispose(HandleRef script);
 
         #endregion
 

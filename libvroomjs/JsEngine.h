@@ -3,13 +3,14 @@
 #include <vector>
 #include <cassert>
 #include "vroomjs.h"
+#include "Disposable.h"
 
 class JsContext;
 class HostObjectTemplate;
 
 // JsEngine is a single isolated v8 interpreter and is the referenced as an IntPtr
 // by the JsEngine on the CLR side.
-class JsEngine
+class JsEngine : Disposable
 {
 public:
     JsEngine(int32_t max_young_space, int32_t max_old_space);
@@ -18,8 +19,8 @@ public:
     // Dispose a Persistent<Object> that was held on the CLR side by JsObject.
     void DisposeObject(Persistent<Object>* obj);
 
-    void Dispose();
-    bool IsDisposed() { return isolate_ == nullptr; }
+    void Dispose() override;
+    bool IsDisposed() override { return isolate_ == nullptr; }
 
     void DumpHeapStats();
     Isolate* Isolate() { return isolate_; }

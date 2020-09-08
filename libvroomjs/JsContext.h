@@ -1,13 +1,14 @@
 #pragma once
 
 #include "vroomjs.h"
+#include "Disposable.h"
 
 class JsEngine;
 class JsScript;
 class JsValue;
 class HostObjectManager;
 
-class JsContext
+class JsContext : Disposable
 {
 public:
     JsContext(int32_t id, JsEngine* engine);
@@ -24,8 +25,8 @@ public:
 
     JsScript* NewScript();
 
-    void Dispose();
-    bool IsDisposed() { return context_ == nullptr; }
+    void Dispose() override;
+    bool IsDisposed()  override { return context_ == nullptr; }
 
     int32_t Id() { return id_; }
     JsEngine* Engine() { return engine_; }
@@ -39,7 +40,7 @@ public:
         return hostObjectManager_;
     }
 
-    ~JsContext() {
+    virtual ~JsContext() {
         DECREMENT(js_mem_debug_context_count);
     }
 

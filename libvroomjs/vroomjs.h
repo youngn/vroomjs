@@ -34,9 +34,6 @@
 
 using namespace v8;
 
-// jsvalue (JsValue on the CLR side) is a struct that can be easily marshaled
-// by simply blitting its value (being only 16 bytes should be quite fast too).
-
 #define JSVALUE_TYPE_TERMINATION    -1
 #define JSVALUE_TYPE_EMPTY           0
 #define JSVALUE_TYPE_NULL            1
@@ -80,6 +77,8 @@ extern long js_mem_debug_script_count;
 
 extern "C"
 {
+    // jsvalue (JsValue on the CLR side) is a struct that can be easily marshaled
+    // by simply blitting its value (being only 16 bytes should be quite fast too).
     struct jsvalue
     {
         // 8 bytes is the maximum CLR alignment; by putting the union first and a
@@ -103,16 +102,7 @@ extern "C"
             int32_t     templateId; // template ID for host object/error
         };
     };
-
-    EXPORT void CALLINGCONVENTION jsvalue_dispose(jsvalue value);
 }
-
-//class JsValue;
-//class JsValueDisposer;
-//class JsErrorInfo;
-//class JsEngine;
-//class JsContext;
-
 
 // The only way for the C++/V8 side to call into the CLR is to use the function
 // pointers (CLR, delegates) defined below.

@@ -230,7 +230,7 @@ namespace VroomJs
                 _keepalives.Clear();
             }
 
-            NativeApi.jscontext_dispose(_contextHandle);
+            NativeApi.js_dispose(_contextHandle);
 
             if (disposing)
                 _notifyDispose(_id);

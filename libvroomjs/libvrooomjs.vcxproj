@@ -271,6 +271,7 @@
     <ClCompile Include="HostObjectRef.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Disposable.h" />
     <ClInclude Include="HostObjectCallbacks.h" />
     <ClInclude Include="HostObjectManager.h" />
     <ClInclude Include="HostObjectTemplate.h" />

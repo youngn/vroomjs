@@ -1,11 +1,12 @@
 #pragma once
 
 #include "vroomjs.h"
+#include "Disposable.h"
 
 class JsContext;
 class JsValue;
 
-class JsScript
+class JsScript : Disposable
 {
 public:
     JsScript(JsContext* context);
@@ -17,10 +18,10 @@ public:
 
     JsValue Execute();
 
-    void Dispose();
-    bool IsDisposed() { return script_ == nullptr; }
+    void Dispose() override;
+    bool IsDisposed() override { return script_ == nullptr; }
 
-    ~JsScript() {
+    virtual ~JsScript() {
         DECREMENT(js_mem_debug_script_count);
     }
 

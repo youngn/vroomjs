@@ -73,6 +73,16 @@ extern "C"
         v8platform = nullptr;
     }
 
+    EXPORT void CALLINGCONVENTION js_dispose(Disposable* disposable)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "js_dispose" << std::endl;
+#endif
+        assert(disposable != nullptr);
+        disposable->Dispose();
+        delete disposable;
+    }
+
 	EXPORT JsEngine* CALLINGCONVENTION jsengine_new(
 		int32_t max_young_space,
         int32_t max_old_space) 
@@ -109,16 +119,6 @@ extern "C"
 		std::wcout << "Total allocated Host Object Refs " << js_mem_debug_hostobjectref_count << std::endl;
 	}
 
-	EXPORT void CALLINGCONVENTION jsengine_dispose(JsEngine* engine)
-    {
-#ifdef DEBUG_TRACE_API
-		std::wcout << "jsengine_dispose" << std::endl;
-#endif
-        assert(engine != nullptr);
-        engine->Dispose();
-        delete engine;
-    }
-
     EXPORT int CALLINGCONVENTION jsengine_add_template(JsEngine* engine, hostobjectcallbacks callbacks)
     {
 #ifdef DEBUG_TRACE_API
@@ -126,6 +126,20 @@ extern "C"
 #endif
         assert(engine != nullptr);
         return engine->AddTemplate(callbacks);
+    }
+
+    EXPORT void CALLINGCONVENTION jsengine_dispose_object(JsEngine* engine, Persistent<Object>* obj)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jscontext_dispose_object" << std::endl;
+#endif
+        if (engine != nullptr) {
+            // Allow V8 GC to reclaim the JS Object
+            engine->DisposeObject(obj);
+        }
+
+        // Delete the Persistent handle (not the Object, which is owned by V8)
+        delete obj;
     }
 
     EXPORT JsContext* CALLINGCONVENTION jscontext_new(int32_t id, JsEngine *engine)
@@ -145,30 +159,6 @@ extern "C"
         // TODO: this method is no longer part of the API - investigate
         //while(!V8::IdleNotification()) {};
     }
-
-    EXPORT void jscontext_dispose(JsContext* context)
-    {
-#ifdef DEBUG_TRACE_API
-		std::wcout << "jscontext_dispose" << std::endl;
-#endif
-        assert(context != nullptr);
-        context->Dispose();
-        delete context;
-    }
-    
-    EXPORT void CALLINGCONVENTION jsengine_dispose_object(JsEngine* engine, Persistent<Object>* obj)
-    {
-#ifdef DEBUG_TRACE_API
-		std::wcout << "jscontext_dispose_object" << std::endl;
-#endif
-        if (engine != nullptr) {
-            // Allow V8 GC to reclaim the JS Object
-            engine->DisposeObject(obj);
-		}
-
-        // Delete the Persistent handle (not the Object, which is owned by V8)
-		delete obj;
-    }     
     
     EXPORT jsvalue CALLINGCONVENTION jscontext_execute(JsContext* context, const uint16_t* code, const uint16_t *resourceName)
     {
@@ -326,17 +316,6 @@ extern "C"
 #endif
         assert(context != nullptr);
         return context->NewScript();
-    }
-
-	EXPORT void CALLINGCONVENTION jsscript_dispose(JsScript *script)
-    {
-#ifdef DEBUG_TRACE_API
-		std::wcout << "jsscript_dispose" << std::endl;
-#endif
-        assert(script != nullptr);
-
-        script->Dispose();
-		delete script;
     }
 
 	EXPORT jsvalue CALLINGCONVENTION jsscript_compile(JsScript* script, const uint16_t* code, const uint16_t *resourceName)

@@ -52,7 +52,7 @@ namespace VroomJs
 
         private void Dispose(bool disposing)
         {
-            NativeApi.jsscript_dispose(_scriptHandle);
+            NativeApi.js_dispose(_scriptHandle);
 
             if(disposing)
                 _notifyDispose(_id);
