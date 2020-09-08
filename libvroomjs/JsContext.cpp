@@ -80,9 +80,9 @@ void JsContext::Dispose()
     isolate_ = nullptr;
 }
 
-JsValue JsContext::Execute(const uint16_t* str, const uint16_t* resourceName = NULL)
+JsValue JsContext::Execute(const uint16_t* code, const uint16_t* resourceName)
 {
-    assert(str != nullptr);
+    assert(code != nullptr);
 
     Locker locker(isolate_);
     Isolate::Scope isolate_scope(isolate_);
@@ -93,9 +93,9 @@ JsValue JsContext::Execute(const uint16_t* str, const uint16_t* resourceName = N
 
     TryCatch trycatch(isolate_);
 
-    auto source = String::NewFromTwoByte(isolate_, str).ToLocalChecked();
+    auto source = String::NewFromTwoByte(isolate_, code).ToLocalChecked();
 
-    auto res_name = resourceName != NULL
+    auto res_name = resourceName != nullptr
         ? String::NewFromTwoByte(isolate_, resourceName).ToLocalChecked()
         : String::Empty(isolate_);
 
@@ -116,30 +116,6 @@ JsValue JsContext::Execute(const uint16_t* str, const uint16_t* resourceName = N
         return JsValue::ForError(trycatch, this);
     }
 }
-
-JsValue JsContext::Execute(JsScript* jsscript)
-{
-    assert(jsscript != nullptr);
-
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    HandleScope scope(isolate_);
-
-    auto ctx = Local<Context>::New(isolate_, *context_);
-    Context::Scope contextScope(ctx);
-
-    TryCatch trycatch(isolate_);
-
-    auto script = Local<Script>::New(isolate_, *(jsscript->GetScript()));
-
-    Local<Value> result;
-    if (script->Run(ctx).ToLocal(&result)) {
-        return JsValue::ForValue(result, this);
-    } else {
-        return JsValue::ForError(trycatch, this);
-    }
-}
-
 
 JsValue JsContext::GetGlobal() {
 

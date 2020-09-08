@@ -15,10 +15,10 @@ JsScript::JsScript(JsContext* context)
     INCREMENT(js_mem_debug_script_count);
 }
 
-JsValue JsScript::Compile(const uint16_t* str, const uint16_t* resourceName)
+JsValue JsScript::Compile(const uint16_t * code, const uint16_t* resourceName)
 {
     assert(script_ == nullptr); // This method can only be called (successfully) once
-    assert(str != nullptr);
+    assert(code != nullptr);
 
     auto isolate = context_->Isolate();
 
@@ -31,7 +31,7 @@ JsValue JsScript::Compile(const uint16_t* str, const uint16_t* resourceName)
 
     TryCatch trycatch(isolate);
 
-    auto source = String::NewFromTwoByte(isolate, str).ToLocalChecked();
+    auto source = String::NewFromTwoByte(isolate, code).ToLocalChecked();
 
     auto res_name = resourceName != NULL
         ? String::NewFromTwoByte(isolate, resourceName).ToLocalChecked()
@@ -49,6 +49,30 @@ JsValue JsScript::Compile(const uint16_t* str, const uint16_t* resourceName)
     script_ = new Persistent<Script>(isolate, script);
 
     return JsValue::ForEmpty();
+}
+
+JsValue JsScript::Execute()
+{
+    auto isolate = context_->Isolate();
+
+    Locker locker(isolate);
+    Isolate::Scope isolate_scope(isolate);
+    HandleScope scope(isolate);
+
+    auto ctx = context_->Ctx();
+    Context::Scope contextScope(ctx);
+
+    TryCatch trycatch(isolate);
+
+    auto script = Local<Script>::New(isolate, *script_);
+
+    Local<Value> result;
+    if (script->Run(ctx).ToLocal(&result)) {
+        return JsValue::ForValue(result, context_);
+    }
+    else {
+        return JsValue::ForError(trycatch, context_);
+    }
 }
 
 void JsScript::Dispose()

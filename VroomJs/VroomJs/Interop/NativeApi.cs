@@ -57,10 +57,7 @@ namespace VroomJs.Interop
         public static extern void jscontext_force_gc();
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-        public static extern jsvalue jscontext_execute(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string str, [MarshalAs(UnmanagedType.LPWStr)] string name);
-
-        [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-        public static extern jsvalue jscontext_execute_script(HandleRef context, HandleRef script);
+        public static extern jsvalue jscontext_execute(HandleRef context, [MarshalAs(UnmanagedType.LPWStr)] string code, [MarshalAs(UnmanagedType.LPWStr)] string name);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern jsvalue jscontext_get_global(HandleRef context);
@@ -110,8 +107,11 @@ namespace VroomJs.Interop
         public static extern IntPtr jsscript_new(HandleRef context);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-        public static extern jsvalue jsscript_compile(HandleRef script, [MarshalAs(UnmanagedType.LPWStr)] string str,
+        public static extern jsvalue jsscript_compile(HandleRef script, [MarshalAs(UnmanagedType.LPWStr)] string code,
                                                       [MarshalAs(UnmanagedType.LPWStr)] string resourceName);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+        public static extern jsvalue jsscript_execute(HandleRef script);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern IntPtr jsscript_dispose(HandleRef script);

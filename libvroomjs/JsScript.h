@@ -10,12 +10,15 @@ class JsScript
 public:
     JsScript(JsContext* context);
 
-    JsValue Compile(const uint16_t* str, const uint16_t* resourceName);
+    // This method can only be called once. 
+    // (Ideally we would use RAII instead, but we need to be able to have a return value
+    // to indicate that compilation was successful).
+    JsValue Compile(const uint16_t * code, const uint16_t* resourceName = nullptr);
+
+    JsValue Execute();
 
     void Dispose();
     bool IsDisposed() { return script_ == nullptr; }
-
-    Persistent<Script>* GetScript() { return script_; }
 
     ~JsScript() {
         DECREMENT(js_mem_debug_script_count);

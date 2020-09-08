@@ -12,8 +12,7 @@ class JsContext
 public:
     JsContext(int32_t id, JsEngine* engine);
 
-    JsValue Execute(const uint16_t* str, const uint16_t* resourceName);
-    JsValue Execute(JsScript* script);
+    JsValue Execute(const uint16_t* code, const uint16_t* resourceName = nullptr);
 
     JsValue GetGlobal();
     JsValue GetVariable(const uint16_t* name);

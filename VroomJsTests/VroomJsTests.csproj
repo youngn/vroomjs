@@ -64,6 +64,7 @@
     <Compile Include="JsEngineTests.cs" />
     <Compile Include="JsFunctionTests.cs" />
     <Compile Include="JsObjectTests.cs" />
+    <Compile Include="JsScriptTests.cs" />
     <Compile Include="MarshalTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="GlobalSetup.cs" />

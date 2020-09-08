@@ -170,26 +170,15 @@ extern "C"
 		delete obj;
     }     
     
-    EXPORT jsvalue CALLINGCONVENTION jscontext_execute(JsContext* context, const uint16_t* str, const uint16_t *resourceName)
+    EXPORT jsvalue CALLINGCONVENTION jscontext_execute(JsContext* context, const uint16_t* code, const uint16_t *resourceName)
     {
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jscontext_execute" << std::endl;
 #endif
         assert(context != nullptr);
-        assert(str != nullptr);
+        assert(code != nullptr);
 
-        return context->Execute(str, resourceName);
-    }
-
-	EXPORT jsvalue CALLINGCONVENTION jscontext_execute_script(JsContext* context, JsScript *script)
-    {
-#ifdef DEBUG_TRACE_API
-		std::wcout << "jscontext_execute_script" << std::endl;
-#endif
-        assert(context != nullptr);
-        assert(script != nullptr);
-
-        return context->Execute(script);
+        return context->Execute(code, resourceName);
     }
 
 	EXPORT jsvalue CALLINGCONVENTION jscontext_get_global(JsContext* context)
@@ -350,15 +339,25 @@ extern "C"
 		delete script;
     }
 
-	EXPORT jsvalue CALLINGCONVENTION jsscript_compile(JsScript* script, const uint16_t* str, const uint16_t *resourceName)
+	EXPORT jsvalue CALLINGCONVENTION jsscript_compile(JsScript* script, const uint16_t* code, const uint16_t *resourceName)
     {
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsscript_compile" << std::endl;
 #endif
         assert(script != nullptr);
-        assert(str != nullptr);
+        assert(code != nullptr);
 
-        return script->Compile(str, resourceName);
+        return script->Compile(code, resourceName);
+    }
+
+    EXPORT jsvalue CALLINGCONVENTION jsscript_execute(JsScript* script)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jsscript_execute" << std::endl;
+#endif
+        assert(script != nullptr);
+
+        return script->Execute();
     }
 
     EXPORT jsvalue CALLINGCONVENTION jsstring_new(JsEngine* engine, const uint16_t* value)

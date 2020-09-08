@@ -78,7 +78,7 @@ namespace VroomJs
             };
         }
 
-        public JsScript CompileScript(string code, string resourceName = null)
+        public JsScript Compile(string code, string resourceName = null)
         {
             if (code == null)
                 throw new ArgumentNullException(nameof(code));
@@ -93,41 +93,6 @@ namespace VroomJs
             return script;
         }
 
-        // NEED TESTS
-        public object Execute(JsScript script, TimeSpan? executionTimeout = null)
-        {
-            if (script == null)
-                throw new ArgumentNullException(nameof(script));
-
-            CheckDisposed();
-
-            Timer timer = null;
-            if (executionTimeout.HasValue)
-            {
-                timer = new Timer(executionTimeout.Value.TotalMilliseconds);
-                timer.Elapsed += (sender, args) =>
-                {
-                    timer.Stop();
-                    _timeoutExceeded = true;
-                    _engine.TerminateExecution();
-                };
-                timer.Start();
-            }
-
-            try
-            {
-                var v = (JsValue)NativeApi.jscontext_execute_script(_contextHandle, script.Handle);
-                return ExtractAndCheckReturnValue(v);
-            }
-            finally
-            {
-                if (executionTimeout.HasValue)
-                {
-                    timer.Dispose();
-                }
-            }
-        }
-
         public object Execute(string code, string resourceName = null, TimeSpan? executionTimeout = null)
         {
             if (code == null)
@@ -135,31 +100,10 @@ namespace VroomJs
 
             CheckDisposed();
 
-            Timer timer = null;
-            if (executionTimeout.HasValue)
+            return ExecuteWithTimeout(() =>
             {
-                timer = new Timer(executionTimeout.Value.TotalMilliseconds);
-                timer.Elapsed += (sender, args) =>
-                {
-                    timer.Stop();
-                    _timeoutExceeded = true;
-                    _engine.TerminateExecution();
-                };
-                timer.Start();
-            }
-
-            try
-            {
-                var v = (JsValue)NativeApi.jscontext_execute(_contextHandle, code, resourceName ?? "<Unnamed Script>");
-                return ExtractAndCheckReturnValue(v);
-            }
-            finally
-            {
-                if (executionTimeout.HasValue)
-                {
-                    timer.Dispose();
-                }
-            }
+                return NativeApi.jscontext_execute(_contextHandle, code, resourceName ?? "<Unnamed Script>");
+            }, executionTimeout);
         }
 
         // todo: Is this really a good idea? Let's keep it private for now
@@ -276,7 +220,7 @@ namespace VroomJs
         {
             if (disposing)
             {
-                foreach (var script in _aliveScripts.Values)
+                foreach (var script in _aliveScripts.Values.ToList())
                 {
                     script.Dispose();
                 }
@@ -302,6 +246,31 @@ namespace VroomJs
         internal HandleRef Handle
         {
             get { return _contextHandle; }
+        }
+
+        internal object ExecuteWithTimeout(Func<JsValue> func, TimeSpan? executionTimeout = null)
+        {
+            Timer timer = null;
+            if (executionTimeout.HasValue)
+            {
+                timer = new Timer(executionTimeout.Value.TotalMilliseconds);
+                timer.Elapsed += (sender, args) =>
+                {
+                    timer.Stop();
+                    _timeoutExceeded = true;
+                    _engine.TerminateExecution();
+                };
+                timer.Start();
+            }
+
+            try
+            {
+                return ExtractAndCheckReturnValue(func());
+            }
+            finally
+            {
+                timer?.Dispose();
+            }
         }
 
         internal void CheckDisposed()
