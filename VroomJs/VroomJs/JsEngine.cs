@@ -34,11 +34,9 @@ namespace VroomJs
 
         private readonly HandleRef _engineHandle;
         private readonly Dictionary<int, JsContext> _aliveContexts = new Dictionary<int, JsContext>();
-        private readonly Dictionary<int, JsScript> _aliveScripts = new Dictionary<int, JsScript>();
         private bool _disposed;
 
         private int _currentContextId = 0;
-        private int _currentScriptId = 0;
 
         public JsEngine(EngineConfiguration configuration = null)
         {
@@ -65,23 +63,6 @@ namespace VroomJs
             _aliveContexts.Add(id, ctx);
 
             return ctx;
-        }
-
-        public JsScript CompileScript(string code, string name = null)
-        {
-            if (code == null)
-                throw new ArgumentNullException(nameof(code));
-
-            CheckDisposed();
-
-            throw new NotImplementedException("Broken because we don't have a JsContext at this point.");
-
-            //var id = Interlocked.Increment(ref _currentScriptId);
-
-            //var script = new JsScript(id, this, _engineHandle, new JsConvert(null), code, name, ScriptDisposed);
-            //_aliveScripts.Add(id, script);
-
-            //return script;
         }
 
         public void DumpHeapStats()
@@ -135,11 +116,6 @@ namespace VroomJs
             _aliveContexts.Remove(id);
         }
 
-        private void ScriptDisposed(int id)
-        {
-            _aliveScripts.Remove(id);
-        }
-
         #region IDisposable implementation
 
         public bool IsDisposed
@@ -169,12 +145,6 @@ namespace VroomJs
                     context.Dispose();
                 }
                 _aliveContexts.Clear();
-
-                foreach (var script in _aliveScripts.Values)
-                {
-                    script.Dispose();
-                }
-                _aliveScripts.Clear();
             }
 
             NativeApi.jsengine_dispose(_engineHandle);

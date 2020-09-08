@@ -107,11 +107,11 @@ namespace VroomJs.Interop
         #region jsscript
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern IntPtr jsscript_new(HandleRef engine);
+        public static extern IntPtr jsscript_new(HandleRef context);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
         public static extern jsvalue jsscript_compile(HandleRef script, [MarshalAs(UnmanagedType.LPWStr)] string str,
-                                                      [MarshalAs(UnmanagedType.LPWStr)] string name);
+                                                      [MarshalAs(UnmanagedType.LPWStr)] string resourceName);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern IntPtr jsscript_dispose(HandleRef script);

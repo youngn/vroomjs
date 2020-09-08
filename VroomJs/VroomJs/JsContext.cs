@@ -24,6 +24,7 @@
 // THE SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -32,7 +33,7 @@ using VroomJs.Interop;
 
 namespace VroomJs
 {
-    public partial class JsContext : IDisposable
+    public class JsContext : IDisposable
     {
         private readonly int _id;
         private readonly JsEngine _engine;
@@ -46,6 +47,11 @@ namespace VroomJs
 
         private ExceptionDispatchInfo _pendingExceptionInfo;
         private bool _timeoutExceeded;// todo: needs thread sync (use Interlocked int?)
+
+        // todo: do we really need to track alive scripts here? or is lifetime mgmt on C++ side already robust enough?
+        // I suppose the advantage is deterministic clean-up of JsScripts when JsContext is disposed.
+        private readonly Dictionary<int, JsScript> _aliveScripts = new Dictionary<int, JsScript>();
+        private int _currentScriptId = 0;
 
         internal JsContext(int id, JsEngine engine, HandleRef engineHandle, Action<int> notifyDispose)
         {
@@ -70,6 +76,21 @@ namespace VroomJs
                 KeepAliveAllocatedSlots = _keepalives.AllocatedSlots,
                 KeepAliveUsedSlots = _keepalives.UsedSlots
             };
+        }
+
+        public JsScript CompileScript(string code, string resourceName = null)
+        {
+            if (code == null)
+                throw new ArgumentNullException(nameof(code));
+
+            CheckDisposed();
+
+            var id = _currentScriptId++;
+
+            var script = new JsScript(id, this, code, resourceName, ScriptDisposed);
+            _aliveScripts.Add(id, script);
+
+            return script;
         }
 
         // NEED TESTS
@@ -107,7 +128,7 @@ namespace VroomJs
             }
         }
 
-        public object Execute(string code, string name = null, TimeSpan? executionTimeout = null)
+        public object Execute(string code, string resourceName = null, TimeSpan? executionTimeout = null)
         {
             if (code == null)
                 throw new ArgumentNullException(nameof(code));
@@ -129,7 +150,7 @@ namespace VroomJs
 
             try
             {
-                var v = (JsValue)NativeApi.jscontext_execute(_contextHandle, code, name ?? "<Unnamed Script>");
+                var v = (JsValue)NativeApi.jscontext_execute(_contextHandle, code, resourceName ?? "<Unnamed Script>");
                 return ExtractAndCheckReturnValue(v);
             }
             finally
@@ -253,14 +274,22 @@ namespace VroomJs
 
         protected virtual void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                foreach (var script in _aliveScripts.Values)
+                {
+                    script.Dispose();
+                }
+                _aliveScripts.Clear();
+
+                // TODO: do we need to run through the collection and dispose each object?
+                _keepalives.Clear();
+            }
+
             NativeApi.jscontext_dispose(_contextHandle);
 
             if (disposing)
-            {
-                // TODO: do we need to run through the collection and dispose each object?
-                _keepalives.Clear();
                 _notifyDispose(_id);
-            }
         }
 
         ~JsContext()
@@ -332,6 +361,11 @@ namespace VroomJs
         internal void SetPendingException(Exception exception)
         {
             _pendingExceptionInfo = ExceptionDispatchInfo.Capture(exception);
+        }
+
+        private void ScriptDisposed(int id)
+        {
+            _aliveScripts.Remove(id);
         }
     }
 }

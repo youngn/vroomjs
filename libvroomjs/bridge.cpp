@@ -330,14 +330,13 @@ extern "C"
         return jsFunc.Invoke(receiver, argCount, (JsValue*)args);
     }        
 
-	EXPORT JsScript* CALLINGCONVENTION jsscript_new(JsEngine *engine)
+	EXPORT JsScript* CALLINGCONVENTION jsscript_new(JsContext *context)
     {
 #ifdef DEBUG_TRACE_API
 		std::wcout << "jsscript_new" << std::endl;
 #endif
-        assert(engine != nullptr);
-
-        return JsScript::New(engine);
+        assert(context != nullptr);
+        return context->NewScript();
     }
 
 	EXPORT void CALLINGCONVENTION jsscript_dispose(JsScript *script)

@@ -60,11 +60,11 @@ JsContext::JsContext(int32_t id, JsEngine* engine)
 
 void JsContext::Dispose()
 {
-    if (context_ == nullptr)
+    if (IsDisposed())
         return;
 
     // Was the engine already disposed?
-    if (engine_->Isolate() != nullptr) {
+    if (!engine_->IsDisposed()) {
         // todo: do we really need the locker/isolate scope?
         Locker locker(isolate_);
         Isolate::Scope isolate_scope(isolate_);
@@ -101,9 +101,8 @@ JsValue JsContext::Execute(const uint16_t* str, const uint16_t* resourceName = N
 
     ScriptOrigin scriptOrigin(res_name);
 
-    // todo: why are we calling GetCurrentContext() below when we already know it?
     Local<Script> script;
-    if (!Script::Compile(isolate_->GetCurrentContext(), source, &scriptOrigin).ToLocal(&script))
+    if (!Script::Compile(ctx, source, &scriptOrigin).ToLocal(&script))
     {
         // Compilation failed e.g. syntax error
         return JsValue::ForError(trycatch, this);
@@ -125,20 +124,22 @@ JsValue JsContext::Execute(JsScript* jsscript)
     Locker locker(isolate_);
     Isolate::Scope isolate_scope(isolate_);
     HandleScope scope(isolate_);
-    Context::Scope contextScope(Local<Context>::New(isolate_, *context_));
+
+    auto ctx = Local<Context>::New(isolate_, *context_);
+    Context::Scope contextScope(ctx);
 
     TryCatch trycatch(isolate_);
 
     auto script = Local<Script>::New(isolate_, *(jsscript->GetScript()));
 
-    // todo: why are we calling GetCurrentContext() below when we already know it?
     Local<Value> result;
-    if (script->Run(isolate_->GetCurrentContext()).ToLocal(&result)) {
+    if (script->Run(ctx).ToLocal(&result)) {
         return JsValue::ForValue(result, this);
     } else {
         return JsValue::ForError(trycatch, this);
     }
 }
+
 
 JsValue JsContext::GetGlobal() {
 
@@ -256,4 +257,9 @@ JsValue JsContext::GetHostObjectProxy(JsValue hostObject)
     // to the other side as a JsObject.
     auto obj = Local<Object>::Cast(hostObject.Extract(this));
     return JsValue::ForJsObject(obj, this);
+}
+
+JsScript* JsContext::NewScript()
+{
+    return new JsScript(this);
 }

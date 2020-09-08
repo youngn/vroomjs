@@ -163,8 +163,9 @@ Local<Value> JsValue::GetValue(JsContext* context)
         return context->HostObjectMgr()->GetProxy(HostObjectIdValue(), HostObjectTemplateIdValue());
     }
 
-    // todo: throw?
-    return Null(isolate);
+    // should never get here! (unknown value type)
+    assert(false);
+    return Undefined(isolate);
 }
 
 void JsValue::Dispose()

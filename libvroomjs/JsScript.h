@@ -2,25 +2,28 @@
 
 #include "vroomjs.h"
 
-class JsEngine;
+class JsContext;
+class JsValue;
 
-class JsScript {
+class JsScript
+{
 public:
-	static JsScript* New(JsEngine* engine);
+    JsScript(JsContext* context);
 
-	jsvalue Compile(const uint16_t* str, const uint16_t* resourceName);
-	void Dispose();
-	Persistent<Script>* GetScript() { return script_; }
+    JsValue Compile(const uint16_t* str, const uint16_t* resourceName);
 
-	inline virtual ~JsScript() {
-		DECREMENT(js_mem_debug_script_count);
-	}
+    void Dispose();
+    bool IsDisposed() { return script_ == nullptr; }
+
+    Persistent<Script>* GetScript() { return script_; }
+
+    ~JsScript() {
+        DECREMENT(js_mem_debug_script_count);
+    }
 
 private:
-	inline JsScript() {
-		INCREMENT(js_mem_debug_script_count);
-	}
-	JsEngine* engine_;
-	Persistent<Script>* script_;
+    // Context that owns this object
+    JsContext* context_;
+    Persistent<Script>* script_;
 };
 

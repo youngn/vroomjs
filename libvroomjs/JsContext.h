@@ -23,7 +23,10 @@ public:
     JsValue CreateArray(int len, const JsValue* elements);
     JsValue GetHostObjectProxy(JsValue hostObject);
 
+    JsScript* NewScript();
+
     void Dispose();
+    bool IsDisposed() { return context_ == nullptr; }
 
     int32_t Id() { return id_; }
     JsEngine* Engine() { return engine_; }

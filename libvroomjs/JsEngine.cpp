@@ -36,50 +36,9 @@ JsEngine::JsEngine(int32_t max_young_space, int32_t max_old_space)
     //}
     //isolate_->Exit();
 
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    HandleScope scope(isolate_);
-
-    global_context_ = new Persistent<Context>(isolate_, Context::New(isolate_));
-
     // Do this last, in case anything above fails
     INCREMENT(js_mem_debug_engine_count);
 }
-
-Persistent<Script>* JsEngine::CompileScript(const uint16_t* str, const uint16_t* resourceName, jsvalue* error)
-{
-    assert(str != nullptr);
-
-    // todo: change this to use v8::ScriptCompiler::CompileUnboundScript() if the goal is to have a 
-    // compiled script that could be used with any context.
-
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    HandleScope scope(isolate_);
-    Context::Scope contextScope(Local<Context>::New(isolate_, *global_context_));
-
-    TryCatch trycatch(isolate_);
-
-    auto source = String::NewFromTwoByte(isolate_, str).ToLocalChecked();
-
-    auto res_name = resourceName != NULL
-        ? String::NewFromTwoByte(isolate_, resourceName).ToLocalChecked()
-        : String::Empty(isolate_);
-
-    ScriptOrigin scriptOrigin(res_name);
-
-    Local<Script> script;
-    if (!Script::Compile(isolate_->GetCurrentContext(), source, &scriptOrigin).ToLocal(&script))
-    {
-        // Compilation failed e.g. syntax error
-        // TODO: this can't possibly work right - the retval from JsValue::ForError is a stack var
-        //*error = JsValue::ForError(trycatch);
-        // todo: should we not just return here? e.g. return null
-    }
-
-    return new Persistent<Script>(isolate_, script);
-}
-
 
 void JsEngine::TerminateExecution()
 {
@@ -117,26 +76,19 @@ int JsEngine::AddTemplate(hostobjectcallbacks callbacks)
 
 void JsEngine::Dispose()
 {
-    if (isolate_ != NULL) {
-        isolate_->Enter();
+    if (IsDisposed())
+        return;
 
-        global_context_->Reset();
-        delete global_context_;
-        global_context_ = NULL;
+    // Templates must be deleted before the isolate is disposed.
+    for (int i = 0; i < templates_.size(); i++)
+        delete templates_[i];
 
-        isolate_->Exit();
+    isolate_->Dispose();
+    // Isolates can only be Dispose()'d, not deleted
+    isolate_ = nullptr;
 
-        // Templates must be deleted before the isolate is disposed.
-        for (int i = 0; i < templates_.size(); i++)
-            delete templates_[i];
-
-        isolate_->Dispose();
-        // Isolates can only be Dispose()'d, not deleted
-        isolate_ = NULL;
-
-        delete allocator_;
-        allocator_ = NULL;
-    }
+    delete allocator_;
+    allocator_ = nullptr;
 }
 
 void JsEngine::DisposeObject(Persistent<Object>* obj)
