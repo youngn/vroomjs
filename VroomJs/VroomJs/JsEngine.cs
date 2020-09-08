@@ -32,7 +32,7 @@ namespace VroomJs
             = new List<HostObjectTemplateRegistration>();
         private readonly HostObjectTemplateRegistration _exceptionTemplateRegistration;
 
-        private readonly HandleRef _engineHandle;
+        private readonly EngineHandle _handle;
         private readonly Dictionary<int, JsContext> _aliveContexts = new Dictionary<int, JsContext>();
         private bool _disposed;
 
@@ -42,9 +42,9 @@ namespace VroomJs
         {
             var memoryConfig = configuration?.Memory ?? new EngineConfiguration.MemoryConfiguration();
 
-            _engineHandle = new HandleRef(this, NativeApi.jsengine_new(
+            _handle = NativeApi.jsengine_new(
                 memoryConfig.MaxYoungSpace,
-                memoryConfig.MaxOldSpace));
+                memoryConfig.MaxOldSpace);
 
             _exceptionTemplateRegistration = new HostObjectTemplateRegistration(this, new ExceptionTemplate());
 
@@ -59,7 +59,7 @@ namespace VroomJs
             CheckDisposed();
 
             var id = Interlocked.Increment(ref _currentContextId);
-            var ctx = new JsContext(id, this, _engineHandle, ContextDisposed);
+            var ctx = new JsContext(id, this, ContextDisposed);
             _aliveContexts.Add(id, ctx);
 
             return ctx;
@@ -67,10 +67,10 @@ namespace VroomJs
 
         public void DumpHeapStats()
         {
-            NativeApi.jsengine_dump_heap_stats(_engineHandle);
+            NativeApi.jsengine_dump_heap_stats(_handle);
         }
 
-        internal HandleRef Handle => _engineHandle;
+        internal EngineHandle Handle => _handle;
 
         internal int ExceptionTemplateId => _exceptionTemplateRegistration.Id;
 
@@ -87,9 +87,9 @@ namespace VroomJs
             // the first argument because we need to free the memory allocated by
             // "new" but not the object on the V8 heap: it has already been freed.
             if (_disposed)
-                NativeApi.jsengine_dispose_object(new HandleRef(this, IntPtr.Zero), ptr);
+                NativeApi.jsengine_dispose_object(EngineHandle.CreateInvalid(), ptr);
             else
-                NativeApi.jsengine_dispose_object(_engineHandle, ptr);
+                NativeApi.jsengine_dispose_object(_handle, ptr);
         }
 
         internal JsContext GetContext(int id)
@@ -108,7 +108,7 @@ namespace VroomJs
 
         internal void TerminateExecution()
         {
-            NativeApi.jsengine_terminate_execution(_engineHandle);
+            NativeApi.jsengine_terminate_execution(_handle);
         }
 
         private void ContextDisposed(int id)
@@ -129,30 +129,13 @@ namespace VroomJs
                 return;
             _disposed = true;
 
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-#if DEBUG_TRACE_API
-            Console.WriteLine("Calling jsEngine dispose: " + _engine.Handle.ToInt64());
-#endif
-            if (disposing)
+            foreach (var context in _aliveContexts.Values)
             {
-                foreach (var context in _aliveContexts.Values)
-                {
-                    context.Dispose();
-                }
-                _aliveContexts.Clear();
+                context.Dispose();
             }
+            _aliveContexts.Clear();
 
-            NativeApi.js_dispose(_engineHandle);
-        }
-
-        ~JsEngine()
-        {
-            Dispose(false);
+            _handle.Dispose();
         }
 
         #endregion

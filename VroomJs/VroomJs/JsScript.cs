@@ -7,7 +7,7 @@ namespace VroomJs
     public sealed class JsScript : IDisposable
     {
         private readonly int _id;
-        private readonly HandleRef _scriptHandle;
+        private readonly ScriptHandle _handle;
         private readonly Action<int> _notifyDispose;
         private bool _disposed;
 
@@ -17,9 +17,9 @@ namespace VroomJs
             Context = context;
             _notifyDispose = notifyDispose;
 
-            _scriptHandle = new HandleRef(this, NativeApi.jsscript_new(Context.Handle));
+            _handle = NativeApi.jsscript_new(Context.Handle);
 
-            var v = NativeApi.jsscript_compile(_scriptHandle, code, resourceName);
+            var v = NativeApi.jsscript_compile(_handle, code, resourceName);
             Context.ExtractAndCheckReturnValue(v);
         }
 
@@ -29,7 +29,7 @@ namespace VroomJs
 
             return Context.ExecuteWithTimeout(() =>
             {
-                return NativeApi.jsscript_execute(_scriptHandle);
+                return NativeApi.jsscript_execute(_handle);
             }, executionTimeout);
         }
 
@@ -46,28 +46,15 @@ namespace VroomJs
                 return;
             _disposed = true;
 
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            NativeApi.js_dispose(_scriptHandle);
-
-            if(disposing)
-                _notifyDispose(_id);
-        }
-
-        ~JsScript()
-        {
-            Dispose(false);
+            _handle.Dispose();
+            _notifyDispose(_id);
         }
 
         #endregion
 
-        internal HandleRef Handle
+        internal ScriptHandle Handle
         {
-            get { return _scriptHandle; }
+            get { return _handle; }
         }
 
         internal JsContext Context { get; }
