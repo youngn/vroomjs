@@ -3,6 +3,11 @@
 #include "JsContext.h"
 
 
+Local<Function> JsFunction::ToLocal()
+{
+    return Local<Function>::Cast(Local<Object>::New(Context()->Isolate(), Obj()));
+}
+
 JsValue JsFunction::Invoke(JsValue receiver, int argCount, JsValue* args)
 {
     assert(argCount >= 0);
@@ -18,7 +23,7 @@ JsValue JsFunction::Invoke(JsValue receiver, int argCount, JsValue* args)
     auto ctx = context->Ctx();
     Context::Scope contextScope(ctx);
 
-    auto funcLocal = Local<Function>::New(isolate, *func_);
+    auto funcLocal = Local<Function>::Cast(Local<Object>::New(isolate, Obj()));
     auto recv = receiver.Extract(context);
 
     TryCatch trycatch(isolate);

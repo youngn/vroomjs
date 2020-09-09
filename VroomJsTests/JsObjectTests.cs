@@ -20,6 +20,31 @@ namespace VroomJsTests
             }
         }
 
+        [Test]
+        public void Test_Dispose_after_context()
+        {
+            JsObject obj;
+            using (var context = Engine.CreateContext())
+            {
+                obj = (JsObject)context.Execute("({ a: 1, b: 2 })");
+            }
+
+            obj.Dispose();
+        }
+
+        [Test]
+        public void Test_Dispose_after_engine()
+        {
+            JsObject obj;
+            using (var engine = new JsEngine())
+            using (var context = engine.CreateContext())
+            {
+                obj = (JsObject)context.Execute("({ a: 1, b: 2 })");
+            }
+
+            obj.Dispose();
+        }
+
         // todo: this test isn't really testing anything
         [Test]
         public void Test_finalization()

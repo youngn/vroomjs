@@ -4,6 +4,9 @@
 
 class JsContext;
 class JsErrorInfo;
+class JsObject;
+class JsFunction;
+class JsArray;
 
 class JsValue
 {
@@ -89,21 +92,21 @@ public:
         assert(v.type == JSVALUE_TYPE_DATE);
         return v.value.num;
     }
-    Persistent<Array>* JsArrayValue() const {
+    JsArray* JsArrayValue() const {
         assert(v.type == JSVALUE_TYPE_JSARRAY);
-        return (Persistent<Array>*)v.value.ptr;
+        return (JsArray*)v.value.ptr;
     }
-    Persistent<Function>* JsFunctionValue() const {
+    JsFunction* JsFunctionValue() const {
         assert(v.type == JSVALUE_TYPE_JSFUNCTION);
-        return (Persistent<Function>*)v.value.ptr;
+        return (JsFunction*)v.value.ptr;
     }
-    Persistent<Object>* JsObjectValue() const {
+    JsObject* JsObjectValue() const {
         assert(v.type == JSVALUE_TYPE_JSOBJECT);
-        return (Persistent<Object>*)v.value.ptr;
+        return (JsObject*)v.value.ptr;
     }
-    Persistent<Object>* HostErrorValue() const {
+    JsObject* HostErrorValue() const {
         assert(v.type == JSVALUE_TYPE_HOSTERROR);
-        return (Persistent<Object>*)v.value.ptr;
+        return (JsObject*)v.value.ptr;
     }
     Persistent<String>* JsStringValue() const {
         assert(v.type == JSVALUE_TYPE_JSSTRING);

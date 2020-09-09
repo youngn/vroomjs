@@ -1,19 +1,18 @@
 #pragma once
 
 #include "vroomjs.h"
+#include "Disposable.h"
 
 class JsValue;
 class JsContext;
 
-class JsObject
+class JsObject : Disposable
 {
 public:
-    JsObject(Persistent<Object>* obj, JsContext* context)
-        :obj_(obj), context_(context)
-    {
-        assert(obj != nullptr);
-        assert(context != nullptr);
-    };
+    JsObject(Local<Object> obj, JsContext* context);
+
+    Local<Object> ToLocal();
+    void Dispose() override;
 
     JsValue GetPropertyNames();
     JsValue GetPropertyValue(const uint16_t* name);
@@ -23,9 +22,10 @@ public:
 
 protected:
     JsContext* Context() { return context_; }
+    Persistent<Object>& Obj() { return obj_; }
 
 private:
-    Persistent<Object>* obj_;
+    Persistent<Object> obj_;
     JsContext* context_;
 };
 

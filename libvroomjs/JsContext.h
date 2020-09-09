@@ -26,7 +26,7 @@ public:
     JsScript* NewScript();
 
     void Dispose() override;
-    bool IsDisposed()  override { return context_ == nullptr; }
+    bool IsDisposed() { return context_ == nullptr; }
 
     int32_t Id() { return id_; }
     JsEngine* Engine() { return engine_; }

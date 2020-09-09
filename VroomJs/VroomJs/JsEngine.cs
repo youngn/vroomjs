@@ -86,10 +86,11 @@ namespace VroomJs
             // If the engine has already been explicitly disposed we pass Zero as
             // the first argument because we need to free the memory allocated by
             // "new" but not the object on the V8 heap: it has already been freed.
-            if (_disposed)
-                NativeApi.jsengine_dispose_object(EngineHandle.CreateInvalid(), ptr);
-            else
-                NativeApi.jsengine_dispose_object(_handle, ptr);
+            //if (_disposed)
+            //    NativeApi.jsengine_dispose_object(EngineHandle.CreateInvalid(), ptr);
+            //else
+            //    NativeApi.jsengine_dispose_object(_handle, ptr);
+            NativeApi.js_dispose(ptr);
         }
 
         internal JsContext GetContext(int id)

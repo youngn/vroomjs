@@ -5,6 +5,9 @@
 #include "JsErrorInfo.h"
 #include "HostObjectRef.h"
 #include "HostObjectManager.h"
+#include "JsObject.h"
+#include "JsFunction.h"
+#include "JsArray.h"
 
 
 JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
@@ -98,19 +101,19 @@ JsValue JsValue::ForJsString(Local<String> value, JsContext* context)
 inline JsValue JsValue::ForJsArray(Local<Array> value, JsContext* context) {
     assert(!value.IsEmpty());
     assert(context != nullptr);
-    return JsValue(JSVALUE_TYPE_JSARRAY, 0, (void*)new Persistent<Array>(context->Isolate(), value));
+    return JsValue(JSVALUE_TYPE_JSARRAY, 0, (void*)new JsArray(value, context));
 }
 
 inline JsValue JsValue::ForJsFunction(Local<Function> value, JsContext* context) {
     assert(!value.IsEmpty());
     assert(context != nullptr);
-    return JsValue(JSVALUE_TYPE_JSFUNCTION, 0, (void*)new Persistent<Function>(context->Isolate(), value));
+    return JsValue(JSVALUE_TYPE_JSFUNCTION, 0, (void*)new JsFunction(value, context));
 }
 
 inline JsValue JsValue::ForJsObject(Local<Object> value, JsContext* context) {
     assert(!value.IsEmpty());
     assert(context != nullptr);
-    return JsValue(JSVALUE_TYPE_JSOBJECT, 0, (void*)new Persistent<Object>(context->Isolate(), value));
+    return JsValue(JSVALUE_TYPE_JSOBJECT, 0, (void*)new JsObject(value, context));
 }
 
 Local<Value> JsValue::GetValue(JsContext* context)
@@ -144,20 +147,16 @@ Local<Value> JsValue::GetValue(JsContext* context)
         return Date::New(ctx, DateValue()).ToLocalChecked();
     }
     if (ValueType() == JSVALUE_TYPE_JSOBJECT) {
-        auto pObj = JsObjectValue();
-        return Local<Object>::New(isolate, *pObj);
+        return JsObjectValue()->ToLocal();
     }
     if (ValueType() == JSVALUE_TYPE_JSARRAY) {
-        auto pObj = JsArrayValue();
-        return Local<Array>::New(isolate, *pObj);
+        return JsArrayValue()->ToLocal();
     }
     if (ValueType() == JSVALUE_TYPE_JSFUNCTION) {
-        auto pObj = JsFunctionValue();
-        return Local<Function>::New(isolate, *pObj);
+        return JsFunctionValue()->ToLocal();
     }
     if (ValueType() == JSVALUE_TYPE_HOSTERROR) {
-        auto pObj = HostErrorValue();
-        return Local<Object>::New(isolate, *pObj);
+        return HostErrorValue()->ToLocal();
     }
     if (ValueType() == JSVALUE_TYPE_HOSTOBJECT) {
         return context->HostObjectMgr()->GetProxy(HostObjectIdValue(), HostObjectTemplateIdValue());

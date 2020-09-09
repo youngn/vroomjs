@@ -20,7 +20,7 @@ public:
     void DisposeObject(Persistent<Object>* obj);
 
     void Dispose() override;
-    bool IsDisposed() override { return isolate_ == nullptr; }
+    bool IsDisposed() { return isolate_ == nullptr; }
 
     void DumpHeapStats();
     Isolate* Isolate() { return isolate_; }

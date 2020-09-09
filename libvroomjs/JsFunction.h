@@ -6,14 +6,13 @@
 class JsFunction : public JsObject
 {
 public:
-    JsFunction(Persistent<Function>* func, JsContext* context)
-        : JsObject((Persistent<Object>*)func, context), func_(func)
+    JsFunction(Local<Function> func, JsContext* context)
+        : JsObject(func, context)
     {
     }
 
-    JsValue Invoke(JsValue receiver, int argCount, JsValue* args);
+    Local<Function> ToLocal();
 
-private:
-    Persistent<Function>* func_;
+    JsValue Invoke(JsValue receiver, int argCount, JsValue* args);
 };
 

@@ -260,6 +260,7 @@
     <ClCompile Include="bridge.cpp" />
     <ClCompile Include="HostObjectManager.cpp" />
     <ClCompile Include="HostObjectTemplate.cpp" />
+    <ClCompile Include="JsArray.cpp" />
     <ClCompile Include="JsContext.cpp" />
     <ClCompile Include="JsEngine.cpp" />
     <ClCompile Include="JsErrorInfo.cpp" />
@@ -275,6 +276,7 @@
     <ClInclude Include="HostObjectCallbacks.h" />
     <ClInclude Include="HostObjectManager.h" />
     <ClInclude Include="HostObjectTemplate.h" />
+    <ClInclude Include="JsArray.h" />
     <ClInclude Include="JsContext.h" />
     <ClInclude Include="JsEngine.h" />
     <ClInclude Include="JsErrorInfo.h" />

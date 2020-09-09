@@ -3,6 +3,31 @@
 #include "JsContext.h"
 
 
+JsObject::JsObject(Local<Object> obj, JsContext* context)
+    :obj_(context->Isolate(), obj),
+    context_(context)
+{
+    assert(context != nullptr);
+}
+
+Local<Object> JsObject::ToLocal()
+{
+    return Local<Object>::New(context_->Isolate(), obj_);
+}
+
+void JsObject::Dispose()
+{
+    // TODO: we can't call Reset() on a Persistent whose Isolate has been destroyed.
+    // Problem is, we have no way of knowing if our Isolated has been destroyed unless
+    // we maintain a weak ptr to it.
+
+    // todo: not sure we actually need this stuff just to Reset a Persistent handle
+    //auto isolate = context_->Isolate();
+    //Locker locker(isolate);
+    //Isolate::Scope isolate_scope(isolate);
+    //obj_.Reset();
+}
+
 JsValue JsObject::GetPropertyNames()
 {
     auto isolate = context_->Isolate();
@@ -16,7 +41,7 @@ JsValue JsObject::GetPropertyNames()
 
     TryCatch trycatch(isolate);
 
-    auto objLocal = Local<Object>::New(isolate, *obj_);
+    auto objLocal = Local<Object>::New(isolate, obj_);
     auto names = objLocal->GetPropertyNames(ctx).ToLocalChecked();
     if (!names.IsEmpty()) {
         return JsValue::ForValue(names, context_);
@@ -40,7 +65,7 @@ JsValue JsObject::GetPropertyValue(const uint16_t* name)
     Context::Scope contextScope(ctx);
 
     auto n = String::NewFromTwoByte(isolate, name).ToLocalChecked();
-    auto objLocal = Local<Object>::New(isolate, *obj_);
+    auto objLocal = Local<Object>::New(isolate, obj_);
 
     TryCatch trycatch(isolate);
 
@@ -64,7 +89,7 @@ JsValue JsObject::GetPropertyValue(const uint32_t index)
     auto ctx = context_->Ctx();
     Context::Scope contextScope(ctx);
 
-    auto objLocal = Local<Object>::New(isolate, *obj_);
+    auto objLocal = Local<Object>::New(isolate, obj_);
 
     TryCatch trycatch(isolate);
 
@@ -92,7 +117,7 @@ JsValue JsObject::SetPropertyValue(const uint16_t* name, JsValue value)
 
     auto v = value.Extract(context_);
     auto n = String::NewFromTwoByte(isolate, name).ToLocalChecked();
-    auto objLocal = Local<Object>::New(isolate, *obj_);
+    auto objLocal = Local<Object>::New(isolate, obj_);
 
     objLocal->Set(ctx, n, v).Check();
 
@@ -113,7 +138,7 @@ JsValue JsObject::SetPropertyValue(const uint32_t index, JsValue value)
     Context::Scope contextScope(ctx);
 
     auto v = value.Extract(context_);
-    auto objLocal = Local<Object>::New(isolate, *obj_);
+    auto objLocal = Local<Object>::New(isolate, obj_);
 
     objLocal->Set(ctx, index, v).Check();
 

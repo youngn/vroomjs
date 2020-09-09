@@ -19,7 +19,7 @@ public:
     JsValue Execute();
 
     void Dispose() override;
-    bool IsDisposed() override { return script_ == nullptr; }
+    bool IsDisposed() { return script_ == nullptr; }
 
     virtual ~JsScript() {
         DECREMENT(js_mem_debug_script_count);
