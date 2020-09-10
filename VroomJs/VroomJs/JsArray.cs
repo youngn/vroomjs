@@ -6,7 +6,7 @@ namespace VroomJs
 {
     public class JsArray : JsObject, IEnumerable<object>
     {
-        internal JsArray(JsContext context, IntPtr objectHandle)
+        internal JsArray(JsContext context, ObjectHandle objectHandle)
             : base(context, objectHandle)
         {
         }

@@ -128,20 +128,6 @@ extern "C"
         return engine->AddTemplate(callbacks);
     }
 
-    EXPORT void CALLINGCONVENTION jsengine_dispose_object(JsEngine* engine, Persistent<Object>* obj)
-    {
-#ifdef DEBUG_TRACE_API
-        std::wcout << "jscontext_dispose_object" << std::endl;
-#endif
-        if (engine != nullptr) {
-            // Allow V8 GC to reclaim the JS Object
-            engine->DisposeObject(obj);
-        }
-
-        // Delete the Persistent handle (not the Object, which is owned by V8)
-        delete obj;
-    }
-
     EXPORT JsContext* CALLINGCONVENTION jscontext_new(int32_t id, JsEngine *engine)
     {
 #ifdef DEBUG_TRACE_API

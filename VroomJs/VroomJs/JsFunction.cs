@@ -9,7 +9,7 @@ namespace VroomJs
 {
     public class JsFunction : JsObject
     {
-        internal JsFunction(JsContext context, IntPtr objectHandle)
+        internal JsFunction(JsContext context, ObjectHandle objectHandle)
             :base(context, objectHandle)
         {
         }

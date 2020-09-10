@@ -177,23 +177,23 @@ namespace VroomJs
         public static JsValue ForJsArray(JsArray value)
         {
             Debug.Assert(value != null);
-            return new jsvalue { Type = JsValueType.JsArray, Ptr = value.Handle };
+            return new jsvalue { Type = JsValueType.JsArray, Ptr = value.Handle.DangerousGetHandle() };
         }
         public static JsValue ForJsFunction(JsFunction value)
         {
             Debug.Assert(value != null);
-            return new jsvalue { Type = JsValueType.JsFunction, Ptr = value.Handle };
+            return new jsvalue { Type = JsValueType.JsFunction, Ptr = value.Handle.DangerousGetHandle() };
         }
         public static JsValue ForJsObject(JsObject value)
         {
             Debug.Assert(value != null);
-            return new jsvalue { Type = JsValueType.JsObject, Ptr = value.Handle };
+            return new jsvalue { Type = JsValueType.JsObject, Ptr = value.Handle.DangerousGetHandle() };
         }
         public static JsValue ForHostError(HostErrorInfo errorInfo, JsContext context)
         {
             Debug.Assert(errorInfo != null);
             var errorObj = errorInfo.ToErrorObject(context);
-            return new jsvalue { Type = JsValueType.HostError, Ptr = errorObj.Handle };
+            return new jsvalue { Type = JsValueType.HostError, Ptr = errorObj.Handle.DangerousGetHandle() };
         }
         public static JsValue ForHostObject(int id, int templateId)
         {
@@ -298,17 +298,17 @@ namespace VroomJs
         private JsArray JsArrayValue(JsContext context)
         {
             Debug.Assert(_data.Type == JsValueType.JsArray);
-            return new JsArray(context, _data.Ptr);
+            return new JsArray(context, new ObjectHandle(_data.Ptr, true));
         }
         private JsFunction JsFunctionValue(JsContext context)
         {
             Debug.Assert(_data.Type == JsValueType.JsFunction);
-            return new JsFunction(context, _data.Ptr);
+            return new JsFunction(context, new ObjectHandle(_data.Ptr, true));
         }
         private JsObject JsObjectValue(JsContext context)
         {
             Debug.Assert(_data.Type == JsValueType.JsObject);
-            return new JsObject(context, _data.Ptr);
+            return new JsObject(context, new ObjectHandle(_data.Ptr, true));
         }
         private object HostObjectValue(JsContext context)
         {

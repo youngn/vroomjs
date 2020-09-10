@@ -34,15 +34,15 @@ namespace VroomJs
     public class JsObject : DynamicObject, IDisposable
     {
         private readonly JsContext _context;
-        private readonly IntPtr _objectHandle;
+        private readonly ObjectHandle _objectHandle;
         private bool _disposed;
 
-        internal JsObject(JsContext context, IntPtr objectHandle)
+        internal JsObject(JsContext context, ObjectHandle objectHandle)
         {
             if (context == null)
                 throw new ArgumentNullException(nameof(context));
-            if (objectHandle == IntPtr.Zero)
-                throw new ArgumentException("Invalid object handle", nameof(objectHandle));
+            if (objectHandle == null)
+                throw new ArgumentNullException(nameof(objectHandle));
 
             _context = context;
             _objectHandle = objectHandle;
@@ -171,23 +171,12 @@ namespace VroomJs
                 return;
             _disposed = true;
 
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            _context.Engine.DisposeObject(_objectHandle);
-        }
-
-        ~JsObject()
-        {
-            Dispose(false);
+            _objectHandle.Dispose();
         }
 
         #endregion
 
-        internal IntPtr Handle
+        internal ObjectHandle Handle
         {
             get { return _objectHandle; }
         }

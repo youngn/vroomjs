@@ -27,11 +27,6 @@ namespace VroomJs
             : base(IntPtr.Zero, true)
         {
         }
-
-        public static EngineHandle CreateInvalid()
-        {
-            return new EngineHandle();
-        }
     }
 
     internal sealed class ContextHandle : V8DisposableSafeHandle
@@ -49,6 +44,22 @@ namespace VroomJs
         private ScriptHandle()
             : base(IntPtr.Zero, true)
         {
+        }
+    }
+
+    internal sealed class ObjectHandle : V8DisposableSafeHandle
+    {
+        // Called by P/Invoke when returning SafeHandles
+        private ObjectHandle()
+            : base(IntPtr.Zero, true)
+        {
+        }
+
+        // If & only if you need to support user-supplied handles
+        internal ObjectHandle(IntPtr preexistingHandle, bool ownsHandle)
+            : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle(preexistingHandle);
         }
     }
 }

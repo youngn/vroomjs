@@ -91,6 +91,7 @@ void JsEngine::Dispose()
     allocator_ = nullptr;
 }
 
+// todo: remove unused method
 void JsEngine::DisposeObject(Persistent<Object>* obj)
 {
     assert(obj != nullptr);

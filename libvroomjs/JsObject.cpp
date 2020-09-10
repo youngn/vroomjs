@@ -115,6 +115,8 @@ JsValue JsObject::SetPropertyValue(const uint16_t* name, JsValue value)
     auto ctx = context_->Ctx();
     Context::Scope contextScope(ctx);
 
+    // todo: trycatch
+
     auto v = value.Extract(context_);
     auto n = String::NewFromTwoByte(isolate, name).ToLocalChecked();
     auto objLocal = Local<Object>::New(isolate, obj_);
@@ -136,6 +138,8 @@ JsValue JsObject::SetPropertyValue(const uint32_t index, JsValue value)
 
     auto ctx = context_->Ctx();
     Context::Scope contextScope(ctx);
+
+    // todo: trycatch
 
     auto v = value.Extract(context_);
     auto objLocal = Local<Object>::New(isolate, obj_);

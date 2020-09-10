@@ -42,9 +42,6 @@ namespace VroomJs.Interop
         public static extern void jsengine_dump_heap_stats(EngineHandle engine);
 
         [DllImport(DllName)]
-        public static extern void jsengine_dispose_object(EngineHandle engine, IntPtr obj);
-
-        [DllImport(DllName)]
         public static extern int jsengine_add_template(EngineHandle engine, hostobjectcallbacks callbacks);
 
         #endregion
@@ -83,22 +80,22 @@ namespace VroomJs.Interop
         #region jsobject
 
         [DllImport(DllName)]
-        public static extern jsvalue jsobject_get_property_names(ContextHandle context, IntPtr obj);
+        public static extern jsvalue jsobject_get_property_names(ContextHandle context, ObjectHandle obj);
 
         [DllImport(DllName)]
-        public static extern jsvalue jsobject_get_named_property_value(ContextHandle context, IntPtr obj, [MarshalAs(UnmanagedType.LPWStr)] string name);
+        public static extern jsvalue jsobject_get_named_property_value(ContextHandle context, ObjectHandle obj, [MarshalAs(UnmanagedType.LPWStr)] string name);
 
         [DllImport(DllName)]
-        public static extern jsvalue jsobject_get_indexed_property_value(ContextHandle context, IntPtr obj, int index);
+        public static extern jsvalue jsobject_get_indexed_property_value(ContextHandle context, ObjectHandle obj, int index);
 
         [DllImport(DllName)]
-        public static extern jsvalue jsobject_set_named_property_value(ContextHandle context, IntPtr obj, [MarshalAs(UnmanagedType.LPWStr)] string name, jsvalue value);
+        public static extern jsvalue jsobject_set_named_property_value(ContextHandle context, ObjectHandle obj, [MarshalAs(UnmanagedType.LPWStr)] string name, jsvalue value);
 
         [DllImport(DllName)]
-        public static extern jsvalue jsobject_set_indexed_property_value(ContextHandle context, IntPtr obj, int index, jsvalue value);
+        public static extern jsvalue jsobject_set_indexed_property_value(ContextHandle context, ObjectHandle obj, int index, jsvalue value);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern jsvalue jsfunction_invoke(ContextHandle context, IntPtr obj, jsvalue receiver, int argCount, [In]jsvalue[] args);
+        public static extern jsvalue jsfunction_invoke(ContextHandle context, ObjectHandle obj, jsvalue receiver, int argCount, [In]jsvalue[] args);
 
         #endregion
 
