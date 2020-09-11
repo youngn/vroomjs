@@ -65,6 +65,10 @@ void JsEngine::DumpHeapStats()
 
 JsContext* JsEngine::NewContext(int32_t id)
 {
+    Locker locker(isolate_);
+    Isolate::Scope isolate_scope(isolate_);
+    HandleScope scope(isolate_);
+
     auto context = new JsContext(id, this);
     RegisterOwnedDisposable(context);
     return context;

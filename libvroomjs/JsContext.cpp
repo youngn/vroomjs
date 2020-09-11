@@ -41,32 +41,18 @@ using namespace v8;
 long js_mem_debug_context_count;
 
 JsContext::JsContext(int32_t id, JsEngine* engine)
+    :id_(id),
+    engine_(engine),
+    isolate_(engine->Isolate()),
+    context_(isolate_, Context::New(isolate_)),
+    hostObjectManager_(new HostObjectManager(this))
 {
-    id_ = id;
-    engine_ = engine;
-    isolate_ = engine->Isolate();
-
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    HandleScope scope(isolate_);
-
-    context_ = new Persistent<Context>(isolate_, Context::New(isolate_));
-
-    hostObjectManager_ = new HostObjectManager(this);
-
-    // Do this last, in case anything above fails
     INCREMENT(js_mem_debug_context_count);
 }
 
 void JsContext::DisposeCore()
 {
-    // todo: do we really need the locker/isolate scope?
-    Locker locker(isolate_);
-    Isolate::Scope isolate_scope(isolate_);
-    context_->Reset();
-
-    delete context_;
-    context_ = nullptr;
+    context_.Reset();
 
     delete hostObjectManager_;
     hostObjectManager_ = nullptr;
@@ -83,7 +69,7 @@ JsValue JsContext::Execute(const uint16_t* code, const uint16_t* resourceName)
     Isolate::Scope isolate_scope(isolate_);
     HandleScope scope(isolate_);
 
-    auto ctx = Local<Context>::New(isolate_, *context_);
+    auto ctx = Ctx();
     Context::Scope contextScope(ctx);
 
     TryCatch trycatch(isolate_);
@@ -118,7 +104,7 @@ JsValue JsContext::GetGlobal() {
     Isolate::Scope isolate_scope(isolate_);
     HandleScope scope(isolate_);
 
-    auto ctx = Local<Context>::New(isolate_, *context_);
+    auto ctx = Ctx();
     Context::Scope contextScope(ctx);
 
     TryCatch trycatch(isolate_);
@@ -140,7 +126,7 @@ JsValue JsContext::GetVariable(const uint16_t* name)
     Isolate::Scope isolate_scope(isolate_);
     HandleScope scope(isolate_);
 
-    auto ctx = Local<Context>::New(isolate_, *context_);
+    auto ctx = Ctx();
     Context::Scope contextScope(ctx);
 
     auto var_name = String::NewFromTwoByte(isolate_, name).ToLocalChecked();
@@ -164,7 +150,7 @@ JsValue JsContext::SetVariable(const uint16_t* name, JsValue value)
     Isolate::Scope isolate_scope(isolate_);
     HandleScope scope(isolate_);
 
-    auto ctx = Local<Context>::New(isolate_, *context_);
+    auto ctx = Ctx();
     Context::Scope contextScope(ctx);
 
     auto v = value.Extract(this);
@@ -187,7 +173,7 @@ JsValue JsContext::CreateObject()
     Locker locker(isolate_);
     HandleScope scope(isolate_);
 
-    auto ctx = Local<Context>::New(isolate_, *context_);
+    auto ctx = Ctx();
     Context::Scope contextScope(ctx);
 
     auto obj = Object::New(isolate_);
@@ -201,13 +187,12 @@ JsValue JsContext::CreateArray(int len, const JsValue * elements)
     Locker locker(isolate_);
     HandleScope scope(isolate_);
 
-    auto ctx = Local<Context>::New(isolate_, *context_);
+    auto ctx = Ctx();
     Context::Scope contextScope(ctx);
 
     auto arr = Array::New(isolate_, len);
 
     if (elements) {
-        auto ctx = Local<Context>::New(isolate_, *context_);
         for (int i = 0; i < len; i++) {
             arr->Set(ctx, i, JsValue(elements[i]).Extract(this)).Check();
         }
@@ -230,9 +215,37 @@ JsValue JsContext::GetHostObjectProxy(JsValue hostObject)
     return JsValue::ForJsObject(obj, this);
 }
 
-JsScript* JsContext::NewScript()
+JsValue JsContext::CompileScript(const uint16_t* code, const uint16_t* resourceName)
 {
-    auto script = new JsScript(this);
-    RegisterOwnedDisposable(script);
-    return script;
+    assert(code != nullptr);
+
+    auto isolate = this->isolate_;
+
+    Locker locker(isolate);
+    Isolate::Scope isolate_scope(isolate);
+    HandleScope scope(isolate);
+
+    auto ctx = Ctx();
+    Context::Scope contextScope(ctx);
+
+    TryCatch trycatch(isolate);
+
+    auto source = String::NewFromTwoByte(isolate, code).ToLocalChecked();
+
+    auto res_name = resourceName != NULL
+        ? String::NewFromTwoByte(isolate, resourceName).ToLocalChecked()
+        : String::Empty(isolate);
+
+    ScriptOrigin scriptOrigin(res_name);
+
+    Local<Script> script;
+    if (!Script::Compile(ctx, source, &scriptOrigin).ToLocal(&script))
+    {
+        // Compilation failed e.g. syntax error
+        return JsValue::ForError(trycatch, this);
+    }
+
+    auto s = new JsScript(script, this);
+    RegisterOwnedDisposable(s);
+    return JsValue::ForScript(s);
 }

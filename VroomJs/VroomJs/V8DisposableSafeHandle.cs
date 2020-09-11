@@ -45,6 +45,13 @@ namespace VroomJs
             : base(IntPtr.Zero, true)
         {
         }
+
+        // If & only if you need to support user-supplied handles
+        internal ScriptHandle(IntPtr preexistingHandle, bool ownsHandle)
+            : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle(preexistingHandle);
+        }
     }
 
     public sealed class ObjectHandle : V8DisposableSafeHandle

@@ -8,6 +8,7 @@
 #include "JsObject.h"
 #include "JsFunction.h"
 #include "JsArray.h"
+#include "JsScript.h"
 
 
 JsValue JsValue::ForValue(Local<Value> value, JsContext* context)
@@ -114,6 +115,12 @@ inline JsValue JsValue::ForJsObject(Local<Object> value, JsContext* context) {
     assert(!value.IsEmpty());
     assert(context != nullptr);
     return JsValue(JSVALUE_TYPE_JSOBJECT, 0, (void*)new JsObject(value, context));
+}
+
+JsValue JsValue::ForScript(JsScript* script)
+{
+    assert(script != nullptr);
+    return JsValue(JSVALUE_TYPE_SCRIPT, 0, (void*)script);
 }
 
 Local<Value> JsValue::GetValue(JsContext* context)

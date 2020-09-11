@@ -45,5 +45,7 @@ namespace VroomJs
         JsFunction = 17,
         JsArray = 18,
         JsString = 19,
+
+        Script = 20,
     }
 }

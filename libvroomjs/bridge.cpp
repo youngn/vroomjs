@@ -219,6 +219,17 @@ extern "C"
         return context->GetHostObjectProxy(hostObject);
     }
 
+    EXPORT jsvalue CALLINGCONVENTION jscontext_compile_script(JsContext* context, const uint16_t* code, const uint16_t* resourceName)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jscontext_compile_script" << std::endl;
+#endif
+        assert(context != nullptr);
+        assert(code != nullptr);
+
+        return context->CompileScript(code, resourceName);
+    }
+
     EXPORT jsvalue CALLINGCONVENTION jsobject_get_named_property_value(JsContext* context, JsObject* obj, const uint16_t* name)
     {
 #ifdef DEBUG_TRACE_API
@@ -288,26 +299,6 @@ extern "C"
 
         return obj->Invoke(receiver, argCount, (JsValue*)args);
     }        
-
-	EXPORT JsScript* CALLINGCONVENTION jsscript_new(JsContext *context)
-    {
-#ifdef DEBUG_TRACE_API
-		std::wcout << "jsscript_new" << std::endl;
-#endif
-        assert(context != nullptr);
-        return context->NewScript();
-    }
-
-	EXPORT jsvalue CALLINGCONVENTION jsscript_compile(JsScript* script, const uint16_t* code, const uint16_t *resourceName)
-    {
-#ifdef DEBUG_TRACE_API
-		std::wcout << "jsscript_compile" << std::endl;
-#endif
-        assert(script != nullptr);
-        assert(code != nullptr);
-
-        return script->Compile(code, resourceName);
-    }
 
     EXPORT jsvalue CALLINGCONVENTION jsscript_execute(JsScript* script)
     {

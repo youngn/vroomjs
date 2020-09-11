@@ -7,6 +7,7 @@ class JsErrorInfo;
 class JsObject;
 class JsFunction;
 class JsArray;
+class JsScript;
 
 class JsValue
 {
@@ -63,6 +64,7 @@ public:
     static JsValue ForHostObject(int32_t id) {
         return JsValue(JSVALUE_TYPE_HOSTOBJECT, 0, id);
     }
+    static JsValue ForScript(JsScript* script);
 
     int32_t ValueType() const {
         return v.type;

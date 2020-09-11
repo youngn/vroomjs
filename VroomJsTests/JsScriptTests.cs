@@ -29,6 +29,18 @@ namespace VroomJsTests
         }
 
         [Test]
+        public void Test_Compile_syntax_error()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                Assert.Throws<JsSyntaxException>(() =>
+                {
+                    context.Compile(".x");
+                });
+            }
+        }
+
+        [Test]
         public void Test_repeat_execution()
         {
             using (var context = Engine.CreateContext())

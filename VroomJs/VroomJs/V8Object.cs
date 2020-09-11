@@ -24,6 +24,8 @@ namespace VroomJs
             _owner?.OwnedObjectDisposed(this);
         }
 
+        protected V8Object Owner => _owner;
+
         protected virtual void DisposeCore()
         {
 
@@ -49,7 +51,7 @@ namespace VroomJs
         protected V8Object(THandle handle, V8Object owner = null)
             :base(owner)
         {
-            Handle = handle;
+            Handle = handle ?? throw new ArgumentNullException(nameof(handle));
         }
 
         internal THandle Handle { get; }

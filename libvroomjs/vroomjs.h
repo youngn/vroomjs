@@ -50,6 +50,7 @@ using namespace v8;
 #define JSVALUE_TYPE_JSFUNCTION     17
 #define JSVALUE_TYPE_JSARRAY        18
 #define JSVALUE_TYPE_JSSTRING       19
+#define JSVALUE_TYPE_SCRIPT         20
 
 #ifdef _WIN32 
 #define EXPORT __declspec(dllexport)

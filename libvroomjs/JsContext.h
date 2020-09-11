@@ -23,13 +23,13 @@ public:
     JsValue CreateArray(int len, const JsValue* elements);
     JsValue GetHostObjectProxy(JsValue hostObject);
 
-    JsScript* NewScript();
+    JsValue CompileScript(const uint16_t* code, const uint16_t* resourceName);
 
     int32_t Id() { return id_; }
     JsEngine* Engine() { return engine_; }
     Isolate* Isolate() { return isolate_; }
     Local<Context> Ctx() {
-        return Local<Context>::New(isolate_, *context_);
+        return Local<Context>::New(isolate_, context_);
     }
 
     // todo: rename this
@@ -48,7 +48,7 @@ private:
     int32_t id_;
     JsEngine* engine_;
     v8::Isolate* isolate_;
-    Persistent<Context>* context_;
+    Persistent<Context> context_;
     ::HostObjectManager* hostObjectManager_;
 };
 

@@ -75,6 +75,10 @@ namespace VroomJs.Interop
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern jsvalue jscontext_get_proxy(ContextHandle context, jsvalue hostObject);
 
+        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+        public static extern jsvalue jscontext_compile_script(
+            ContextHandle context, [MarshalAs(UnmanagedType.LPWStr)] string code, [MarshalAs(UnmanagedType.LPWStr)] string resourceName);
+
         #endregion
 
         #region jsobject
@@ -100,13 +104,6 @@ namespace VroomJs.Interop
         #endregion
 
         #region jsscript
-
-        [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern ScriptHandle jsscript_new(ContextHandle context);
-
-        [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-        public static extern jsvalue jsscript_compile(ScriptHandle script, [MarshalAs(UnmanagedType.LPWStr)] string code,
-                                                      [MarshalAs(UnmanagedType.LPWStr)] string resourceName);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
         public static extern jsvalue jsscript_execute(ScriptHandle script);

@@ -5,18 +5,11 @@ namespace VroomJs
 {
     public sealed class JsScript : V8Object<ScriptHandle>
     {
-        internal JsScript(JsContext context, string code, string resourceName)
-            :base(InitHandle(context), owner: context)
+        internal JsScript(JsContext context, ScriptHandle handle)
+            :base(handle, owner: context)
         {
-            Context = context;
-
-            var v = NativeApi.jsscript_compile(Handle, code, resourceName);
-            Context.ExtractAndCheckReturnValue(v);
-        }
-
-        private static ScriptHandle InitHandle(JsContext context)
-        {
-            return NativeApi.jsscript_new(context.Handle);
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
         }
 
         public object Execute(TimeSpan? executionTimeout = null)
@@ -29,6 +22,6 @@ namespace VroomJs
             }, executionTimeout);
         }
 
-        internal JsContext Context { get; }
+        public JsContext Context => (JsContext)Owner;
     }
 }

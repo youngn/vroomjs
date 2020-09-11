@@ -34,7 +34,6 @@ namespace VroomJs
     public class JsContext : V8Object<ContextHandle>
     {
         private readonly int _id;
-        private readonly JsEngine _engine;
 
         // Keep objects passed to V8 alive even if no other references exist.
         private readonly IKeepAliveStore _keepalives;
@@ -46,8 +45,6 @@ namespace VroomJs
             :base(InitHandle(id, engine), owner: engine)
         {
             _id = id;
-            _engine = engine;
-
             _keepalives = new KeepAliveDictionaryStore();
         }
 
@@ -58,10 +55,7 @@ namespace VroomJs
 
         internal int Id => _id;
 
-        public JsEngine Engine
-        {
-            get { return _engine; }
-        }
+        public JsEngine Engine => (JsEngine)Owner;
 
         public JsEngineStats GetStats()
         {
@@ -80,7 +74,8 @@ namespace VroomJs
 
             CheckDisposed();
 
-            return new JsScript(this, code, resourceName);
+            var v = NativeApi.jscontext_compile_script(Handle, code, resourceName);
+            return (JsScript)ExtractAndCheckReturnValue(v);
         }
 
         public object Execute(string code, string resourceName = null, TimeSpan? executionTimeout = null)
@@ -207,7 +202,7 @@ namespace VroomJs
                 {
                     timer.Stop();
                     _timeoutExceeded = true;
-                    _engine.TerminateExecution();
+                    Engine.TerminateExecution();
                 };
                 timer.Start();
             }
@@ -224,7 +219,7 @@ namespace VroomJs
 
         internal JsObject GetExceptionProxy(Exception ex)
         {
-            return GetHostObjectProxy(ex, _engine.ExceptionTemplateId);
+            return GetHostObjectProxy(ex, Engine.ExceptionTemplateId);
         }
 
         internal JsObject GetHostObjectProxy(object obj, int templateId)

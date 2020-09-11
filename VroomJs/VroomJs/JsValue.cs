@@ -249,6 +249,9 @@ namespace VroomJs
                 case JsValueType.JsError:
                     return JsErrorValue(context);
 
+                case JsValueType.Script:
+                    return ScriptValue(context);
+
                 default:
                     throw new InvalidOperationException("unknown type code: " + _data.Type);
             }
@@ -363,6 +366,11 @@ namespace VroomJs
 
                 stackFrame = info.Next;
             }
+        }
+        private JsScript ScriptValue(JsContext context)
+        {
+            Debug.Assert(_data.Type == JsValueType.Script);
+            return new JsScript(context, new ScriptHandle(_data.Ptr, true));
         }
 
         #endregion
