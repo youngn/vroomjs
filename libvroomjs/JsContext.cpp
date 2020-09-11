@@ -58,18 +58,13 @@ JsContext::JsContext(int32_t id, JsEngine* engine)
     INCREMENT(js_mem_debug_context_count);
 }
 
-void JsContext::Dispose()
+void JsContext::DisposeCore()
 {
-    if (IsDisposed())
-        return;
+    // todo: do we really need the locker/isolate scope?
+    Locker locker(isolate_);
+    Isolate::Scope isolate_scope(isolate_);
+    context_->Reset();
 
-    // Was the engine already disposed?
-    if (!engine_->IsDisposed()) {
-        // todo: do we really need the locker/isolate scope?
-        Locker locker(isolate_);
-        Isolate::Scope isolate_scope(isolate_);
-        context_->Reset();
-    }
     delete context_;
     context_ = nullptr;
 
@@ -237,5 +232,7 @@ JsValue JsContext::GetHostObjectProxy(JsValue hostObject)
 
 JsScript* JsContext::NewScript()
 {
-    return new JsScript(this);
+    auto script = new JsScript(this);
+    RegisterOwnedDisposable(script);
+    return script;
 }

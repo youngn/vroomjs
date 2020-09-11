@@ -4,7 +4,7 @@ using VroomJs.Interop;
 
 namespace VroomJs
 {
-    internal abstract class V8DisposableSafeHandle : SafeHandle
+    public abstract class V8DisposableSafeHandle : SafeHandle
     {
         protected V8DisposableSafeHandle(IntPtr invalidHandleValue, bool ownsHandle)
             : base(invalidHandleValue, ownsHandle)
@@ -20,7 +20,7 @@ namespace VroomJs
         }
     }
 
-    internal sealed class EngineHandle : V8DisposableSafeHandle
+    public sealed class EngineHandle : V8DisposableSafeHandle
     {
         // Called by P/Invoke when returning SafeHandles
         private EngineHandle()
@@ -29,7 +29,7 @@ namespace VroomJs
         }
     }
 
-    internal sealed class ContextHandle : V8DisposableSafeHandle
+    public sealed class ContextHandle : V8DisposableSafeHandle
     {
         // Called by P/Invoke when returning SafeHandles
         private ContextHandle()
@@ -38,7 +38,7 @@ namespace VroomJs
         }
     }
 
-    internal sealed class ScriptHandle : V8DisposableSafeHandle
+    public sealed class ScriptHandle : V8DisposableSafeHandle
     {
         // Called by P/Invoke when returning SafeHandles
         private ScriptHandle()
@@ -47,7 +47,7 @@ namespace VroomJs
         }
     }
 
-    internal sealed class ObjectHandle : V8DisposableSafeHandle
+    public sealed class ObjectHandle : V8DisposableSafeHandle
     {
         // Called by P/Invoke when returning SafeHandles
         private ObjectHandle()

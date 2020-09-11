@@ -1,26 +1,22 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using VroomJs.Interop;
 
 namespace VroomJs
 {
-    public sealed class JsScript : IDisposable
+    public sealed class JsScript : V8Object<ScriptHandle>
     {
-        private readonly int _id;
-        private readonly ScriptHandle _handle;
-        private readonly Action<int> _notifyDispose;
-        private bool _disposed;
-
-        internal JsScript(int id, JsContext context, string code, string resourceName, Action<int> notifyDispose)
+        internal JsScript(JsContext context, string code, string resourceName)
+            :base(InitHandle(context), owner: context)
         {
-            _id = id;
             Context = context;
-            _notifyDispose = notifyDispose;
 
-            _handle = NativeApi.jsscript_new(Context.Handle);
-
-            var v = NativeApi.jsscript_compile(_handle, code, resourceName);
+            var v = NativeApi.jsscript_compile(Handle, code, resourceName);
             Context.ExtractAndCheckReturnValue(v);
+        }
+
+        private static ScriptHandle InitHandle(JsContext context)
+        {
+            return NativeApi.jsscript_new(context.Handle);
         }
 
         public object Execute(TimeSpan? executionTimeout = null)
@@ -29,42 +25,10 @@ namespace VroomJs
 
             return Context.ExecuteWithTimeout(() =>
             {
-                return NativeApi.jsscript_execute(_handle);
+                return NativeApi.jsscript_execute(Handle);
             }, executionTimeout);
         }
 
-        #region IDisposable implementation
-
-        public bool IsDisposed
-        {
-            get { return _disposed; }
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-            _disposed = true;
-
-            _handle.Dispose();
-            _notifyDispose(_id);
-        }
-
-        #endregion
-
-        internal ScriptHandle Handle
-        {
-            get { return _handle; }
-        }
-
         internal JsContext Context { get; }
-
-        private void CheckDisposed()
-        {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(JsScript));
-
-            Context.CheckDisposed();
-        }
     }
 }

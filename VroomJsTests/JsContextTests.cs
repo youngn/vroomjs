@@ -11,6 +11,20 @@ namespace VroomJsTests
     [TestFixture]
     public class JsContextTests : TestsBase
     {
+
+        [Test]
+        public void Test_Dispose_after_engine()
+        {
+            JsContext context;
+            using (var engine = new JsEngine())
+            {
+                context = engine.CreateContext();
+            }
+
+            Assert.DoesNotThrow(() => context.Dispose());
+        }
+
+
         [Test]
         [TestCaseSource(nameof(TestCases_Execute))]
         public object Test_Execute(string script)

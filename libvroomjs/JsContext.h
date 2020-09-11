@@ -8,7 +8,7 @@ class JsScript;
 class JsValue;
 class HostObjectManager;
 
-class JsContext : Disposable
+class JsContext : public Disposable
 {
 public:
     JsContext(int32_t id, JsEngine* engine);
@@ -25,9 +25,6 @@ public:
 
     JsScript* NewScript();
 
-    void Dispose() override;
-    bool IsDisposed() { return context_ == nullptr; }
-
     int32_t Id() { return id_; }
     JsEngine* Engine() { return engine_; }
     Isolate* Isolate() { return isolate_; }
@@ -43,6 +40,9 @@ public:
     virtual ~JsContext() {
         DECREMENT(js_mem_debug_context_count);
     }
+
+protected:
+    void DisposeCore() override;
 
 private:
     int32_t id_;

@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using VroomJs.Interop;
 
 
 namespace VroomJs
 {
-    public partial class JsEngine : IDisposable
+    public partial class JsEngine : V8Object<EngineHandle>
     {
         public static void Initialize()
         {
@@ -32,20 +30,13 @@ namespace VroomJs
             = new List<HostObjectTemplateRegistration>();
         private readonly HostObjectTemplateRegistration _exceptionTemplateRegistration;
 
-        private readonly EngineHandle _handle;
         private readonly Dictionary<int, JsContext> _aliveContexts = new Dictionary<int, JsContext>();
-        private bool _disposed;
 
         private int _currentContextId = 0;
 
         public JsEngine(EngineConfiguration configuration = null)
+            :base(InitHandle(configuration))
         {
-            var memoryConfig = configuration?.Memory ?? new EngineConfiguration.MemoryConfiguration();
-
-            _handle = NativeApi.jsengine_new(
-                memoryConfig.MaxYoungSpace,
-                memoryConfig.MaxOldSpace);
-
             _exceptionTemplateRegistration = new HostObjectTemplateRegistration(this, new ExceptionTemplate());
 
             if (configuration != null)
@@ -54,12 +45,21 @@ namespace VroomJs
             }
         }
 
+        private static EngineHandle InitHandle(EngineConfiguration configuration)
+        {
+            var memoryConfig = configuration?.Memory ?? new EngineConfiguration.MemoryConfiguration();
+
+            return NativeApi.jsengine_new(
+                memoryConfig.MaxYoungSpace,
+                memoryConfig.MaxOldSpace);
+        }
+
         public JsContext CreateContext()
         {
             CheckDisposed();
 
             var id = Interlocked.Increment(ref _currentContextId);
-            var ctx = new JsContext(id, this, ContextDisposed);
+            var ctx = new JsContext(id, this);
             _aliveContexts.Add(id, ctx);
 
             return ctx;
@@ -67,10 +67,8 @@ namespace VroomJs
 
         public void DumpHeapStats()
         {
-            NativeApi.jsengine_dump_heap_stats(_handle);
+            NativeApi.jsengine_dump_heap_stats(Handle);
         }
-
-        internal EngineHandle Handle => _handle;
 
         internal int ExceptionTemplateId => _exceptionTemplateRegistration.Id;
 
@@ -97,42 +95,22 @@ namespace VroomJs
 
         internal void TerminateExecution()
         {
-            NativeApi.jsengine_terminate_execution(_handle);
+            NativeApi.jsengine_terminate_execution(Handle);
         }
 
-        private void ContextDisposed(int id)
+        protected override void DisposeCore()
         {
-            _aliveContexts.Remove(id);
-        }
-
-        #region IDisposable implementation
-
-        public bool IsDisposed
-        {
-            get { return _disposed; }
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-            _disposed = true;
-
-            foreach (var context in _aliveContexts.Values)
-            {
-                context.Dispose();
-            }
             _aliveContexts.Clear();
 
-            _handle.Dispose();
+            base.DisposeCore();
         }
 
-        #endregion
-
-        internal void CheckDisposed()
+        protected override void OwnedObjectDisposed(V8Object ownedObject)
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(JsEngine));
+            var context = (JsContext)ownedObject;
+            _aliveContexts.Remove(context.Id);
+
+            base.OwnedObjectDisposed(ownedObject);
         }
     }
 }

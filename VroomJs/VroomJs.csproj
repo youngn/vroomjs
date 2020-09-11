@@ -76,6 +76,7 @@
     <Compile Include="VroomJs\Interop\NativeApi.cs" />
     <Compile Include="VroomJs\HostObjectTemplate.cs" />
     <Compile Include="VroomJs\V8DisposableSafeHandle.cs" />
+    <Compile Include="VroomJs\V8Object.cs" />
     <Compile Include="VroomJs\WeakDelegate.cs" />
     <Compile Include="VroomJs\JsEngineStats.cs" />
     <Compile Include="VroomJs\IKeepAliveStore.cs" />

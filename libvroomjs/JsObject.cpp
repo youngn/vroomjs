@@ -8,6 +8,11 @@ JsObject::JsObject(Local<Object> obj, JsContext* context)
     context_(context)
 {
     assert(context != nullptr);
+
+    // TODO: this doesn't seem quite right. If there are a large number of JsObjects
+    // associated with a context, using the forward_list will be slow i.e. O(N). 
+    // Can we use identity map instead?
+    context->RegisterOwnedDisposable(this);
 }
 
 Local<Object> JsObject::ToLocal()
@@ -15,17 +20,9 @@ Local<Object> JsObject::ToLocal()
     return Local<Object>::New(context_->Isolate(), obj_);
 }
 
-void JsObject::Dispose()
+void JsObject::DisposeCore()
 {
-    // TODO: we can't call Reset() on a Persistent whose Isolate has been destroyed.
-    // Problem is, we have no way of knowing if our Isolated has been destroyed unless
-    // we maintain a weak ptr to it.
-
-    // todo: not sure we actually need this stuff just to Reset a Persistent handle
-    //auto isolate = context_->Isolate();
-    //Locker locker(isolate);
-    //Isolate::Scope isolate_scope(isolate);
-    //obj_.Reset();
+    obj_.Reset();
 }
 
 JsValue JsObject::GetPropertyNames()

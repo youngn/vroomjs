@@ -65,7 +65,9 @@ void JsEngine::DumpHeapStats()
 
 JsContext* JsEngine::NewContext(int32_t id)
 {
-    return new JsContext(id, this);
+    auto context = new JsContext(id, this);
+    RegisterOwnedDisposable(context);
+    return context;
 }
 
 int JsEngine::AddTemplate(hostobjectcallbacks callbacks)
@@ -74,11 +76,8 @@ int JsEngine::AddTemplate(hostobjectcallbacks callbacks)
     return templates_.size() - 1; // template id
 }
 
-void JsEngine::Dispose()
+void JsEngine::DisposeCore()
 {
-    if (IsDisposed())
-        return;
-
     // Templates must be deleted before the isolate is disposed.
     for (int i = 0; i < templates_.size(); i++)
         delete templates_[i];

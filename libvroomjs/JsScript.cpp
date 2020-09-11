@@ -15,6 +15,14 @@ JsScript::JsScript(JsContext* context)
     INCREMENT(js_mem_debug_script_count);
 }
 
+void JsScript::DisposeCore()
+{
+    script_->Reset();
+
+    delete script_;
+    script_ = nullptr;
+}
+
 JsValue JsScript::Compile(const uint16_t * code, const uint16_t* resourceName)
 {
     assert(script_ == nullptr); // This method can only be called (successfully) once
@@ -73,19 +81,4 @@ JsValue JsScript::Execute()
     else {
         return JsValue::ForError(trycatch, context_);
     }
-}
-
-void JsScript::Dispose()
-{
-    if (IsDisposed())
-        return;
-
-    // Is the context/engine still alive (i.e. the Isolate is still alive)?
-    if (!context_->IsDisposed() && !context_->Engine()->IsDisposed()) {
-
-        script_->Reset();
-    }
-
-    delete script_;
-    script_ = nullptr;
 }

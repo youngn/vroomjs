@@ -60,17 +60,40 @@ namespace VroomJsTests
         }
 
         [Test]
-        public void Test_disposed_when_context_disposed()
+        public void Test_Dispose()
+        {
+            using (var context = Engine.CreateContext())
+            {
+                var script = context.Compile("1");
+
+                script.Dispose();
+                // todo: how to verify that native resource was actually disposed?
+            }
+        }
+
+        [Test]
+        public void Test_Dispose_after_context()
         {
             JsScript script;
             using (var context = Engine.CreateContext())
             {
                 script = context.Compile("1");
-
-                Assert.IsFalse(script.IsDisposed);
             }
 
-            Assert.IsTrue(script.IsDisposed);
+            script.Dispose();
+        }
+
+        [Test]
+        public void Test_Dispose_after_engine()
+        {
+            JsScript script;
+            using (var engine = new JsEngine())
+            using (var context = engine.CreateContext())
+            {
+                script = context.Compile("1");
+            }
+
+            script.Dispose();
         }
     }
 }

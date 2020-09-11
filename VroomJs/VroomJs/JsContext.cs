@@ -24,7 +24,6 @@
 // THE SOFTWARE.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Timers;
@@ -32,35 +31,32 @@ using VroomJs.Interop;
 
 namespace VroomJs
 {
-    public class JsContext : IDisposable
+    public class JsContext : V8Object<ContextHandle>
     {
         private readonly int _id;
         private readonly JsEngine _engine;
-        private readonly ContextHandle _handle;
 
         // Keep objects passed to V8 alive even if no other references exist.
         private readonly IKeepAliveStore _keepalives;
 
-        private readonly Action<int> _notifyDispose;
-        private bool _disposed;
-
         private ExceptionDispatchInfo _pendingExceptionInfo;
         private bool _timeoutExceeded;// todo: needs thread sync (use Interlocked int?)
 
-        // todo: do we really need to track alive scripts here? or is lifetime mgmt on C++ side already robust enough?
-        // I suppose the advantage is deterministic clean-up of JsScripts when JsContext is disposed.
-        private readonly Dictionary<int, JsScript> _aliveScripts = new Dictionary<int, JsScript>();
-        private int _currentScriptId = 0;
-
-        internal JsContext(int id, JsEngine engine, Action<int> notifyDispose)
+        internal JsContext(int id, JsEngine engine)
+            :base(InitHandle(id, engine), owner: engine)
         {
             _id = id;
             _engine = engine;
-            _notifyDispose = notifyDispose;
 
             _keepalives = new KeepAliveDictionaryStore();
-            _handle = NativeApi.jscontext_new(id, engine.Handle);
         }
+
+        private static ContextHandle InitHandle(int id, JsEngine engine)
+        {
+            return NativeApi.jscontext_new(id, engine.Handle);
+        }
+
+        internal int Id => _id;
 
         public JsEngine Engine
         {
@@ -84,12 +80,7 @@ namespace VroomJs
 
             CheckDisposed();
 
-            var id = _currentScriptId++;
-
-            var script = new JsScript(id, this, code, resourceName, ScriptDisposed);
-            _aliveScripts.Add(id, script);
-
-            return script;
+            return new JsScript(this, code, resourceName);
         }
 
         public object Execute(string code, string resourceName = null, TimeSpan? executionTimeout = null)
@@ -101,7 +92,7 @@ namespace VroomJs
 
             return ExecuteWithTimeout(() =>
             {
-                return NativeApi.jscontext_execute(_handle, code, resourceName ?? "<Unnamed Script>");
+                return NativeApi.jscontext_execute(Handle, code, resourceName ?? "<Unnamed Script>");
             }, executionTimeout);
         }
 
@@ -109,7 +100,7 @@ namespace VroomJs
         internal object GetGlobal()
         {
             CheckDisposed();
-            var v = (JsValue)NativeApi.jscontext_get_global(_handle);
+            var v = (JsValue)NativeApi.jscontext_get_global(Handle);
             return ExtractAndCheckReturnValue(v);
         }
 
@@ -120,7 +111,7 @@ namespace VroomJs
 
             CheckDisposed();
 
-            var v = (JsValue)NativeApi.jscontext_get_variable(_handle, name);
+            var v = (JsValue)NativeApi.jscontext_get_variable(Handle, name);
             return ExtractAndCheckReturnValue(v);
         }
 
@@ -131,7 +122,7 @@ namespace VroomJs
 
             CheckDisposed();
 
-            var v = (JsValue)NativeApi.jscontext_set_variable(_handle, name, JsValue.ForValue(value, this));
+            var v = (JsValue)NativeApi.jscontext_set_variable(Handle, name, JsValue.ForValue(value, this));
 
             // Extract the return value so that it gets cleaned up,
             // and we check the result of the operation for errors.
@@ -155,7 +146,7 @@ namespace VroomJs
 
         public JsObject CreateObject()
         {
-            var v = (JsValue)NativeApi.jscontext_new_object(_handle);
+            var v = (JsValue)NativeApi.jscontext_new_object(Handle);
             return (JsObject)ExtractAndCheckReturnValue(v);
         }
 
@@ -165,7 +156,7 @@ namespace VroomJs
                 throw new ArgumentNullException(nameof(elements));
 
             var v = (JsValue)NativeApi.jscontext_new_array(
-                _handle,
+                Handle,
                 elements.Length,
                 elements.Select(z => (jsvalue)JsValue.ForValue(z, this)).ToArray()
             );
@@ -198,38 +189,12 @@ namespace VroomJs
 
         #endregion
 
-        #region IDisposable implementation
-
-        public bool IsDisposed
+        protected override void DisposeCore()
         {
-            get { return _disposed; }
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-            _disposed = true;
-
-            foreach (var script in _aliveScripts.Values.ToList())
-            {
-                script.Dispose();
-            }
-            _aliveScripts.Clear();
-
             // TODO: do we need to run through the collection and dispose each object?
             _keepalives.Clear();
 
-            _handle.Dispose();
-
-            _notifyDispose(_id);
-        }
-
-        #endregion
-
-        internal ContextHandle Handle
-        {
-            get { return _handle; }
+            base.DisposeCore();
         }
 
         internal object ExecuteWithTimeout(Func<JsValue> func, TimeSpan? executionTimeout = null)
@@ -257,14 +222,6 @@ namespace VroomJs
             }
         }
 
-        internal void CheckDisposed()
-        {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(JsContext));
-
-            _engine.CheckDisposed();
-        }
-
         internal JsObject GetExceptionProxy(Exception ex)
         {
             return GetHostObjectProxy(ex, _engine.ExceptionTemplateId);
@@ -273,7 +230,7 @@ namespace VroomJs
         internal JsObject GetHostObjectProxy(object obj, int templateId)
         {
             var x = JsValue.ForHostObject(AddHostObject(obj), templateId);
-            var v = (JsValue)NativeApi.jscontext_get_proxy(_handle, x);
+            var v = (JsValue)NativeApi.jscontext_get_proxy(Handle, x);
             return (JsObject)ExtractAndCheckReturnValue(v);
         }
 
@@ -314,11 +271,6 @@ namespace VroomJs
         internal void SetPendingException(Exception exception)
         {
             _pendingExceptionInfo = ExceptionDispatchInfo.Capture(exception);
-        }
-
-        private void ScriptDisposed(int id)
-        {
-            _aliveScripts.Remove(id);
         }
     }
 }

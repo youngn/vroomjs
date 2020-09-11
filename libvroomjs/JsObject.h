@@ -6,13 +6,12 @@
 class JsValue;
 class JsContext;
 
-class JsObject : Disposable
+class JsObject : public Disposable
 {
 public:
     JsObject(Local<Object> obj, JsContext* context);
 
     Local<Object> ToLocal();
-    void Dispose() override;
 
     JsValue GetPropertyNames();
     JsValue GetPropertyValue(const uint16_t* name);
@@ -23,6 +22,8 @@ public:
 protected:
     JsContext* Context() { return context_; }
     Persistent<Object>& Obj() { return obj_; }
+
+    void DisposeCore() override;
 
 private:
     Persistent<Object> obj_;
