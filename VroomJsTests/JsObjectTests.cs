@@ -17,6 +17,11 @@ namespace VroomJsTests
 
                 obj.Dispose();
                 // todo: how to verify that native resource was actually disposed?
+
+                Assert.Throws<ObjectDisposedException>(() =>
+                {
+                    obj.GetPropertyNames();
+                });
             }
         }
 
@@ -29,7 +34,12 @@ namespace VroomJsTests
                 obj = (JsObject)context.Execute("({ a: 1, b: 2 })");
             }
 
-            obj.Dispose();
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                obj.GetPropertyNames();
+            });
+
+            Assert.DoesNotThrow(() => obj.Dispose());
         }
 
         [Test]
@@ -42,7 +52,12 @@ namespace VroomJsTests
                 obj = (JsObject)context.Execute("({ a: 1, b: 2 })");
             }
 
-            obj.Dispose();
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                obj.GetPropertyNames();
+            });
+
+            Assert.DoesNotThrow(() => obj.Dispose());
         }
 
         // todo: this test isn't really testing anything

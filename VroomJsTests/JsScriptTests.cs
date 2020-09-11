@@ -79,6 +79,11 @@ namespace VroomJsTests
                 var script = context.Compile("1");
 
                 script.Dispose();
+
+                Assert.Throws<ObjectDisposedException>(() =>
+                {
+                    script.Execute();
+                });
                 // todo: how to verify that native resource was actually disposed?
             }
         }
@@ -92,7 +97,12 @@ namespace VroomJsTests
                 script = context.Compile("1");
             }
 
-            script.Dispose();
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                script.Execute();
+            });
+
+            Assert.DoesNotThrow(() => script.Dispose());
         }
 
         [Test]
@@ -105,7 +115,12 @@ namespace VroomJsTests
                 script = context.Compile("1");
             }
 
-            script.Dispose();
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                script.Execute();
+            });
+
+            Assert.DoesNotThrow(() => script.Dispose());
         }
     }
 }

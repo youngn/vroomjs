@@ -11,6 +11,19 @@ namespace VroomJsTests
     [TestFixture]
     public class JsContextTests : TestsBase
     {
+        [Test]
+        public void Test_Dispose()
+        {
+            var context = Engine.CreateContext();
+
+            context.Dispose();
+            // todo: how to verify that native resource was actually disposed?
+
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                context.Execute("1 + 1");
+            });
+        }
 
         [Test]
         public void Test_Dispose_after_engine()
@@ -20,6 +33,11 @@ namespace VroomJsTests
             {
                 context = engine.CreateContext();
             }
+
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                context.Execute("1 + 1");
+            });
 
             Assert.DoesNotThrow(() => context.Dispose());
         }
