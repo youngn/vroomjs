@@ -33,12 +33,12 @@
 
 using namespace v8;
 
-long js_mem_debug_hostobjectref_count;
+long js_mem_debug_hostobject_count;
 
 HostObjectRef::~HostObjectRef()
 {
     callbacks_.Remove(context_->Id(), id_);
-    DECREMENT(js_mem_debug_hostobjectref_count);
+    DECREMENT(js_mem_debug_hostobject_count);
 }
 
 void HostObjectRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInfo<Value>& info)

@@ -13,7 +13,7 @@ public:
         id_(id),
         callbacks_(callbacks)
     {
-        INCREMENT(js_mem_debug_hostobjectref_count);
+        INCREMENT(js_mem_debug_hostobject_count);
     }
 
     ~HostObjectRef();

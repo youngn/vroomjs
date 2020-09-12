@@ -7,7 +7,8 @@ class Disposable
 {
 public:
     Disposable()
-        :disposed_(false), owner_(nullptr)
+        :disposed_(false),
+        owner_(nullptr)
     {
     }
 
@@ -35,7 +36,8 @@ private:
             return;
 
         // Dispose owned objects
-        for (auto it = ownedDisposables_.begin(); it != ownedDisposables_.end(); ++it) {
+        for (auto it = ownedDisposables_.begin();
+                it != ownedDisposables_.end(); ++it) {
             (*it)->Dispose(false);
         }
         ownedDisposables_.clear();
@@ -55,7 +57,7 @@ private:
         ownedDisposables_.remove(disposable);
     }
 
-    Disposable* owner_;
+    Disposable* owner_; // null if not owned
     std::forward_list<Disposable*> ownedDisposables_;
     bool disposed_;
 };

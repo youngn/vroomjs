@@ -2,6 +2,7 @@
 #include "JsValue.h"
 #include "JsContext.h"
 
+long js_mem_debug_jsobject_count;
 
 JsObject::JsObject(Local<Object> obj, JsContext* context)
     :obj_(context->Isolate(), obj),
@@ -13,6 +14,8 @@ JsObject::JsObject(Local<Object> obj, JsContext* context)
     // associated with a context, using the forward_list will be slow i.e. O(N). 
     // Can we use identity map instead?
     context->RegisterOwnedDisposable(this);
+
+    INCREMENT(js_mem_debug_jsobject_count);
 }
 
 Local<Object> JsObject::ToLocal()

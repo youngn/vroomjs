@@ -83,6 +83,28 @@ extern "C"
         delete disposable;
     }
 
+    EXPORT void CALLINGCONVENTION jsengine_dump_heap_stats(JsEngine* engine) {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jsengine_dump_heap_stats" << std::endl;
+#endif
+        assert(engine != nullptr);
+        engine->DumpHeapStats();
+    }
+
+    EXPORT allocationstats CALLINGCONVENTION js_get_allocation_stats() {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "js_get_allocation_stats" << std::endl;
+#endif
+        allocationstats stats;
+        stats.engine_count = js_mem_debug_engine_count;
+        stats.context_count = js_mem_debug_context_count;
+        stats.script_count = js_mem_debug_script_count;
+        stats.hostobject_count = js_mem_debug_hostobject_count;
+        stats.jsobject_count = js_mem_debug_jsobject_count;
+
+        return stats;
+    }
+
 	EXPORT JsEngine* CALLINGCONVENTION jsengine_new(
 		int32_t max_young_space,
         int32_t max_old_space) 
@@ -99,24 +121,6 @@ extern "C"
 #endif
         assert(engine != nullptr);
 		engine->TerminateExecution();
-	}
-
-    EXPORT void CALLINGCONVENTION jsengine_dump_heap_stats(JsEngine* engine) {
-#ifdef DEBUG_TRACE_API
-                std::wcout << "jsengine_dump_heap_stats" << std::endl;
-#endif
-        assert(engine != nullptr);
-        engine->DumpHeapStats();
-	}
-
-	EXPORT void CALLINGCONVENTION js_dump_allocated_items() {
-#ifdef DEBUG_TRACE_API
-                std::wcout << "js_dump_allocated_items" << std::endl;
-#endif
-		std::wcout << "Total allocated Js engines " << js_mem_debug_engine_count << std::endl;
-		std::wcout << "Total allocated Js contexts " << js_mem_debug_context_count << std::endl;
-		std::wcout << "Total allocated Js scripts " << js_mem_debug_script_count << std::endl;
-		std::wcout << "Total allocated Host Object Refs " << js_mem_debug_hostobjectref_count << std::endl;
 	}
 
     EXPORT int CALLINGCONVENTION jsengine_add_template(JsEngine* engine, hostobjectcallbacks callbacks)

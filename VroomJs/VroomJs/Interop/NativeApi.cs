@@ -18,7 +18,7 @@ namespace VroomJs.Interop
         public static extern void js_shutdown();
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
-        public static extern void js_dump_allocated_items();
+        public static extern allocationstats js_get_allocation_stats();
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         [SuppressUnmanagedCodeSecurity]

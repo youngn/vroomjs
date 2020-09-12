@@ -73,8 +73,9 @@ extern int32_t js_object_marshal_type;
 
 extern long js_mem_debug_engine_count;
 extern long js_mem_debug_context_count;
-extern long js_mem_debug_hostobjectref_count;
 extern long js_mem_debug_script_count;
+extern long js_mem_debug_hostobject_count;
+extern long js_mem_debug_jsobject_count;
 
 extern "C"
 {
@@ -103,13 +104,10 @@ extern "C"
             int32_t     templateId; // template ID for host object/error
         };
     };
-}
 
-// The only way for the C++/V8 side to call into the CLR is to use the function
-// pointers (CLR, delegates) defined below.
 
-extern "C"
-{
+    // The only way for the C++/V8 side to call into the CLR is to use the function
+    // pointers (CLR, delegates) defined below.
     // We don't have a keepalive_add_f because that is managed on the CLR side.
     // Its definition would be "int (*keepalive_add_f) (HostObjectRef obj)".
 
@@ -132,6 +130,15 @@ extern "C"
         keepalive_invoke_f invoke;
         keepalive_valueof_f valueof;
         keepalive_tostring_f tostring;
+    };
+
+    struct allocationstats
+    {
+        int engine_count;
+        int context_count;
+        int script_count;
+        int hostobject_count;
+        int jsobject_count;
     };
 }
 

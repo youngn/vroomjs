@@ -19,6 +19,10 @@ public:
     JsValue SetPropertyValue(const uint16_t* name, JsValue value);
     JsValue SetPropertyValue(const uint32_t index, JsValue value);
 
+    virtual ~JsObject() {
+        DECREMENT(js_mem_debug_jsobject_count);
+    }
+
 protected:
     JsContext* Context() { return context_; }
     Persistent<Object>& Obj() { return obj_; }

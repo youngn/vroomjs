@@ -21,11 +21,6 @@ namespace VroomJs
             NativeApi.js_shutdown();
         }
 
-        public static void DumpAllocatedItems()
-        {
-            NativeApi.js_dump_allocated_items();
-        }
-
         private readonly List<HostObjectTemplateRegistration> _templateRegistrations
             = new List<HostObjectTemplateRegistration>();
         private readonly HostObjectTemplateRegistration _exceptionTemplateRegistration;

@@ -14,7 +14,7 @@ namespace VroomJs.Interop
     delegate jsvalue KeepAliveToStringDelegate(int contextId, int objectId);
 
     [StructLayout(LayoutKind.Sequential)]
-    struct hostobjectcallbacks
+    internal struct hostobjectcallbacks
     {
         public hostobjectcallbacks(
             KeepaliveRemoveDelegate remove,

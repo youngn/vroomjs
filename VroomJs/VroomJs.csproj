@@ -41,6 +41,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="VroomJs\AllocationStats.cs" />
     <Compile Include="VroomJs\HostErrorFilterDelegate.cs" />
     <Compile Include="VroomJs\ClrDelegateTemplate.cs" />
     <Compile Include="VroomJs\ClrMemberTemplate.cs" />
@@ -49,6 +50,7 @@
     <Compile Include="VroomJs\ExceptionTemplate.cs" />
     <Compile Include="VroomJs\HostErrorException.cs" />
     <Compile Include="VroomJs\HostErrorInfo.cs" />
+    <Compile Include="VroomJs\Interop\allocationstats.cs" />
     <Compile Include="VroomJs\Interop\jsvalue.cs" />
     <Compile Include="VroomJs\JsErrorInfo.cs" />
     <Compile Include="VroomJs\JsUndefined.cs" />

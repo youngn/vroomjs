@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CleanupTests.cs" />
     <Compile Include="ClrDelegateTemplateTests.cs" />
     <Compile Include="ClrMethodTemplateTests.cs" />
     <Compile Include="ClrTypeTemplateTests.cs" />
