@@ -14,7 +14,7 @@ void HostObjectManager::WeakHandleCallback(const WeakCallbackInfo<HostObjectMana
     std::cout << "WeakHandleCallback " << args->id << " " << std::this_thread::get_id() << std::endl;
 #endif
 
-    args->owner->RemoveEntry(args->id);
+    args->owner->ReleaseProxy(args->id);
 }
 
 Local<Object> HostObjectManager::GetProxy(int id, int templateId)
@@ -46,7 +46,13 @@ Local<Object> HostObjectManager::GetProxy(int id, int templateId)
     return obj;
 }
 
-void HostObjectManager::RemoveEntry(int id)
+void HostObjectManager::ReleaseProxy(int id)
 {
+    // Notify CLR code that this proxy object has been GC'd on the JS side.
+    auto search = proxyMap_.find(id);
+    if (search != proxyMap_.end()) {
+        search->second.hostObjectRef->NotifyReleased();
+    }
+    
     proxyMap_.erase(id);
 }

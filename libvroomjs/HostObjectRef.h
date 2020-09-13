@@ -16,7 +16,10 @@ public:
         INCREMENT(js_mem_debug_hostobject_count);
     }
 
-    ~HostObjectRef();
+    virtual ~HostObjectRef()
+    {
+        DECREMENT(js_mem_debug_hostobject_count);
+    }
 
     int32_t Id() { return id_; }
 
@@ -27,6 +30,8 @@ public:
     void Invoke(const FunctionCallbackInfo<Value>& info);
     void ValueOf(const FunctionCallbackInfo<Value>& info);
     void ToString(const FunctionCallbackInfo<Value>& info);
+
+    void NotifyReleased();
 
 private:
     JsContext* context_;

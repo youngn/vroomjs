@@ -35,12 +35,6 @@ using namespace v8;
 
 long js_mem_debug_hostobject_count;
 
-HostObjectRef::~HostObjectRef()
-{
-    callbacks_.Remove(context_->Id(), id_);
-    DECREMENT(js_mem_debug_hostobject_count);
-}
-
 void HostObjectRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInfo<Value>& info)
 {
     auto isolate = context_->Isolate();
@@ -156,5 +150,10 @@ void HostObjectRef::ToString(const FunctionCallbackInfo<Value>& info)
     }
 
     info.GetReturnValue().Set(r.Extract(context_));
+}
+
+void HostObjectRef::NotifyReleased()
+{
+    callbacks_.Released(context_->Id(), id_);
 }
 

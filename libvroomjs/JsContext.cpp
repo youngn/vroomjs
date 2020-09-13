@@ -52,10 +52,10 @@ JsContext::JsContext(int32_t id, JsEngine* engine)
 
 void JsContext::DisposeCore()
 {
-    context_.Reset();
-
     delete hostObjectManager_;
     hostObjectManager_ = nullptr;
+
+    context_.Reset();
 
     engine_ = nullptr;
     isolate_ = nullptr;

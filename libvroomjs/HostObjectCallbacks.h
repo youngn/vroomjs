@@ -15,7 +15,7 @@ public:
         assert(callbacks.remove != nullptr);
     }
 
-    void Remove(int32_t context, int id) const {
+    void Released(int32_t context, int id) const {
         callbacks.remove(context, id);
     }
     JsValue GetPropertyValue(int32_t context, int32_t id, uint16_t* name) const {

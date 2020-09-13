@@ -74,7 +74,7 @@ private:
     };
 
     static void WeakHandleCallback(const WeakCallbackInfo<WeakCallbackArgs>& info);
-    void RemoveEntry(int id);
+    void ReleaseProxy(int id);
 
     // Context that owns this object
     JsContext* context_;

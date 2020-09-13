@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using VroomJs;
 
 namespace VroomJsTests
@@ -70,26 +71,41 @@ namespace VroomJsTests
 
             void CreateObjects()
             {
+                var objects = new List<object>();
+
                 var config = new EngineConfiguration();
                 config.ClrTemplates.EnableObjects = true;
 
                 var engine = new JsEngine(config);
-                var context = engine.CreateContext();
+                objects.Add(engine);
 
-                var script = context.Compile("1 + 1");
-                script.Execute();
+                for(var i = 0; i < 5; i++)
+                {
+                    var context = engine.CreateContext();
+                    objects.Add(context);
 
-                var obj = (JsObject)context.Execute("({})"); // create a JS object
-                obj.SetPropertyValue("a", 1);
+                    for(var j = 0; j < 5; j++)
+                    {
+                        var script = context.Compile("1 + 1");
+                        objects.Add(script);
 
-                //context.SetVariable("x", new object()); // create a Host object
+                        var obj = (JsObject)context.Execute("({})"); // create a JS object
+                        objects.Add(obj);
+
+                        context.SetVariable("x", new object()); // create a Host object
+                    }
+                }
 
                 stats.Refresh();
                 Assert.AreEqual(1, stats.EngineCount);
-                Assert.AreEqual(1, stats.ContextCount);
-                Assert.AreEqual(1, stats.ScriptCount);
-                Assert.AreEqual(1, stats.JsObjectCount);
-                Assert.AreEqual(0, stats.HostObjectCount);
+                Assert.AreEqual(5, stats.ContextCount);
+                Assert.AreEqual(25, stats.ScriptCount);
+                Assert.AreEqual(25, stats.JsObjectCount);
+                Assert.AreEqual(25, stats.HostObjectCount);
+
+                // Do not explicitly Dispose of any of the objects,
+                // just let them go...
+                objects.Clear();
             }
         }
     }
