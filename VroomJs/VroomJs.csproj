@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="VroomJs\AllocationStats.cs" />
+    <Compile Include="VroomJs\ContextConfiguration.cs" />
     <Compile Include="VroomJs\HostErrorFilterDelegate.cs" />
     <Compile Include="VroomJs\ClrDelegateTemplate.cs" />
     <Compile Include="VroomJs\ClrMemberTemplate.cs" />
@@ -58,7 +59,7 @@
     <Compile Include="VroomJs\ClrMethodTemplate.cs" />
     <Compile Include="VroomJs\ClrObjectTemplate.cs" />
     <Compile Include="VroomJs\DictionaryObjectTemplate.cs" />
-    <Compile Include="VroomJs\JsEngine_HostObjectTemplateRegistration.cs" />
+    <Compile Include="VroomJs\JsContext_HostObjectTemplateRegistration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VroomJs\JsStackTrace.cs" />
     <Compile Include="VroomJs\BoundWeakDelegate.cs" />

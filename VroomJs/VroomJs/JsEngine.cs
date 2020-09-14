@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using VroomJs.Interop;
-
 
 namespace VroomJs
 {
@@ -21,9 +19,6 @@ namespace VroomJs
             NativeApi.js_shutdown();
         }
 
-        private readonly List<HostObjectTemplateRegistration> _templateRegistrations
-            = new List<HostObjectTemplateRegistration>();
-        private readonly HostObjectTemplateRegistration _exceptionTemplateRegistration;
 
         private readonly Dictionary<int, JsContext> _aliveContexts = new Dictionary<int, JsContext>();
 
@@ -32,12 +27,7 @@ namespace VroomJs
         public JsEngine(EngineConfiguration configuration = null)
             :base(InitHandle(configuration))
         {
-            _exceptionTemplateRegistration = new HostObjectTemplateRegistration(this, new ExceptionTemplate());
-
-            if (configuration != null)
-            {
-                configuration.Apply(this);
-            }
+            configuration?.Apply(this);
         }
 
         private static EngineHandle InitHandle(EngineConfiguration configuration)
@@ -49,13 +39,12 @@ namespace VroomJs
                 memoryConfig.MaxOldSpace);
         }
 
-        public JsContext CreateContext()
+        public JsContext CreateContext(ContextConfiguration configuration = null)
         {
             CheckDisposed();
 
-            var id = Interlocked.Increment(ref _currentContextId);
-            var ctx = new JsContext(id, this);
-            _aliveContexts.Add(id, ctx);
+            var ctx = new JsContext(this, configuration);
+            //_aliveContexts.Add(0, ctx);
 
             return ctx;
         }
@@ -65,27 +54,12 @@ namespace VroomJs
             NativeApi.jsengine_dump_heap_stats(Handle);
         }
 
-        internal int ExceptionTemplateId => _exceptionTemplateRegistration.Id;
-
-        internal HostErrorFilterDelegate HostErrorFilter { get; set; }
-
-        internal void RegisterHostObjectTemplate(HostObjectTemplate template, Predicate<object> selector = null)
-        {
-            _templateRegistrations.Add(new HostObjectTemplateRegistration(this, template, selector));
-        }
-
         internal JsContext GetContext(int id)
         {
             if (!_aliveContexts.TryGetValue(id, out JsContext context))
                 throw new InvalidOperationException($"Invalid context ID: {id}");
 
             return context;
-        }
-
-        internal int SelectTemplate(object obj)
-        {
-            var template = _templateRegistrations.FirstOrDefault(r => r.IsApplicableTo(obj));
-            return template != null ? template.Id : -1;
         }
 
         internal void TerminateExecution()
@@ -103,7 +77,7 @@ namespace VroomJs
         protected override void OwnedObjectDisposed(V8Object ownedObject)
         {
             var context = (JsContext)ownedObject;
-            _aliveContexts.Remove(context.Id);
+            //_aliveContexts.Remove(context.Id);
 
             base.OwnedObjectDisposed(ownedObject);
         }

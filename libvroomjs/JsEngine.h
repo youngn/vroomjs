@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vector>
 #include <cassert>
 #include "vroomjs.h"
 #include "Disposable.h"
@@ -23,13 +22,6 @@ public:
     Isolate* Isolate() { return isolate_; }
     JsContext* NewContext(int32_t id);
 
-    int AddTemplate(hostobjectcallbacks callbacks);
-
-    const HostObjectTemplate* Template(int i) {
-        assert(i >= 0 && i < templates_.size());
-        return templates_.at(i);
-    }
-
     virtual ~JsEngine() {
         DECREMENT(js_mem_debug_engine_count);
     }
@@ -40,9 +32,5 @@ protected:
 private:
     v8::Isolate* isolate_;
     ArrayBuffer::Allocator* allocator_;
-
-    // We use an array of pointers here to guarantee that each HostObjectTemplate
-    // has a stable memory location so that we can maintain long-lived references to it.
-    std::vector<HostObjectTemplate*> templates_;
 };
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "vroomjs.h"
 #include "Disposable.h"
 
@@ -7,6 +8,7 @@ class JsEngine;
 class JsScript;
 class JsValue;
 class HostObjectManager;
+class HostObjectTemplate;
 
 class JsContext : public Disposable
 {
@@ -37,6 +39,13 @@ public:
         return hostObjectManager_;
     }
 
+    int AddTemplate(hostobjectcallbacks callbacks);
+
+    const HostObjectTemplate* Template(int i) {
+        assert(i >= 0 && i < templates_.size());
+        return templates_.at(i);
+    }
+
     virtual ~JsContext() {
         DECREMENT(js_mem_debug_context_count);
     }
@@ -50,5 +59,9 @@ private:
     v8::Isolate* isolate_;
     Persistent<Context> context_;
     ::HostObjectManager* hostObjectManager_;
+
+    // We use an array of pointers here to guarantee that each HostObjectTemplate
+    // has a stable memory location so that we can maintain long-lived references to it.
+    std::vector<HostObjectTemplate*> templates_;
 };
 

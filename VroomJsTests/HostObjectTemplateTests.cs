@@ -6,7 +6,7 @@ using VroomJs;
 namespace VroomJsTests
 {
     [TestFixture]
-    class HostObjectTemplateTests
+    class HostObjectTemplateTests : TestsBase
     {
         private class FooException : Exception
         {
@@ -20,313 +20,284 @@ namespace VroomJsTests
         public void Test_named_property()
         {
             object propValue = null;
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
                 // Property handlers are installed and return true (handled)
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     tryGetProperty: (IHostObjectCallbackContext ctx, object obj, string name, out object value) => { value = propValue; return true; },
                     trySetProperty: (IHostObjectCallbackContext ctx, object obj, string name, object value) => { propValue = value; return true; },
                     tryDeleteProperty: (IHostObjectCallbackContext ctx, object obj, string name, out bool deleted) => { propValue = null; deleted = true; return true; }
                 ));
 
-                using (var context = engine.CreateContext())
-                {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                var x = new object();
+                context.SetVariable("x", x);
 
-                    Assert.AreEqual(null, context.Execute("x.bar"));
-                    Assert.AreEqual(24, context.Execute("x.bar = 24"));
-                    Assert.AreEqual(24, propValue);
-                    Assert.AreEqual(24, context.Execute("x.bar"));
+                Assert.AreEqual(null, context.Execute("x.bar"));
+                Assert.AreEqual(24, context.Execute("x.bar = 24"));
+                Assert.AreEqual(24, propValue);
+                Assert.AreEqual(24, context.Execute("x.bar"));
 
-                    Assert.AreEqual(true, context.Execute("delete x.bar"));
-                    Assert.AreEqual(null, context.Execute("x.bar"));
-                }
+                Assert.AreEqual(true, context.Execute("delete x.bar"));
+                Assert.AreEqual(null, context.Execute("x.bar"));
             }
         }
 
         [Test]
         public void Test_named_property_no_handler()
         {
-            using(var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
                 // No get/set handler is installed on the template
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate());
+                context.RegisterHostObjectTemplate(new HostObjectTemplate());
 
-                using (var context = engine.CreateContext())
-                {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                var x = new object();
+                context.SetVariable("x", x);
 
-                    // Even though we don't have any handlers registered,
-                    // we can still get/set arbitrary properties on the JS proxy object.
-                    Assert.AreEqual(null, context.Execute("x.bar"));
-                    Assert.AreEqual(24, context.Execute("x.bar = 24"));
-                    Assert.AreEqual(24, context.Execute("x.bar"));
+                // Even though we don't have any handlers registered,
+                // we can still get/set arbitrary properties on the JS proxy object.
+                Assert.AreEqual(null, context.Execute("x.bar"));
+                Assert.AreEqual(24, context.Execute("x.bar = 24"));
+                Assert.AreEqual(24, context.Execute("x.bar"));
 
-                    var props = context.Execute("Object.keys(x)") as JsArray;
-                    Assert.IsNotNull(props);
-                    Assert.AreEqual(1, props.GetLength());
-                    Assert.AreEqual("bar", props[0]);
+                var props = context.Execute("Object.keys(x)") as JsArray;
+                Assert.IsNotNull(props);
+                Assert.AreEqual(1, props.GetLength());
+                Assert.AreEqual("bar", props[0]);
 
-                    Assert.AreEqual(true, context.Execute("delete x.bar"));
-                    Assert.AreEqual(null, context.Execute("x.bar"));
-                }
+                Assert.AreEqual(true, context.Execute("delete x.bar"));
+                Assert.AreEqual(null, context.Execute("x.bar"));
             }
         }
 
         [Test]
         public void Test_named_property_not_handled()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
                 // Property handlers are installed, but return false (not handled)
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     tryGetProperty: (IHostObjectCallbackContext ctx, object obj, string name, out object value) => { value = null; return false; },
                     trySetProperty: (IHostObjectCallbackContext ctx, object obj, string name, object value) => { return false; },
                     tryDeleteProperty: (IHostObjectCallbackContext ctx, object obj, string name, out bool deleted) => { deleted = false; return false; }
                 ));
 
-                using (var context = engine.CreateContext())
-                {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                var x = new object();
+                context.SetVariable("x", x);
 
-                    // Given that the handlers return false, all requests
-                    // fall through to the JS proxy object.
-                    Assert.AreEqual(null, context.Execute("x.bar"));
-                    Assert.AreEqual(24, context.Execute("x.bar = 24"));
-                    Assert.AreEqual(24, context.Execute("x.bar"));
+                // Given that the handlers return false, all requests
+                // fall through to the JS proxy object.
+                Assert.AreEqual(null, context.Execute("x.bar"));
+                Assert.AreEqual(24, context.Execute("x.bar = 24"));
+                Assert.AreEqual(24, context.Execute("x.bar"));
 
-                    var props = context.Execute("Object.keys(x)") as JsArray;
-                    Assert.IsNotNull(props);
-                    Assert.AreEqual(1, props.GetLength());
-                    Assert.AreEqual("bar", props[0]);
+                var props = context.Execute("Object.keys(x)") as JsArray;
+                Assert.IsNotNull(props);
+                Assert.AreEqual(1, props.GetLength());
+                Assert.AreEqual("bar", props[0]);
 
-                    Assert.AreEqual(true, context.Execute("delete x.bar"));
-                    Assert.AreEqual(null, context.Execute("x.bar"));
-                }
+                Assert.AreEqual(true, context.Execute("delete x.bar"));
+                Assert.AreEqual(null, context.Execute("x.bar"));
             }
         }
 
         [Test]
         public void Test_get_property_throws_exception()
         {
-            using (var engine = new JsEngine())
+            var fooEx = new FooException("uh oh");
+
+            using (var context = Engine.CreateContext())
             {
-                var fooEx = new FooException("uh oh");
                 // Property handlers are installed and return true (handled)
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     tryGetProperty: (IHostObjectCallbackContext ctx, object obj, string name, out object value)
                         => { throw fooEx; }
                 ));
 
-                using (var context = engine.CreateContext())
-                {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                var x = new object();
+                context.SetVariable("x", x);
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("x.bar");
-                    });
-                    
-                    Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.AreSame(fooEx, ex.InnerException);
-                    Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
-                }
+                var ex = Assert.Throws<JsException>(() =>
+                {
+                    context.Execute("x.bar");
+                });
+
+                Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.AreSame(fooEx, ex.InnerException);
+                Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_get_property_throws_custom_error()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
                 // Property handlers are installed and return true (handled)
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     tryGetProperty: (IHostObjectCallbackContext ctx, object obj, string name, out object value)
                         => { throw new HostErrorException("uh oh", CustomErrorName); }
                 ));
 
-                using (var context = engine.CreateContext())
+                var x = new object();
+                context.SetVariable("x", x);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                    context.Execute("x.bar");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("x.bar");
-                    });
-
-                    Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.IsNull(ex.InnerException);
-                    Assert.IsNull(ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.IsNull(ex.InnerException);
+                Assert.IsNull(ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_set_property_throws_exception()
         {
-            using (var engine = new JsEngine())
-            {
-                var fooEx = new FooException("uh oh");
+            var fooEx = new FooException("uh oh");
 
+            using (var context = Engine.CreateContext())
+            {
                 // Property handlers are installed and return true (handled)
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     trySetProperty: (IHostObjectCallbackContext ctx, object obj, string name, object value)
                         => { throw fooEx; }
                 ));
 
-                using (var context = engine.CreateContext())
+                var x = new object();
+                context.SetVariable("x", x);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                    context.Execute("x.bar = 1;");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("x.bar = 1;");
-                    });
-
-                    Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.AreSame(fooEx, ex.InnerException);
-                    Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.AreSame(fooEx, ex.InnerException);
+                Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_set_property_throws_custom_error()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
                 // Property handlers are installed and return true (handled)
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     trySetProperty: (IHostObjectCallbackContext ctx, object obj, string name, object value)
                         => { throw new HostErrorException("uh oh", CustomErrorName); }
                 ));
 
-                using (var context = engine.CreateContext())
+                var x = new object();
+                context.SetVariable("x", x);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                    context.Execute("x.bar = 1;");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("x.bar = 1;");
-                    });
-
-                    Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.IsNull(ex.InnerException);
-                    Assert.IsNull(ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.IsNull(ex.InnerException);
+                Assert.IsNull(ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_delete_property_throws_exception()
         {
-            using (var engine = new JsEngine())
-            {
-                var fooEx = new FooException("uh oh");
+            var fooEx = new FooException("uh oh");
 
+            using (var context = Engine.CreateContext())
+            {
                 // Property handlers are installed and return true (handled)
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     tryDeleteProperty: (IHostObjectCallbackContext ctx, object obj, string name, out bool deleted)
                         => { throw fooEx; }
                 ));
 
-                using (var context = engine.CreateContext())
+                var x = new object();
+                context.SetVariable("x", x);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                    context.Execute("delete x.bar;");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("delete x.bar;");
-                    });
-
-                    Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.AreSame(fooEx, ex.InnerException);
-                    Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.AreSame(fooEx, ex.InnerException);
+                Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_delete_property_throws_custom_error()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
                 // Property handlers are installed and return true (handled)
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     tryDeleteProperty: (IHostObjectCallbackContext ctx, object obj, string name, out bool deleted)
                         => { throw new HostErrorException("uh oh", CustomErrorName); }
                 ));
 
-                using (var context = engine.CreateContext())
+                var x = new object();
+                context.SetVariable("x", x);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                    context.Execute("delete x.bar;");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("delete x.bar;");
-                    });
-
-                    Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.IsNull(ex.InnerException);
-                    Assert.IsNull(ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.IsNull(ex.InnerException);
+                Assert.IsNull(ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_enumerate_properties()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     enumerateProperties: (IHostObjectCallbackContext ctx, object obj) => { return new string[] { "alpha", "beta", "gamma" }; }
                 ));
 
-                using (var context = engine.CreateContext())
-                {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                var x = new object();
+                context.SetVariable("x", x);
 
-                    var props = context.Execute("Object.keys(x)") as JsArray;
-                    Assert.IsNotNull(props);
-                    Assert.AreEqual(3, props.GetLength());
-                    Assert.AreEqual("alpha", props[0]);
-                    Assert.AreEqual("beta", props[1]);
-                    Assert.AreEqual("gamma", props[2]);
+                var props = context.Execute("Object.keys(x)") as JsArray;
+                Assert.IsNotNull(props);
+                Assert.AreEqual(3, props.GetLength());
+                Assert.AreEqual("alpha", props[0]);
+                Assert.AreEqual("beta", props[1]);
+                Assert.AreEqual("gamma", props[2]);
 
-                    // additional properties added to the JS proxy object are also enumerated
-                    context.Execute("x.bar = null");
-                    context.Execute("x.zee = 0");
-                    props = context.Execute("Object.keys(x)") as JsArray;
-                    Assert.IsNotNull(props);
-                    Assert.AreEqual(5, props.GetLength());
-                    Assert.AreEqual("bar", props[0]);
-                    Assert.AreEqual("zee", props[1]);
-                    Assert.AreEqual("alpha", props[2]);
-                    Assert.AreEqual("beta", props[3]);
-                    Assert.AreEqual("gamma", props[4]);
-                }
+                // additional properties added to the JS proxy object are also enumerated
+                context.Execute("x.bar = null");
+                context.Execute("x.zee = 0");
+                props = context.Execute("Object.keys(x)") as JsArray;
+                Assert.IsNotNull(props);
+                Assert.AreEqual(5, props.GetLength());
+                Assert.AreEqual("bar", props[0]);
+                Assert.AreEqual("zee", props[1]);
+                Assert.AreEqual("alpha", props[2]);
+                Assert.AreEqual("beta", props[3]);
+                Assert.AreEqual("gamma", props[4]);
             }
         }
 
@@ -334,119 +305,105 @@ namespace VroomJsTests
         public void Test_enumerate_properties_throws_exception()
         {
             var fooEx = new FooException("uh oh");
-            using (var engine = new JsEngine())
+
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     enumerateProperties: (IHostObjectCallbackContext ctx, object obj) => { throw fooEx; }
                 ));
 
-                using (var context = engine.CreateContext())
+                var x = new object();
+                context.SetVariable("x", x);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                    context.Execute("Object.keys(x);");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("Object.keys(x);");
-                    });
-
-                    Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.AreSame(fooEx, ex.InnerException);
-                    Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.AreSame(fooEx, ex.InnerException);
+                Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_enumerate_properties_throws_custom_error()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     enumerateProperties: (IHostObjectCallbackContext ctx, object obj)
                         => { throw new HostErrorException("uh oh", CustomErrorName); }
                 ));
 
-                using (var context = engine.CreateContext())
+                var x = new object();
+                context.SetVariable("x", x);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                    context.Execute("Object.keys(x);");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("Object.keys(x);");
-                    });
-
-                    Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.IsNull(ex.InnerException);
-                    Assert.IsNull(ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.IsNull(ex.InnerException);
+                Assert.IsNull(ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_invoke()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { return args.Sum(x => (int)x); }
                 ));
 
-                using (var context = engine.CreateContext())
-                {
-                    var f = new object();
-                    context.SetVariable("f", f);
+                var f = new object();
+                context.SetVariable("f", f);
 
-                    Assert.IsTrue((bool)context.Execute("f() === 0"));
-                    Assert.IsTrue((bool)context.Execute("f(1) === 1"));
-                    Assert.IsTrue((bool)context.Execute("f(1, 2) === 3"));
-                    Assert.IsTrue((bool)context.Execute("f(1, 2, 3) === 6"));
-                }
+                Assert.IsTrue((bool)context.Execute("f() === 0"));
+                Assert.IsTrue((bool)context.Execute("f(1) === 1"));
+                Assert.IsTrue((bool)context.Execute("f(1, 2) === 3"));
+                Assert.IsTrue((bool)context.Execute("f(1, 2, 3) === 6"));
             }
         }
 
         [Test]
         public void Test_invoke_returns_undefined()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { return JsUndefined.Value; }
                 ));
 
-                using (var context = engine.CreateContext())
-                {
-                    var f = new object();
-                    context.SetVariable("f", f);
+                var f = new object();
+                context.SetVariable("f", f);
 
-                    Assert.IsTrue((bool)context.Execute("f() === undefined"));
-                    Assert.IsFalse((bool)context.Execute("f() === null"));
-                }
+                Assert.IsTrue((bool)context.Execute("f() === undefined"));
+                Assert.IsFalse((bool)context.Execute("f() === null"));
             }
         }
 
         [Test]
         public void Test_invoke_returns_null()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { return null; }
                 ));
 
-                using (var context = engine.CreateContext())
-                {
-                    var f = new object();
-                    context.SetVariable("f", f);
+                var f = new object();
+                context.SetVariable("f", f);
 
-                    Assert.IsTrue((bool)context.Execute("f() === null"));
-                    Assert.IsFalse((bool)context.Execute("f() === undefined"));
-                }
+                Assert.IsTrue((bool)context.Execute("f() === null"));
+                Assert.IsFalse((bool)context.Execute("f() === undefined"));
             }
         }
 
@@ -454,92 +411,80 @@ namespace VroomJsTests
         public void Test_invoke_throws_exception()
         {
             var fooEx = new FooException("uh oh");
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { throw fooEx; }
                 ));
 
-                using (var context = engine.CreateContext())
+                var f = new object();
+                context.SetVariable("f", f);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var f = new object();
-                    context.SetVariable("f", f);
+                    context.Execute("f()");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("f()");
-                    });
-
-                    Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.AreSame(fooEx, ex.InnerException);
-                    Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.AreSame(fooEx, ex.InnerException);
+                Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_invoke_throws_custom_error()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     invoke: (IHostObjectCallbackContext ctx, object obj, object[] args)
                         => { throw new HostErrorException("uh oh", CustomErrorName); }
                 ));
 
-                using (var context = engine.CreateContext())
+                var f = new object();
+                context.SetVariable("f", f);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var f = new object();
-                    context.SetVariable("f", f);
+                    context.Execute("f()");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("f()");
-                    });
-
-                    Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.IsNull(ex.InnerException);
-                    Assert.IsNull(ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.IsNull(ex.InnerException);
+                Assert.IsNull(ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_valueOf()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     valueOf: (IHostObjectCallbackContext ctx, object obj) => { return 1; }
                 ));
 
-                using (var context = engine.CreateContext())
-                {
-                    var x = new object();
-                    context.SetVariable("x", x);
-                    Assert.AreEqual(1, context.Execute("x.valueOf()"));
-                }
+                var x = new object();
+                context.SetVariable("x", x);
+                Assert.AreEqual(1, context.Execute("x.valueOf()"));
             }
         }
 
         [Test]
         public void Test_valueOf_no_handler()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
                 // No valueOf handler installed on template
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate());
+                context.RegisterHostObjectTemplate(new HostObjectTemplate());
 
-                using (var context = engine.CreateContext())
-                {
-                    var x = new object();
-                    context.SetVariable("x", x);
-                    Assert.AreEqual(x, context.Execute("x.valueOf()")); // default V8 implementation
-                }
+                var x = new object();
+                context.SetVariable("x", x);
+                Assert.AreEqual(x, context.Execute("x.valueOf()")); // default V8 implementation
             }
         }
 
@@ -547,92 +492,80 @@ namespace VroomJsTests
         public void Test_valueOf_throws_exception()
         {
             var fooEx = new FooException("uh oh");
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     valueOf: (IHostObjectCallbackContext ctx, object obj) => { throw fooEx; }
                 ));
 
-                using (var context = engine.CreateContext())
+                var x = new object();
+                context.SetVariable("x", x);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                    context.Execute("x.valueOf()");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("x.valueOf()");
-                    });
-
-                    Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.AreSame(fooEx, ex.InnerException);
-                    Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.AreSame(fooEx, ex.InnerException);
+                Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_valueOf_throws_custom_error()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     valueOf: (IHostObjectCallbackContext ctx, object obj)
                         => { throw new HostErrorException("uh oh", CustomErrorName); }
                 ));
 
-                using (var context = engine.CreateContext())
+                var x = new object();
+                context.SetVariable("x", x);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                    context.Execute("x.valueOf()");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("x.valueOf()");
-                    });
-
-                    Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.IsNull(ex.InnerException);
-                    Assert.IsNull(ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.IsNull(ex.InnerException);
+                Assert.IsNull(ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_toString()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     toString: (IHostObjectCallbackContext ctx, object obj) => { return "alpha"; }
                 ));
 
-                using (var context = engine.CreateContext())
-                {
-                    var x = new object();
-                    context.SetVariable("x", x);
-                    Assert.AreEqual("alpha", context.Execute("x.toString()"));
-                }
+                var x = new object();
+                context.SetVariable("x", x);
+                Assert.AreEqual("alpha", context.Execute("x.toString()"));
             }
         }
 
         [Test]
         public void Test_toString_no_handler()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
                 // No toString handler installed on template
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate());
+                context.RegisterHostObjectTemplate(new HostObjectTemplate());
 
-                using (var context = engine.CreateContext())
-                {
-                    var x = new object();
-                    context.SetVariable("x", x);
-                    Assert.AreEqual("[object Object]", context.Execute("x.toString()")); // default V8 implementation
-                }
+                var x = new object();
+                context.SetVariable("x", x);
+                Assert.AreEqual("[object Object]", context.Execute("x.toString()")); // default V8 implementation
             }
         }
 
@@ -640,57 +573,51 @@ namespace VroomJsTests
         public void Test_toString_throws_exception()
         {
             var fooEx = new FooException("uh oh");
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     toString: (IHostObjectCallbackContext ctx, object obj) => { throw fooEx; }
                 ));
 
-                using (var context = engine.CreateContext())
+                var x = new object();
+                context.SetVariable("x", x);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                    context.Execute("x.toString()");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("x.toString()");
-                    });
-
-                    Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.AreSame(fooEx, ex.InnerException);
-                    Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(DefaultErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.AreSame(fooEx, ex.InnerException);
+                Assert.AreSame(fooEx, ex.ErrorInfo.ClrException);
             }
         }
 
         [Test]
         public void Test_toString_throws_custom_error()
         {
-            using (var engine = new JsEngine())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     toString: (IHostObjectCallbackContext ctx, object obj)
                         => { throw new HostErrorException("uh oh", CustomErrorName); }
                 ));
 
-                using (var context = engine.CreateContext())
+                var x = new object();
+                context.SetVariable("x", x);
+
+                var ex = Assert.Throws<JsException>(() =>
                 {
-                    var x = new object();
-                    context.SetVariable("x", x);
+                    context.Execute("x.toString()");
+                });
 
-                    var ex = Assert.Throws<JsException>(() =>
-                    {
-                        context.Execute("x.toString()");
-                    });
-
-                    Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
-                    var errorObj = (JsObject)ex.ErrorInfo.Error;
-                    Assert.AreEqual("uh oh", errorObj["message"]);
-                    Assert.IsNull(ex.InnerException);
-                    Assert.IsNull(ex.ErrorInfo.ClrException);
-                }
+                Assert.AreEqual(CustomErrorName, ex.ErrorInfo.Name);
+                var errorObj = (JsObject)ex.ErrorInfo.Error;
+                Assert.AreEqual("uh oh", errorObj["message"]);
+                Assert.IsNull(ex.InnerException);
+                Assert.IsNull(ex.ErrorInfo.ClrException);
             }
         }
     }

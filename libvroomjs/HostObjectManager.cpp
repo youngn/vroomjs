@@ -30,7 +30,7 @@ Local<Object> HostObjectManager::GetProxy(int id, int templateId)
         return Local<Object>::New(isolate, search->second.objectHandle);
     }
 
-    auto objectTemplate = context_->Engine()->Template(templateId);
+    auto objectTemplate = context_->Template(templateId);
 
     auto ref = new HostObjectRef(context_, id, objectTemplate->Callbacks());
     auto obj = objectTemplate->NewInstance(context_->Ctx(), ref);

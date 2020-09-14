@@ -123,15 +123,6 @@ extern "C"
 		engine->TerminateExecution();
 	}
 
-    EXPORT int CALLINGCONVENTION jsengine_add_template(JsEngine* engine, hostobjectcallbacks callbacks)
-    {
-#ifdef DEBUG_TRACE_API
-        std::wcout << "jsengine_add_template" << std::endl;
-#endif
-        assert(engine != nullptr);
-        return engine->AddTemplate(callbacks);
-    }
-
     EXPORT JsContext* CALLINGCONVENTION jscontext_new(int32_t id, JsEngine *engine)
     {
 #ifdef DEBUG_TRACE_API
@@ -139,6 +130,15 @@ extern "C"
 #endif
         assert(engine != nullptr);
         return engine->NewContext(id);
+    }
+
+    EXPORT int CALLINGCONVENTION jscontext_add_template(JsContext* context, hostobjectcallbacks callbacks)
+    {
+#ifdef DEBUG_TRACE_API
+        std::wcout << "jscontext_add_template" << std::endl;
+#endif
+        assert(context != nullptr);
+        return context->AddTemplate(callbacks);
     }
 
 	EXPORT void CALLINGCONVENTION jscontext_force_gc()

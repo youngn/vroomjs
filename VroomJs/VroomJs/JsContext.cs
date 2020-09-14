@@ -24,6 +24,7 @@
 // THE SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Timers;
@@ -31,9 +32,11 @@ using VroomJs.Interop;
 
 namespace VroomJs
 {
-    public class JsContext : V8Object<ContextHandle>
+    public partial class JsContext : V8Object<ContextHandle>
     {
-        private readonly int _id;
+        private readonly List<HostObjectTemplateRegistration> _templateRegistrations
+            = new List<HostObjectTemplateRegistration>();
+        private readonly HostObjectTemplateRegistration _exceptionTemplateRegistration;
 
         // Keep objects passed to V8 alive even if no other references exist.
         private readonly IKeepAliveStore _keepalives;
@@ -41,19 +44,19 @@ namespace VroomJs
         private ExceptionDispatchInfo _pendingExceptionInfo;
         private bool _timeoutExceeded;// todo: needs thread sync (use Interlocked int?)
 
-        internal JsContext(int id, JsEngine engine)
-            :base(InitHandle(id, engine), owner: engine)
+        internal JsContext(JsEngine engine, ContextConfiguration configuration)
+            :base(InitHandle(engine), owner: engine)
         {
-            _id = id;
             _keepalives = new KeepAliveDictionaryStore();
+            _exceptionTemplateRegistration = new HostObjectTemplateRegistration(this, new ExceptionTemplate());
+
+            configuration?.Apply(this);
         }
 
-        private static ContextHandle InitHandle(int id, JsEngine engine)
+        private static ContextHandle InitHandle(JsEngine engine)
         {
-            return NativeApi.jscontext_new(id, engine.Handle);
+            return NativeApi.jscontext_new(0, engine.Handle);
         }
-
-        internal int Id => _id;
 
         public JsEngine Engine => (JsEngine)Owner;
 
@@ -216,10 +219,22 @@ namespace VroomJs
                 timer?.Dispose();
             }
         }
+        internal HostErrorFilterDelegate HostErrorFilter { get; set; }
+
+        internal void RegisterHostObjectTemplate(HostObjectTemplate template, Predicate<object> selector = null)
+        {
+            _templateRegistrations.Add(new HostObjectTemplateRegistration(this, template, selector));
+        }
+
+        internal int SelectTemplate(object obj)
+        {
+            var template = _templateRegistrations.FirstOrDefault(r => r.IsApplicableTo(obj));
+            return template != null ? template.Id : -1;
+        }
 
         internal JsObject GetExceptionProxy(Exception ex)
         {
-            return GetHostObjectProxy(ex, Engine.ExceptionTemplateId);
+            return GetHostObjectProxy(ex, _exceptionTemplateRegistration.Id);
         }
 
         internal JsObject GetHostObjectProxy(object obj, int templateId)

@@ -18,11 +18,11 @@ namespace VroomJsTests
             Assert.AreEqual(0, stats.JsObjectCount);
             Assert.AreEqual(0, stats.HostObjectCount);
 
-            var config = new EngineConfiguration();
+            var config = new ContextConfiguration();
             config.ClrTemplates.EnableObjects = true;
 
-            using (var engine = new JsEngine(config))
-            using (var context = engine.CreateContext())
+            using (var engine = new JsEngine())
+            using (var context = engine.CreateContext(config))
             using (var script = context.Compile("1 + 1"))
             using (var obj = (JsObject)context.Execute("({})")) // create a JS object
             {
@@ -73,15 +73,15 @@ namespace VroomJsTests
             {
                 var objects = new List<object>();
 
-                var config = new EngineConfiguration();
+                var config = new ContextConfiguration();
                 config.ClrTemplates.EnableObjects = true;
 
-                var engine = new JsEngine(config);
+                var engine = new JsEngine();
                 objects.Add(engine);
 
                 for(var i = 0; i < 5; i++)
                 {
-                    var context = engine.CreateContext();
+                    var context = engine.CreateContext(config);
                     objects.Add(context);
 
                     for(var j = 0; j < 5; j++)

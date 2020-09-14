@@ -113,7 +113,7 @@ namespace VroomJs
             if (type == typeof(HostErrorInfo))
                 return ForHostError((HostErrorInfo)obj, context);
 
-            var templateId = context.Engine.SelectTemplate(obj);
+            var templateId = context.SelectTemplate(obj);
             if(templateId >= 0)
             {
                 return ForHostObject(context.AddHostObject(obj), templateId);

@@ -5,7 +5,6 @@
 #include "vroomjs.h"
 #include "JsEngine.h"
 #include "JsContext.h"
-#include "HostObjectTemplate.h"
 
 
 long js_mem_debug_engine_count;
@@ -74,18 +73,9 @@ JsContext* JsEngine::NewContext(int32_t id)
     return context;
 }
 
-int JsEngine::AddTemplate(hostobjectcallbacks callbacks)
-{
-    templates_.push_back(new HostObjectTemplate(isolate_, callbacks));
-    return templates_.size() - 1; // template id
-}
 
 void JsEngine::DisposeCore()
 {
-    // Templates must be deleted before the isolate is disposed.
-    for (int i = 0; i < templates_.size(); i++)
-        delete templates_[i];
-
     isolate_->Dispose();
     // Isolates can only be Dispose()'d, not deleted
     isolate_ = nullptr;

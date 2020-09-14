@@ -34,6 +34,7 @@
 #include "JsScript.h"
 #include "HostObjectRef.h"
 #include "HostObjectManager.h"
+#include "HostObjectTemplate.h"
 
 
 using namespace v8;
@@ -50,10 +51,20 @@ JsContext::JsContext(int32_t id, JsEngine* engine)
     INCREMENT(js_mem_debug_context_count);
 }
 
+
+int JsContext::AddTemplate(hostobjectcallbacks callbacks)
+{
+    templates_.push_back(new HostObjectTemplate(isolate_, callbacks));
+    return templates_.size() - 1; // template id
+}
+
 void JsContext::DisposeCore()
 {
     delete hostObjectManager_;
     hostObjectManager_ = nullptr;
+
+    for (int i = 0; i < templates_.size(); i++)
+        delete templates_[i];
 
     context_.Reset();
 

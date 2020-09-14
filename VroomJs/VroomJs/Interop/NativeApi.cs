@@ -41,15 +41,15 @@ namespace VroomJs.Interop
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern void jsengine_dump_heap_stats(EngineHandle engine);
 
-        [DllImport(DllName)]
-        public static extern int jsengine_add_template(EngineHandle engine, hostobjectcallbacks callbacks);
-
         #endregion
 
         #region jscontext
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern ContextHandle jscontext_new(int id, EngineHandle engine);
+
+        [DllImport(DllName)]
+        public static extern int jscontext_add_template(ContextHandle context, hostobjectcallbacks callbacks);
 
         [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
         public static extern void jscontext_force_gc();

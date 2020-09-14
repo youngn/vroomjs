@@ -214,12 +214,10 @@ namespace VroomJsTests
                 "    at gamma (<Unnamed Script>:5:5)\n" +
                 "    at <Unnamed Script>:8:1";
 
-            // Use own engine instance here, since we need to register a template
             var fooException = new FooException("Uh oh");
-            using (var engine = new JsEngine())
-            using (var context = engine.CreateContext())
+            using (var context = Engine.CreateContext())
             {
-                engine.RegisterHostObjectTemplate(new HostObjectTemplate(
+                context.RegisterHostObjectTemplate(new HostObjectTemplate(
                     invoke: (IHostObjectCallbackContext ctx, object obj, object[] args) => { throw fooException; }
                 ));
 
@@ -333,34 +331,29 @@ namespace VroomJsTests
         [Test]
         public void Test_clr_object()
         {
-            // Use custom engine for this test as it requires ExposeObjects
-            // to be true.
-            var config = new EngineConfiguration();
+            var config = new ContextConfiguration();
             config.ClrTemplates.EnableObjects = true;
 
-            using (var engine = new JsEngine(config))
+            using (var context = Engine.CreateContext(config))
             {
-                using (var context = engine.CreateContext())
-                {
-                    var foo = new Foo();
-                    context.SetVariable("x", foo);
+                var foo = new Foo();
+                context.SetVariable("x", foo);
 
-                    // Ensure round-trippable
-                    var fooReturned = context.GetVariable("x");
-                    Assert.AreSame(foo, fooReturned);
+                // Ensure round-trippable
+                var fooReturned = context.GetVariable("x");
+                Assert.AreSame(foo, fooReturned);
 
-                    // Ensure object identity is maintained on script side
-                    context.SetVariable("y", foo);
-                    Assert.IsTrue((bool)context.Execute("y === x"));
+                // Ensure object identity is maintained on script side
+                context.SetVariable("y", foo);
+                Assert.IsTrue((bool)context.Execute("y === x"));
 
-                    var foo2 = new Foo();
-                    context.SetVariable("y", foo2);
-                    var foo2Returned = context.GetVariable("y");
-                    Assert.AreSame(foo2, foo2Returned);
-                    Assert.AreNotSame(foo, foo2Returned);
+                var foo2 = new Foo();
+                context.SetVariable("y", foo2);
+                var foo2Returned = context.GetVariable("y");
+                Assert.AreSame(foo2, foo2Returned);
+                Assert.AreNotSame(foo, foo2Returned);
 
-                    Assert.IsFalse((bool)context.Execute("y === x"));
-                }
+                Assert.IsFalse((bool)context.Execute("y === x"));
             }
         }
 
@@ -373,22 +366,17 @@ namespace VroomJsTests
         [Test]
         public void Test_JsErrorInfo()
         {
-            // Use custom engine for this test as it requires ExposeObjects
-            // to be true.
-            var config = new EngineConfiguration();
+            var config = new ContextConfiguration();
             config.ClrTemplates.EnableObjects = true;
 
-            using (var engine = new JsEngine(config))
+            using (var context = Engine.CreateContext(config))
             {
-                using (var context = engine.CreateContext())
-                {
-                    var foo = new JsErrorInfo("", 0, 0, null, "", "", "", null, null);
-                    context.SetVariable("x", foo);
+                var foo = new JsErrorInfo("", 0, 0, null, "", "", "", null, null);
+                context.SetVariable("x", foo);
 
-                    // Ensure round-trippable
-                    var fooReturned = context.Execute("x");
-                    Assert.AreSame(foo, fooReturned);
-                }
+                // Ensure round-trippable
+                var fooReturned = context.Execute("x");
+                Assert.AreSame(foo, fooReturned);
             }
         }
     }

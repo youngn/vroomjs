@@ -168,7 +168,7 @@ namespace Sandbox
 
         public static void Test_exception_error_suppression()
         {
-            var config = new EngineConfiguration();
+            var config = new ContextConfiguration();
 
             // Use filter to prevent host error from being caught by script
             config.HostErrorFilter = (context, errorInfo) =>
@@ -182,9 +182,9 @@ namespace Sandbox
                     => { throw fooEx; }
             ));
 
-            using (var engine = new JsEngine(config))
+            using (var engine = new JsEngine())
             {
-                using (var context = engine.CreateContext())
+                using (var context = engine.CreateContext(config))
                 {
                     var x = new object();
                     context.SetVariable("x", x);
@@ -216,7 +216,7 @@ namespace Sandbox
         }
         public static void Test_exception_error_suppression2()
         {
-            var config = new EngineConfiguration();
+            var config = new ContextConfiguration();
 
             // Use filter to prevent host error from being caught by script
             config.HostErrorFilter = (context, errorInfo) =>
@@ -230,9 +230,9 @@ namespace Sandbox
                     => { throw fooEx; }
             ));
 
-            using (var engine = new JsEngine(config))
+            using (var engine = new JsEngine())
             {
-                using (var context = engine.CreateContext())
+                using (var context = engine.CreateContext(config))
                 {
                     var x = new object();
                     context.SetVariable("x", x);
@@ -256,7 +256,7 @@ namespace Sandbox
 
         public static void Test_custom_error_modification()
         {
-            var config = new EngineConfiguration();
+            var config = new ContextConfiguration();
             // Use filter to modify the error info
             config.HostErrorFilter = (context, errorInfo) =>
             {
@@ -272,9 +272,9 @@ namespace Sandbox
                     => { throw new HostErrorException("uh oh", "MyError"); }
             ));
 
-            using (var engine = new JsEngine(config))
+            using (var engine = new JsEngine())
             {
-                using (var context = engine.CreateContext())
+                using (var context = engine.CreateContext(config))
                 {
                     var x = new object();
                     context.SetVariable("x", x);
