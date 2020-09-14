@@ -15,36 +15,36 @@ public:
         assert(callbacks.remove != nullptr);
     }
 
-    void Released(int32_t context, int id) const {
-        callbacks.remove(context, id);
+    void Released(int id) const {
+        callbacks.remove(id);
     }
-    JsValue GetPropertyValue(int32_t context, int32_t id, uint16_t* name) const {
+    JsValue GetPropertyValue(int32_t id, uint16_t* name) const {
         assert(callbacks.get_property_value != nullptr);
-        return callbacks.get_property_value(context, id, name);
+        return callbacks.get_property_value(id, name);
     }
-    JsValue SetPropertyValue(int32_t context, int32_t id, uint16_t* name, jsvalue value) const {
+    JsValue SetPropertyValue(int32_t id, uint16_t* name, jsvalue value) const {
         assert(callbacks.set_property_value != nullptr);
-        return callbacks.set_property_value(context, id, name, value);
+        return callbacks.set_property_value(id, name, value);
     }
-    JsValue DeleteProperty(int32_t context, int32_t id, uint16_t* name) const {
+    JsValue DeleteProperty(int32_t id, uint16_t* name) const {
         assert(callbacks.delete_property != nullptr);
-        return callbacks.delete_property(context, id, name);
+        return callbacks.delete_property(id, name);
     }
-    JsValue EnumerateProperties(int32_t context, int32_t id) const {
+    JsValue EnumerateProperties(int32_t id) const {
         assert(callbacks.enumerate_properties != nullptr);
-        return callbacks.enumerate_properties(context, id);
+        return callbacks.enumerate_properties(id);
     }
-    JsValue Invoke(int32_t context, int32_t id, int32_t argCount, jsvalue* args) const {
+    JsValue Invoke(int32_t id, int32_t argCount, jsvalue* args) const {
         assert(callbacks.invoke != nullptr);
-        return callbacks.invoke(context, id, argCount, args);
+        return callbacks.invoke(id, argCount, args);
     }
-    JsValue ValueOf(int32_t context, int32_t id) const {
+    JsValue ValueOf(int32_t id) const {
         assert(callbacks.valueof != nullptr);
-        return callbacks.valueof(context, id);
+        return callbacks.valueof(id);
     }
-    JsValue ToString(int32_t context, int32_t id) const {
+    JsValue ToString(int32_t id) const {
         assert(callbacks.tostring != nullptr);
-        return callbacks.tostring(context, id);
+        return callbacks.tostring(id);
     }
 
 private:

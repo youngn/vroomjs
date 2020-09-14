@@ -20,7 +20,7 @@ public:
 
     void DumpHeapStats();
     Isolate* Isolate() { return isolate_; }
-    JsContext* NewContext(int32_t id);
+    JsContext* NewContext();
 
     virtual ~JsEngine() {
         DECREMENT(js_mem_debug_engine_count);

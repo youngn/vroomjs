@@ -123,13 +123,13 @@ extern "C"
 		engine->TerminateExecution();
 	}
 
-    EXPORT JsContext* CALLINGCONVENTION jscontext_new(int32_t id, JsEngine *engine)
+    EXPORT JsContext* CALLINGCONVENTION jsengine_new_context(JsEngine *engine)
     {
 #ifdef DEBUG_TRACE_API
-		std::wcout << "jscontext_new" << std::endl;
+		std::wcout << "jsengine_new_context" << std::endl;
 #endif
         assert(engine != nullptr);
-        return engine->NewContext(id);
+        return engine->NewContext();
     }
 
     EXPORT int CALLINGCONVENTION jscontext_add_template(JsContext* context, hostobjectcallbacks callbacks)

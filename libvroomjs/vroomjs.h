@@ -111,14 +111,14 @@ extern "C"
     // We don't have a keepalive_add_f because that is managed on the CLR side.
     // Its definition would be "int (*keepalive_add_f) (HostObjectRef obj)".
 
-    typedef void (CALLINGCONVENTION* keepalive_remove_f) (int32_t context, int32_t id);
-    typedef jsvalue(CALLINGCONVENTION* keepalive_get_property_value_f) (int32_t context, int32_t id, uint16_t* name);
-    typedef jsvalue(CALLINGCONVENTION* keepalive_set_property_value_f) (int32_t context, int32_t id, uint16_t* name, jsvalue value);
-    typedef jsvalue(CALLINGCONVENTION* keepalive_delete_property_f) (int32_t context, int32_t id, uint16_t* name);
-    typedef jsvalue(CALLINGCONVENTION* keepalive_enumerate_properties_f) (int32_t context, int32_t id);
-    typedef jsvalue(CALLINGCONVENTION* keepalive_invoke_f) (int32_t context, int32_t id, int32_t argCount, jsvalue* args);
-    typedef jsvalue(CALLINGCONVENTION* keepalive_valueof_f) (int32_t context, int32_t id);
-    typedef jsvalue(CALLINGCONVENTION* keepalive_tostring_f) (int32_t context, int32_t id);
+    typedef void (CALLINGCONVENTION* keepalive_remove_f) (int32_t id);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_get_property_value_f) (int32_t id, uint16_t* name);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_set_property_value_f) (int32_t id, uint16_t* name, jsvalue value);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_delete_property_f) (int32_t id, uint16_t* name);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_enumerate_properties_f) (int32_t id);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_invoke_f) (int32_t id, int32_t argCount, jsvalue* args);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_valueof_f) (int32_t id);
+    typedef jsvalue(CALLINGCONVENTION* keepalive_tostring_f) (int32_t id);
 
     struct hostobjectcallbacks
     {

@@ -59,7 +59,7 @@ namespace VroomJs
                 return _selector == null || _selector(obj);
             }
 
-            private void Remove(int contextId, int objectId)
+            private void Remove(int objectId)
             {
                 if (_template.RemoveHandler != null)
                 {
@@ -70,7 +70,7 @@ namespace VroomJs
                 _context.RemoveHostObject(objectId);
             }
 
-            private jsvalue GetPropertyValue(int contextId, int objectId, string name)
+            private jsvalue GetPropertyValue(int objectId, string name)
             {
                 var obj = _context.GetHostObject(objectId);
 
@@ -87,7 +87,7 @@ namespace VroomJs
                 }
             }
 
-            private jsvalue SetPropertyValue(int contextId, int objectId, string name, jsvalue value)
+            private jsvalue SetPropertyValue(int objectId, string name, jsvalue value)
             {
                 var obj = _context.GetHostObject(objectId);
 
@@ -108,7 +108,7 @@ namespace VroomJs
                 }
             }
 
-            private jsvalue DeleteProperty(int contextId, int objectId, string name)
+            private jsvalue DeleteProperty(int objectId, string name)
             {
                 var obj = _context.GetHostObject(objectId);
 
@@ -125,7 +125,7 @@ namespace VroomJs
                 }
             }
 
-            private jsvalue EnumerateProperties(int contextId, int objectId)
+            private jsvalue EnumerateProperties(int objectId)
             {
                 var obj = _context.GetHostObject(objectId);
 
@@ -143,7 +143,7 @@ namespace VroomJs
                 return NativeApi.jscontext_new_array(_context.Handle, propNames.Length, propNames);
             }
 
-            private jsvalue Invoke(int contextId, int objectId, int argCount, IntPtr args)
+            private jsvalue Invoke(int objectId, int argCount, IntPtr args)
             {
                 var obj = _context.GetHostObject(objectId);
 
@@ -164,7 +164,7 @@ namespace VroomJs
                 }
             }
 
-            private jsvalue ValueOf(int contextId, int objectId)
+            private jsvalue ValueOf(int objectId)
             {
                 var obj = _context.GetHostObject(objectId);
 
@@ -180,7 +180,7 @@ namespace VroomJs
                 }
             }
 
-            private jsvalue ToString(int contextId, int objectId)
+            private jsvalue ToString(int objectId)
             {
                 var obj = _context.GetHostObject(objectId);
 

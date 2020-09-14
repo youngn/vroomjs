@@ -13,7 +13,7 @@ class HostObjectTemplate;
 class JsContext : public Disposable
 {
 public:
-    JsContext(int32_t id, JsEngine* engine);
+    JsContext(JsEngine* engine);
 
     JsValue Execute(const uint16_t* code, const uint16_t* resourceName = nullptr);
 
@@ -27,8 +27,6 @@ public:
 
     JsValue CompileScript(const uint16_t* code, const uint16_t* resourceName);
 
-    int32_t Id() { return id_; }
-    JsEngine* Engine() { return engine_; }
     Isolate* Isolate() { return isolate_; }
     Local<Context> Ctx() {
         return Local<Context>::New(isolate_, context_);
@@ -54,7 +52,6 @@ protected:
     void DisposeCore() override;
 
 private:
-    int32_t id_;
     JsEngine* engine_;
     v8::Isolate* isolate_;
     Persistent<Context> context_;

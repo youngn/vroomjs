@@ -40,7 +40,7 @@ void HostObjectRef::GetPropertyValue(Local<Name> name, const PropertyCallbackInf
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-    auto r = callbacks_.GetPropertyValue(context_->Id(), id_, *s);
+    auto r = callbacks_.GetPropertyValue(id_, *s);
     if (r.ValueType() == JSVALUE_TYPE_EMPTY) {
         // empty signifies not handled
         return;
@@ -58,7 +58,7 @@ void HostObjectRef::SetPropertyValue(Local<Name> name, Local<Value> value, const
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-    auto r = callbacks_.SetPropertyValue(context_->Id(), id_, *s, JsValue::ForValue(value, context_));
+    auto r = callbacks_.SetPropertyValue(id_, *s, JsValue::ForValue(value, context_));
     if (r.ValueType() == JSVALUE_TYPE_EMPTY) {
         // empty signifies not handled
         return;
@@ -80,7 +80,7 @@ void HostObjectRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<
     auto isolate = context_->Isolate();
     String::Value s(isolate, name);
 
-    auto r = callbacks_.DeleteProperty(context_->Id(), id_, *s);
+    auto r = callbacks_.DeleteProperty(id_, *s);
     if (r.ValueType() == JSVALUE_TYPE_EMPTY) {
         // empty signifies not handled
         return;
@@ -96,7 +96,7 @@ void HostObjectRef::DeleteProperty(Local<Name> name, const PropertyCallbackInfo<
 
 void HostObjectRef::EnumerateProperties(const PropertyCallbackInfo<Array>& info)
 {
-    auto r = callbacks_.EnumerateProperties(context_->Id(), id_);
+    auto r = callbacks_.EnumerateProperties(id_);
     if (r.ValueType() == JSVALUE_TYPE_HOSTERROR) {
         context_->Isolate()->ThrowException(r.Extract(context_));
         return;
@@ -115,7 +115,7 @@ void HostObjectRef::Invoke(const FunctionCallbackInfo<Value>& info)
         args[i] = JsValue::ForValue(info[i], context_);
     }
 
-    auto r = callbacks_.Invoke(context_->Id(), id_, len, args);
+    auto r = callbacks_.Invoke(id_, len, args);
     delete[] args;
 
     if (r.ValueType() == JSVALUE_TYPE_HOSTERROR) {
@@ -130,7 +130,7 @@ void HostObjectRef::ValueOf(const FunctionCallbackInfo<Value>& info)
 {
     auto isolate = context_->Isolate();
 
-    JsValue r = callbacks_.ValueOf(context_->Id(), id_);
+    JsValue r = callbacks_.ValueOf(id_);
     if (r.ValueType() == JSVALUE_TYPE_HOSTERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -143,7 +143,7 @@ void HostObjectRef::ToString(const FunctionCallbackInfo<Value>& info)
 {
     auto isolate = context_->Isolate();
 
-    JsValue r = callbacks_.ToString(context_->Id(), id_);
+    JsValue r = callbacks_.ToString(id_);
     if (r.ValueType() == JSVALUE_TYPE_HOSTERROR) {
         isolate->ThrowException(r.Extract(context_));
         return;
@@ -154,6 +154,6 @@ void HostObjectRef::ToString(const FunctionCallbackInfo<Value>& info)
 
 void HostObjectRef::NotifyReleased()
 {
-    callbacks_.Released(context_->Id(), id_);
+    callbacks_.Released(id_);
 }
 

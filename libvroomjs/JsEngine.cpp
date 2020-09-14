@@ -62,13 +62,13 @@ void JsEngine::DumpHeapStats()
     std::wcout << "Used heap size " << (stats.used_heap_size() / Mega) << std::endl;
 }
 
-JsContext* JsEngine::NewContext(int32_t id)
+JsContext* JsEngine::NewContext()
 {
     Locker locker(isolate_);
     Isolate::Scope isolate_scope(isolate_);
     HandleScope scope(isolate_);
 
-    auto context = new JsContext(id, this);
+    auto context = new JsContext(this);
     RegisterOwnedDisposable(context);
     return context;
 }

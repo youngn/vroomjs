@@ -55,7 +55,7 @@ namespace VroomJs
 
         private static ContextHandle InitHandle(JsEngine engine)
         {
-            return NativeApi.jscontext_new(0, engine.Handle);
+            return NativeApi.jsengine_new_context(engine.Handle);
         }
 
         public JsEngine Engine => (JsEngine)Owner;

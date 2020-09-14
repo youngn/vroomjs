@@ -41,9 +41,8 @@ using namespace v8;
 
 long js_mem_debug_context_count;
 
-JsContext::JsContext(int32_t id, JsEngine* engine)
-    :id_(id),
-    engine_(engine),
+JsContext::JsContext(JsEngine* engine)
+    :engine_(engine),
     isolate_(engine->Isolate()),
     context_(isolate_, Context::New(isolate_)),
     hostObjectManager_(new HostObjectManager(this))
