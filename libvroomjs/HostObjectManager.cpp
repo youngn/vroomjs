@@ -6,7 +6,8 @@
 
 #include <thread>
 
-void HostObjectManager::WeakHandleCallback(const WeakCallbackInfo<HostObjectManager::WeakCallbackArgs>& info)
+void HostObjectManager::WeakHandleCallback(
+    const WeakCallbackInfo<HostObjectManager::WeakCallbackArgs>& info)
 {
     auto args = info.GetParameter();
 
@@ -37,11 +38,16 @@ Local<Object> HostObjectManager::GetProxy(int id, int templateId)
      
     auto args = new WeakCallbackArgs { this, id };
     auto handle = UniquePersistent<Object>(isolate, obj);
-    handle.SetWeak(args, HostObjectManager::WeakHandleCallback, v8::WeakCallbackType::kParameter);
+    handle.SetWeak(args,
+        HostObjectManager::WeakHandleCallback,
+        v8::WeakCallbackType::kParameter);
 
-    // The entry in proxyMap_ will own the UniquePersistent, HostObjectRef and the WeakCallbackArgs,
-    // and will be responsible for releasing them.
-    proxyMap_[id] = Entry(std::move(handle), std::unique_ptr<HostObjectRef>(ref), std::unique_ptr<WeakCallbackArgs>(args));
+    // The entry in proxyMap_ will own the UniquePersistent, HostObjectRef and
+    // the WeakCallbackArgs, and will be responsible for releasing them.
+    proxyMap_[id] = Entry(
+        std::move(handle),
+        std::unique_ptr<HostObjectRef>(ref),
+        std::unique_ptr<WeakCallbackArgs>(args));
 
     return obj;
 }

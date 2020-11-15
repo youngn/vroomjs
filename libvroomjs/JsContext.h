@@ -59,6 +59,8 @@ private:
 
     // We use an array of pointers here to guarantee that each HostObjectTemplate
     // has a stable memory location so that we can maintain long-lived references to it.
+    // (i.e. if the vector contained the objects, they would move if the vector was
+    // resized)
     std::vector<HostObjectTemplate*> templates_;
 };
 
